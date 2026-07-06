@@ -4,6 +4,18 @@ import { useEffect, useState } from "react";
 import { api, type DashboardStats } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip as RechartsTooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+} from "recharts";
+import {
   Table,
   TableBody,
   TableCell,
@@ -176,7 +188,7 @@ export default function DashboardPage() {
         })}
       </div>
 
-      <Card className="border-zinc-800/50 bg-zinc-900/50 backdrop-blur-sm">
+      <Card className="border-zinc-800/50 bg-zinc-900/50 backdrop-blur-sm mb-8">
         <CardHeader>
           <CardTitle className="text-lg font-semibold text-zinc-100 flex items-center gap-2">
             <ShoppingCart className="h-5 w-5 text-zinc-400" />
@@ -272,6 +284,114 @@ export default function DashboardPage() {
           )}
         </CardContent>
       </Card>
+
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7 mb-8">
+        {/* Sales Trend Line Chart */}
+        <Card className="border-zinc-800/50 bg-zinc-900/50 backdrop-blur-sm xl:col-span-4">
+          <CardHeader>
+            <CardTitle className="text-lg font-semibold text-zinc-100">
+              Son 6 Aylık Satış Trendi
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[300px] w-full">
+              {stats.sales_trend && stats.sales_trend.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={stats.sales_trend}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#3f3f46" vertical={false} />
+                    <XAxis
+                      dataKey="month"
+                      stroke="#a1a1aa"
+                      fontSize={12}
+                      tickLine={false}
+                      axisLine={false}
+                    />
+                    <YAxis
+                      stroke="#a1a1aa"
+                      fontSize={12}
+                      tickLine={false}
+                      axisLine={false}
+                      tickFormatter={(value) => `₺${value}`}
+                    />
+                    <RechartsTooltip
+                      contentStyle={{ backgroundColor: "#18181b", borderColor: "#27272a", borderRadius: "8px" }}
+                      itemStyle={{ color: "#e4e4e7" }}
+                      formatter={(value: number) => [formatCurrency(value), "Ciro"]}
+                      labelStyle={{ color: "#a1a1aa", marginBottom: "4px" }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="revenue"
+                      stroke="#3b82f6"
+                      strokeWidth={3}
+                      dot={{ fill: "#3b82f6", strokeWidth: 2 }}
+                      activeDot={{ r: 6, strokeWidth: 0 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-full flex items-center justify-center text-zinc-500">
+                  Yeterli veri yok
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Top Motorcycle Brands Pie Chart */}
+        <Card className="border-zinc-800/50 bg-zinc-900/50 backdrop-blur-sm xl:col-span-3">
+          <CardHeader>
+            <CardTitle className="text-lg font-semibold text-zinc-100">
+              Popüler Markalar
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[300px] w-full">
+              {stats.top_brands && stats.top_brands.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={stats.top_brands}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={80}
+                      paddingAngle={5}
+                      dataKey="count"
+                      nameKey="brand"
+                    >
+                      {stats.top_brands.map((_, index) => {
+                        const colors = ["#3b82f6", "#10b981", "#8b5cf6", "#f59e0b", "#ef4444"];
+                        return <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />;
+                      })}
+                    </Pie>
+                    <RechartsTooltip
+                      contentStyle={{ backgroundColor: "#18181b", borderColor: "#27272a", borderRadius: "8px" }}
+                      itemStyle={{ color: "#e4e4e7" }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-full flex items-center justify-center text-zinc-500">
+                  Yeterli veri yok
+                </div>
+              )}
+            </div>
+            {/* Custom Legend */}
+            <div className="mt-4 flex flex-wrap justify-center gap-4">
+              {stats.top_brands?.map((brand, index) => {
+                const colors = ["#3b82f6", "#10b981", "#8b5cf6", "#f59e0b", "#ef4444"];
+                return (
+                  <div key={brand.brand} className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: colors[index % colors.length] }} />
+                    <span className="text-xs text-zinc-400">{brand.brand}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
       <AlertDialog open={deletingId !== null} onOpenChange={(open) => !open && setDeletingId(null)}>
         <AlertDialogContent className="bg-zinc-900 border-zinc-800">

@@ -9,6 +9,16 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+type SalesTrend struct {
+	Month   string  `json:"month"`
+	Revenue float64 `json:"revenue"`
+}
+
+type BrandStat struct {
+	Brand string `json:"brand"`
+	Count int64  `json:"count"`
+}
+
 func GetDashboardStats(c *gin.Context) {
 	var totalMotorcycles int64
 	var availableMotorcycles int64
@@ -45,6 +55,26 @@ func GetDashboardStats(c *gin.Context) {
 	var recentSales []models.Sale
 	database.DB.Preload("Customer").Preload("Items").Preload("Payments").Order("created_at desc").Limit(5).Find(&recentSales)
 
+	var salesTrend []SalesTrend
+	database.DB.Raw(`
+		SELECT to_char(created_at, 'YYYY-MM') as month, SUM(total_amount) as revenue 
+		FROM sales 
+		WHERE created_at >= NOW() - INTERVAL '6 months' 
+		GROUP BY month 
+		ORDER BY month
+	`).Scan(&salesTrend)
+
+	var topBrands []BrandStat
+	database.DB.Raw(`
+		SELECT m.brand, COUNT(si.id) as count 
+		FROM sale_items si 
+		JOIN motorcycles m ON si.item_id = m.id 
+		WHERE si.item_type = 'motorcycle' 
+		GROUP BY m.brand 
+		ORDER BY count DESC 
+		LIMIT 5
+	`).Scan(&topBrands)
+
 	c.JSON(http.StatusOK, gin.H{
 		"total_motorcycles":        totalMotorcycles,
 		"available_motorcycles":    availableMotorcycles,
@@ -56,5 +86,7 @@ func GetDashboardStats(c *gin.Context) {
 		"total_sales":              totalSales,
 		"total_revenue":            totalRevenue,
 		"recent_sales":             recentSales,
+		"sales_trend":              salesTrend,
+		"top_brands":               topBrands,
 	})
 }

@@ -78,6 +78,16 @@ export interface Sale {
   created_at: string
 }
 
+export interface SalesTrend {
+  month: string
+  revenue: number
+}
+
+export interface BrandStat {
+  brand: string
+  count: number
+}
+
 export interface DashboardStats {
   total_motorcycles: number
   available_motorcycles: number
@@ -89,6 +99,8 @@ export interface DashboardStats {
   total_sales: number
   total_revenue: number
   recent_sales: Sale[]
+  sales_trend: SalesTrend[]
+  top_brands: BrandStat[]
 }
 
 export interface SMTPSettings {
