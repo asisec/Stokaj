@@ -1,0 +1,40 @@
+node_modules/
+.next/
+out/
+build/
+dist/
+
+# Env files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Go
+server
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+vendor/
+go.work
+go.work.sum
+
+# IDE / Editor
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Database Volumes
+pgdata/
+
+# Temporary files
+tmp/
+*.log
