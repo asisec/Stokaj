@@ -1,3 +1,7 @@
+<div align="center">
+  <img src="logo.png" alt="Stokaj Logo" width="300"/>
+</div>
+
 # Stokaj - Motosiklet ERP & CRM Sistemi
 
 Stokaj, motosiklet galerileri ve servisleri için özel olarak geliştirilmiş, modern bir envanter, müşteri ve satış yönetimi (POS) sistemidir.
