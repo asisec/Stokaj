@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
@@ -169,18 +170,10 @@ export function MotorcycleForm({
             >
               Alış Fiyatı (₺)
             </Label>
-            <Input
+            <CurrencyInput
               id="purchase_price"
-              type="number"
-              step="0.01"
-              min="0"
-              value={formData.purchase_price === 0 ? "" : formData.purchase_price}
-              onChange={(e) =>
-                handleChange(
-                  "purchase_price",
-                  e.target.value === "" ? 0 : parseFloat(e.target.value)
-                )
-              }
+              value={formData.purchase_price}
+              onChange={(val) => handleChange("purchase_price", val)}
               className="bg-zinc-900/50 border-zinc-800 text-zinc-200 focus:border-blue-500/50 transition-colors"
               required
             />
