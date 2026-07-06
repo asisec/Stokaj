@@ -1,8 +1,8 @@
-# Stokaj - Motosiklet ERP & CRM Sistemi 🏍️
+# Stokaj - Motosiklet ERP & CRM Sistemi
 
 Stokaj, motosiklet galerileri ve servisleri için özel olarak geliştirilmiş, modern bir envanter, müşteri ve satış yönetimi (POS) sistemidir.
 
-## ✨ Temel Özellikler
+## Temel Özellikler
 
 * **Müşteri Yönetimi:** Müşterilerinizi sisteme kaydedin ve satışlarınızı müşterilerinizle ilişkilendirin.
 * **Motosiklet & Yedek Parça Envanteri:** Motosikletlerinizi (alış/satış fiyatı, marka, şasi no) ve yedek parçalarınızı stok adetleriyle birlikte takip edin.
@@ -10,14 +10,14 @@ Stokaj, motosiklet galerileri ve servisleri için özel olarak geliştirilmiş, 
 * **Dashboard:** Net kâr, toplam satış hacmi, bekleyen işlemler ve envanter durumunuzu tek bir ekranda, güncel istatistiklerle görüntüleyin.
 * **Otomatik Yedekleme & Güvenlik:** Belirlediğiniz SMTP ayarları üzerinden sistem veritabanı yedeğini tek tıkla e-posta adresinize gönderin. Güvenli ayarlar sayfası.
 
-## 🛠️ Kullanılan Teknolojiler
+## Kullanılan Teknolojiler
 
 * **Frontend:** Next.js (React), Tailwind CSS, Shadcn/UI
 * **Backend:** Go, Gin Framework, GORM
 * **Veritabanı:** PostgreSQL
 * **Altyapı:** Docker & Docker Compose
 
-## 🚀 Kurulum ve Çalıştırma
+## Kurulum ve Çalıştırma
 
 Proje Docker ile konteynerize edilmiştir. Çalıştırmak için bilgisayarınızda **Docker** ve **Docker Compose** kurulu olması yeterlidir.
 
