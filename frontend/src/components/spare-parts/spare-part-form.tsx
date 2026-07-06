@@ -116,9 +116,9 @@ export function SparePartForm({
                 id="quantity"
                 type="number"
                 min="0"
-                value={formData.quantity}
+                value={formData.quantity === 0 ? "" : formData.quantity}
                 onChange={(e) =>
-                  handleChange("quantity", parseInt(e.target.value) || 0)
+                  handleChange("quantity", e.target.value === "" ? 0 : parseInt(e.target.value))
                 }
                 className="bg-zinc-900/50 border-zinc-800 text-zinc-200 focus:border-emerald-500/50 transition-colors"
                 required

@@ -174,11 +174,11 @@ export function MotorcycleForm({
               type="number"
               step="0.01"
               min="0"
-              value={formData.purchase_price}
+              value={formData.purchase_price === 0 ? "" : formData.purchase_price}
               onChange={(e) =>
                 handleChange(
                   "purchase_price",
-                  parseFloat(e.target.value) || 0
+                  e.target.value === "" ? 0 : parseFloat(e.target.value)
                 )
               }
               className="bg-zinc-900/50 border-zinc-800 text-zinc-200 focus:border-blue-500/50 transition-colors"
