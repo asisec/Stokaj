@@ -1,5 +1,8 @@
 <div align="center">
   <img src="logo.png" alt="Stokaj Logo" width="300"/>
+  <br />
+  <br />
+  <img src="https://skillicons.dev/icons?i=nextjs,react,tailwind,go,postgres,docker" alt="Tech Stack" />
 </div>
 
 # Stokaj - Motosiklet ERP & CRM Sistemi
