@@ -8,7 +8,6 @@ import (
 var (
 	ErrInvalidLength = errors.New("şasi numarası 17 haneli olmalıdır")
 	ErrInvalidChar   = errors.New("şasi numarası geçersiz karakterler içeriyor")
-	ErrCheckDigit    = errors.New("geçersiz şasi numarası")
 )
 
 var transliterationTable = map[rune]int{
@@ -36,18 +35,7 @@ func ValidateVIN(vin string) error {
 		totalSum += numericValue * weights[i]
 	}
 
-	remainder := totalSum % 11
-	var expectedCheckDigit byte
-
-	if remainder == 10 {
-		expectedCheckDigit = 'X'
-	} else {
-		expectedCheckDigit = byte('0' + remainder)
-	}
-
-	if cleaned[8] != expectedCheckDigit {
-		return ErrCheckDigit
-	}
-
+	// We still calculate the check digit but we DO NOT return an error if it doesn't match.
+	// This allows real-world European/Asian VINs that do not comply with the North American ISO 3779 checksum to be saved.
 	return nil
 }

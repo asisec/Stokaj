@@ -1,12 +1,17 @@
-export function validateVIN(vin: string): { isValid: boolean; message: string } {
+export type VinValidationResult = {
+  status: 'valid' | 'partial' | 'invalid';
+  message: string;
+};
+
+export function validateVIN(vin: string): VinValidationResult {
   if (!vin || vin.trim() === "") {
-    return { isValid: false, message: "" };
+    return { status: 'invalid', message: "" };
   }
 
   const cleanedVin = vin.trim().toUpperCase();
 
   if (cleanedVin.length !== 17) {
-    return { isValid: false, message: "Şasi numarası tam olarak 17 karakter olmalıdır." };
+    return { status: 'invalid', message: "Şasi numarası tam olarak 17 karakter olmalıdır." };
   }
 
   const TransliterationTable: Record<string, number> = {
@@ -25,7 +30,7 @@ export function validateVIN(vin: string): { isValid: boolean; message: string } 
 
     const numericValue = TransliterationTable[currentCharacter];
     if (numericValue === undefined) {
-      return { isValid: false, message: "Şasi numarası geçersiz karakterler içeriyor." };
+      return { status: 'invalid', message: "Şasi numarası geçersiz karakterler içeriyor." };
     }
 
     totalSum += numericValue * Weights[i];
@@ -35,8 +40,8 @@ export function validateVIN(vin: string): { isValid: boolean; message: string } 
   const expectedCheckDigit = remainder === 10 ? 'X' : remainder.toString()[0];
 
   if (cleanedVin[8] === expectedCheckDigit) {
-    return { isValid: true, message: "Geçerli bir şasi numarası." };
+    return { status: 'valid', message: "Geçerli bir şasi numarası (Tam Doğrulama)." };
   } else {
-    return { isValid: false, message: "Geçersiz şasi numarası." };
+    return { status: 'partial', message: "Geçerli şasi numarası (Ancak doğrulama basamağı uymuyor)." };
   }
 }
