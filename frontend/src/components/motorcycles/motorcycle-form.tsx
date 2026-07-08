@@ -32,6 +32,19 @@ const initialFormState = {
   purchase_price: 0,
 };
 
+const SUGGESTED_BRANDS = ["LEKSAS", "APACHI", "REBAT", "ZLIN", "ARORA"];
+
+function getBrandSuggestion(input: string): string | null {
+  if (!input) return null;
+  const upperInput = input.toUpperCase();
+  for (const brand of SUGGESTED_BRANDS) {
+    if (brand.startsWith(upperInput) && brand !== upperInput) {
+      return brand;
+    }
+  }
+  return null;
+}
+
 export function MotorcycleForm({
   open,
   onOpenChange,
@@ -85,10 +98,14 @@ export function MotorcycleForm({
     if (field === "chassis_number" && typeof value === "string") {
       value = value.toUpperCase();
     }
+    if (field === "brand" && typeof value === "string") {
+      value = value.toUpperCase();
+    }
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   const vinValidation = validateVIN(formData.chassis_number);
+  const suggestedBrand = getBrandSuggestion(formData.brand);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -146,13 +163,27 @@ export function MotorcycleForm({
               <Label htmlFor="brand" className="text-zinc-400 text-sm">
                 Marka
               </Label>
-              <Input
-                id="brand"
-                value={formData.brand}
-                onChange={(e) => handleChange("brand", e.target.value)}
-                className="bg-zinc-900/50 border-zinc-800 text-zinc-200 focus:border-blue-500/50 transition-colors"
-                required
-              />
+              <div className="relative flex items-center">
+                <Input
+                  id="brand"
+                  value={formData.brand}
+                  onChange={(e) => handleChange("brand", e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Tab" && suggestedBrand) {
+                      e.preventDefault();
+                      handleChange("brand", suggestedBrand);
+                    }
+                  }}
+                  className="bg-zinc-900/50 border-zinc-800 text-zinc-200 focus:border-blue-500/50 transition-colors"
+                  required
+                />
+                {suggestedBrand && (
+                  <div className="absolute inset-0 pointer-events-none flex items-center px-3 text-sm border border-transparent">
+                    <span className="text-transparent">{formData.brand}</span>
+                    <span className="text-zinc-500/50">{suggestedBrand.slice(formData.brand.length)}</span>
+                  </div>
+                )}
+              </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="model" className="text-zinc-400 text-sm">
