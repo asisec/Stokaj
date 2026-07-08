@@ -112,7 +112,7 @@ export function MotorcycleForm({
                   ? vinValidation.status === "valid"
                     ? "border-green-500/50 focus:border-green-500/50"
                     : vinValidation.status === "partial"
-                    ? "border-orange-500/50 focus:border-orange-500/50"
+                    ? "border-blue-500/50 focus:border-blue-500/50"
                     : "border-red-500/50 focus:border-red-500/50"
                   : "border-zinc-800"
               }`}
@@ -125,14 +125,14 @@ export function MotorcycleForm({
                   vinValidation.status === "valid"
                     ? "text-green-500"
                     : vinValidation.status === "partial"
-                    ? "text-orange-500"
+                    ? "text-blue-500"
                     : "text-red-500"
                 }`}
               >
                 {vinValidation.status === "valid" ? (
                   <CheckCircle2 className="h-3.5 w-3.5" />
                 ) : vinValidation.status === "partial" ? (
-                  <CheckCircle2 className="h-3.5 w-3.5" />
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
                 ) : (
                   <XCircle className="h-3.5 w-3.5" />
                 )}
