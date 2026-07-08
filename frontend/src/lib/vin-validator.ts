@@ -5,13 +5,17 @@ export type VinValidationResult = {
 
 export function validateVIN(vin: string): VinValidationResult {
   if (!vin || vin.trim() === "") {
-    return { status: 'invalid', message: "" };
+    return { status: 'invalid', message: "Şasi numarası boş bırakılamaz." };
   }
 
   const cleanedVin = vin.trim().toUpperCase();
 
-  if (cleanedVin.length !== 17) {
-    return { status: 'invalid', message: "Şasi numarası tam olarak 17 karakter olmalıdır." };
+  if (cleanedVin.length < 17) {
+    return { status: 'partial', message: "Şasi numarası yazılıyor..." };
+  }
+
+  if (cleanedVin.length > 17) {
+    return { status: 'invalid', message: "Şasi numarası 17 karakterden uzun olamaz." };
   }
 
   const TransliterationTable: Record<string, number> = {
@@ -22,13 +26,12 @@ export function validateVIN(vin: string): VinValidationResult {
   };
 
   const Weights = [8, 7, 6, 5, 4, 3, 2, 10, 0, 9, 8, 7, 6, 5, 4, 3, 2];
-
   let totalSum = 0;
 
   for (let i = 0; i < 17; i++) {
     const currentCharacter = cleanedVin[i];
-
     const numericValue = TransliterationTable[currentCharacter];
+
     if (numericValue === undefined) {
       return { status: 'invalid', message: "Şasi numarası geçersiz karakterler içeriyor." };
     }
@@ -37,11 +40,11 @@ export function validateVIN(vin: string): VinValidationResult {
   }
 
   const remainder = totalSum % 11;
-  const expectedCheckDigit = remainder === 10 ? 'X' : remainder.toString()[0];
+  const expectedCheckDigit = remainder === 10 ? 'X' : remainder.toString();
 
-  if (cleanedVin[8] === expectedCheckDigit) {
-    return { status: 'valid', message: "Geçerli şasi numarası." };
-  } else {
-    return { status: 'valid', message: "Geçerli şasi numarası." };
+  if (cleanedVin[8] !== expectedCheckDigit) {
+    return { status: 'invalid', message: "Geçersiz şasi numarası kontrol basamağı uyuşmuyor." };
   }
+
+  return { status: 'valid', message: "Şasi numarası başarıyla doğrulandı." };
 }
