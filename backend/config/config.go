@@ -8,6 +8,7 @@ type Config struct {
 	DBUser     string
 	DBPassword string
 	DBName     string
+	DBSSLMode  string
 	Port       string
 }
 
@@ -18,6 +19,7 @@ func Load() Config {
 		DBUser:     getEnv("DB_USER", "stokaj"),
 		DBPassword: getEnv("DB_PASSWORD", "stokaj_secret_2024"),
 		DBName:     getEnv("DB_NAME", "stokaj_db"),
+		DBSSLMode:  getEnv("DB_SSLMODE", "disable"),
 		Port:       getEnv("PORT", "8080"),
 	}
 }
