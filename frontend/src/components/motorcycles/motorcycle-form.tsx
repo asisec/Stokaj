@@ -13,7 +13,8 @@ import { Input } from "@/components/ui/input";
 import { CurrencyInput } from "@/components/ui/currency-input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Loader2, CheckCircle2, XCircle } from "lucide-react";
+import { validateVIN } from "@/lib/vin-validator";
 
 interface MotorcycleFormProps {
   open: boolean;
@@ -81,8 +82,13 @@ export function MotorcycleForm({
   };
 
   const handleChange = (field: string, value: string | number) => {
+    if (field === "chassis_number" && typeof value === "string") {
+      value = value.toUpperCase();
+    }
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
+
+  const vinValidation = validateVIN(formData.chassis_number);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -101,9 +107,30 @@ export function MotorcycleForm({
               id="chassis_number"
               value={formData.chassis_number}
               onChange={(e) => handleChange("chassis_number", e.target.value)}
-              className="bg-zinc-900/50 border-zinc-800 text-zinc-200 focus:border-blue-500/50 transition-colors"
+              className={`bg-zinc-900/50 text-zinc-200 transition-colors focus:border-blue-500/50 ${
+                formData.chassis_number.length > 0
+                  ? vinValidation.isValid
+                    ? "border-green-500/50 focus:border-green-500/50"
+                    : "border-red-500/50 focus:border-red-500/50"
+                  : "border-zinc-800"
+              }`}
               required
+              maxLength={17}
             />
+            {formData.chassis_number.length > 0 && (
+              <div
+                className={`flex items-center gap-1.5 text-xs mt-1.5 ${
+                  vinValidation.isValid ? "text-green-500" : "text-red-500"
+                }`}
+              >
+                {vinValidation.isValid ? (
+                  <CheckCircle2 className="h-3.5 w-3.5" />
+                ) : (
+                  <XCircle className="h-3.5 w-3.5" />
+                )}
+                <span>{vinValidation.message}</span>
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
