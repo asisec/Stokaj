@@ -42,6 +42,7 @@ import {
   Pencil,
   Trash2,
   ArrowUpDown,
+  QrCode,
 } from "lucide-react";
 
 const formatCurrency = (value: number) =>
@@ -53,6 +54,7 @@ interface MotorcycleTableProps {
   motorcycles: Motorcycle[];
   onEdit: (motorcycle: Motorcycle) => void;
   onDelete: (id: number) => void;
+  onShowQR: (motorcycle: Motorcycle) => void;
   loading: boolean;
 }
 
@@ -60,6 +62,7 @@ export function MotorcycleTable({
   motorcycles,
   onEdit,
   onDelete,
+  onShowQR,
   loading,
 }: MotorcycleTableProps) {
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -221,36 +224,47 @@ export function MotorcycleTable({
         id: "actions",
         header: () => <span className="text-zinc-400">İşlemler</span>,
         cell: ({ row }) => (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 text-zinc-400 hover:text-zinc-200"
-              >
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="end"
-              className="bg-zinc-900 border-zinc-800"
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => onShowQR(row.original)}
+              className="h-8 w-8 text-blue-400 hover:text-blue-300 hover:bg-blue-500/10"
+              title="QR Kod Göster"
             >
-              <DropdownMenuItem
-                onClick={() => onEdit(row.original)}
-                className="text-zinc-300 focus:bg-zinc-800 focus:text-zinc-100 cursor-pointer"
+              <QrCode className="h-4 w-4" />
+            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-zinc-400 hover:text-zinc-200"
+                >
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="end"
+                className="bg-zinc-900 border-zinc-800"
               >
-                <Pencil className="mr-2 h-4 w-4" />
-                Düzenle
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => onDelete(row.original.id)}
-                className="text-red-400 focus:bg-red-500/10 focus:text-red-300 cursor-pointer"
-              >
-                <Trash2 className="mr-2 h-4 w-4" />
-                Sil
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+                <DropdownMenuItem
+                  onClick={() => onEdit(row.original)}
+                  className="text-zinc-300 focus:bg-zinc-800 focus:text-zinc-100 cursor-pointer"
+                >
+                  <Pencil className="mr-2 h-4 w-4" />
+                  Düzenle
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => onDelete(row.original.id)}
+                  className="text-red-400 focus:bg-red-500/10 focus:text-red-300 cursor-pointer"
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Sil
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         ),
       },
     ],
