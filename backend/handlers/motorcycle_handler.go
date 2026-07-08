@@ -40,6 +40,18 @@ func GetMotorcycle(c *gin.Context) {
 	c.JSON(http.StatusOK, motorcycle)
 }
 
+func GetPublicMotorcycleByChassis(c *gin.Context) {
+	var motorcycle models.Motorcycle
+	if err := database.DB.Where("chassis_number = ?", c.Param("chassis")).First(&motorcycle).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Motosiklet bulunamadı"})
+		return
+	}
+	// Hide sensitive information before sending public data
+	motorcycle.PurchasePrice = 0
+	
+	c.JSON(http.StatusOK, motorcycle)
+}
+
 func CreateMotorcycle(c *gin.Context) {
 	var motorcycle models.Motorcycle
 	if err := c.ShouldBindJSON(&motorcycle); err != nil {

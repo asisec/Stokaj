@@ -6,15 +6,18 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { MotorcycleTable } from "@/components/motorcycles/motorcycle-table";
 import { MotorcycleForm } from "@/components/motorcycles/motorcycle-form";
+import { QRCodeModal } from "@/components/motorcycles/qr-code-modal";
 import { toast } from "sonner";
 
 export default function MotorcyclesPage() {
   const [motorcycles, setMotorcycles] = useState<Motorcycle[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [qrDialogOpen, setQrDialogOpen] = useState(false);
   const [editingMotorcycle, setEditingMotorcycle] = useState<Motorcycle | null>(
     null
   );
+  const [qrMotorcycle, setQrMotorcycle] = useState<Motorcycle | null>(null);
 
   const fetchMotorcycles = useCallback(() => {
     setLoading(true);
@@ -34,6 +37,11 @@ export default function MotorcyclesPage() {
     setDialogOpen(true);
   };
 
+  const handleShowQR = (motorcycle: Motorcycle) => {
+    setQrMotorcycle(motorcycle);
+    setQrDialogOpen(true);
+  };
+
   const handleDelete = async (id: number) => {
     if (!window.confirm("Bu motosikleti silmek istediğinizden emin misiniz?")) {
       return;
@@ -51,6 +59,13 @@ export default function MotorcyclesPage() {
     setDialogOpen(open);
     if (!open) {
       setEditingMotorcycle(null);
+    }
+  };
+
+  const handleQrDialogChange = (open: boolean) => {
+    setQrDialogOpen(open);
+    if (!open) {
+      setQrMotorcycle(null);
     }
   };
 
@@ -78,6 +93,7 @@ export default function MotorcyclesPage() {
         motorcycles={motorcycles}
         onEdit={handleEdit}
         onDelete={handleDelete}
+        onShowQR={handleShowQR}
         loading={loading}
       />
 
@@ -86,6 +102,12 @@ export default function MotorcyclesPage() {
         onOpenChange={handleDialogChange}
         motorcycle={editingMotorcycle}
         onSuccess={fetchMotorcycles}
+      />
+
+      <QRCodeModal
+        open={qrDialogOpen}
+        onOpenChange={handleQrDialogChange}
+        motorcycle={qrMotorcycle}
       />
     </div>
   );
