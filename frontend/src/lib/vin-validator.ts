@@ -40,8 +40,8 @@ export function validateVIN(vin: string): VinValidationResult {
   const expectedCheckDigit = remainder === 10 ? 'X' : remainder.toString()[0];
 
   if (cleanedVin[8] === expectedCheckDigit) {
-    return { status: 'valid', message: "Geçerli bir şasi numarası (Tam Doğrulama)." };
+    return { status: 'valid', message: "Geçerli şasi numarası." };
   } else {
-    return { status: 'partial', message: "Geçerli şasi numarası (Ancak doğrulama basamağı uymuyor)." };
+    return { status: 'valid', message: "Geçerli şasi numarası." };
   }
 }
