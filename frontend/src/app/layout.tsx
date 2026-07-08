@@ -20,18 +20,20 @@ export default function RootLayout({
   const pathname = usePathname()
   const router = useRouter()
   const isLoginPage = pathname === "/login"
+  const isPublicPage = pathname.startsWith("/m/")
+  const isStandalonePage = isLoginPage || isPublicPage
   const [checked, setChecked] = useState(false)
 
   useEffect(() => {
-    if (!isLoginPage && !isLoggedIn()) {
+    if (!isStandalonePage && !isLoggedIn()) {
       router.replace("/login")
     } else {
       setChecked(true)
     }
-  }, [pathname, isLoginPage, router])
+  }, [pathname, isStandalonePage, router])
 
   // While checking auth, show nothing to avoid flash
-  if (!isLoginPage && !checked) {
+  if (!isStandalonePage && !checked) {
     return (
       <html lang="tr" className="dark" suppressHydrationWarning>
         <body className={inter.className}>
@@ -49,8 +51,8 @@ export default function RootLayout({
       </head>
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="dark" disableTransitionOnChange>
-          {isLoginPage ? (
-            // Login page: full screen, no sidebar/header
+          {isStandalonePage ? (
+            // Standalone pages: full screen, no sidebar/header
             <>
               {children}
               <Toaster richColors position="top-right" />
@@ -67,7 +69,7 @@ export default function RootLayout({
               </div>
             </div>
           )}
-          {!isLoginPage && <Toaster richColors position="top-right" />}
+          {!isStandalonePage && <Toaster richColors position="top-right" />}
         </ThemeProvider>
       </body>
     </html>
