@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { Bike, Eye, EyeOff, Loader2, Lock, User } from "lucide-react"
 import { setToken } from "@/lib/auth"
 
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? ""
 export default function LoginPage() {
   const router = useRouter()
   const [username, setUsername] = useState("")
@@ -19,7 +20,7 @@ export default function LoginPage() {
     setLoading(true)
 
     try {
-      const res = await fetch(`/api/auth/login`, {
+      const res = await fetch(`${BASE_URL}/api/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
