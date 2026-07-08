@@ -103,15 +103,6 @@ export interface DashboardStats {
   top_brands: BrandStat[]
 }
 
-export interface SMTPSettings {
-  smtp_host: string
-  smtp_port: string
-  smtp_username: string
-  smtp_password: string
-  recipient_email: string
-  is_configured?: boolean
-}
-
 export const api = {
   getMotorcycles: (search?: string, status?: string) => {
     const params = new URLSearchParams()
@@ -153,20 +144,5 @@ export const api = {
   deleteSale: (id: number) => request<void>(`/api/sales/${id}`, { method: "DELETE" }),
 
   getDashboardStats: () => request<DashboardStats>("/api/dashboard/stats"),
-
-  getSettings: () => request<SMTPSettings>("/api/settings"),
-  saveSettings: (data: SMTPSettings) => request<{ message: string }>("/api/settings", { method: "POST", body: JSON.stringify(data) }),
-  restoreDatabase: (file: File) => {
-    const formData = new FormData()
-    formData.append("file", file)
-    return fetch(`${API_URL}/api/settings/restore`, { method: "POST", body: formData })
-      .then(async (res) => {
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({ error: "Bir hata oluştu" }))
-          throw new Error(err.error || "Bir hata oluştu")
-        }
-        return res.json() as Promise<{ message: string }>
-      })
-  },
 }
 

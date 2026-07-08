@@ -43,9 +43,5 @@ func main() {
 
 	api.GET("/dashboard/stats", handlers.GetDashboardStats)
 
-	api.GET("/settings", handlers.GetSettings)
-	api.POST("/settings", handlers.SaveSettings)
-	api.POST("/settings/restore", handlers.RestoreDatabase)
-
 	r.Run(":" + cfg.Port)
 }

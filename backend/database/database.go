@@ -30,7 +30,6 @@ func Connect(cfg config.Config) {
 		&models.Sale{},
 		&models.SalePayment{},
 		&models.SaleItem{},
-		&models.SmtpSetting{},
 	)
 
 	DB = db

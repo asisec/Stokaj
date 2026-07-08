@@ -52,10 +52,6 @@ func init() {
 	apiGroup.DELETE("/sales/:id", handlers.DeleteSale)
 
 	apiGroup.GET("/dashboard/stats", handlers.GetDashboardStats)
-
-	apiGroup.GET("/settings", handlers.GetSettings)
-	apiGroup.POST("/settings", handlers.SaveSettings)
-	apiGroup.POST("/settings/restore", handlers.RestoreDatabase)
 }
 
 // Handler is the entrypoint for Vercel Serverless

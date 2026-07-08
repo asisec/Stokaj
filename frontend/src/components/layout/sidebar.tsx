@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Bike, LayoutDashboard, Wrench, Users, ShoppingCart, Settings } from "lucide-react"
+import { Bike, LayoutDashboard, Wrench, Users, ShoppingCart } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const navigationItems = [
@@ -47,10 +47,6 @@ export function Sidebar() {
       <nav className="flex-1 space-y-1 p-3">
         {navigationItems.map((item) => navLink(item.href, item.label, item.icon))}
       </nav>
-
-      <div className="p-3 border-t border-sidebar-border">
-        {navLink("/settings", "Ayarlar", Settings)}
-      </div>
     </aside>
   )
 }
