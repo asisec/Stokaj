@@ -1,10 +1,30 @@
+import { getToken, removeToken } from "./auth"
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
+  const token = getToken()
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    ...(options?.headers as Record<string, string>),
+  }
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`
+  }
+
   const res = await fetch(`${API_URL}${path}`, {
-    headers: { "Content-Type": "application/json", ...options?.headers },
     ...options,
+    headers,
   })
+
+  if (res.status === 401) {
+    removeToken()
+    if (typeof window !== "undefined") {
+      window.location.href = "/login"
+    }
+    throw new Error("Oturum süresi doldu, lütfen tekrar giriş yapın")
+  }
+
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: "Bir hata oluştu" }))
     throw new Error(err.error || "Bir hata oluştu")
