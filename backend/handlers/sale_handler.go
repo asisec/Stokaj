@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"stokaj-backend/config"
+
 	"stokaj-backend/database"
 	"stokaj-backend/models"
 
@@ -130,8 +130,7 @@ func CreateSale(c *gin.Context) {
 		tx.Preload("Customer").Preload("Items").Preload("Payments").First(&sale, sale.ID)
 		c.JSON(http.StatusCreated, sale)
 
-		cfg := config.Load()
-		go TakeBackupAndEmail(cfg)
+
 
 		return nil
 	})
