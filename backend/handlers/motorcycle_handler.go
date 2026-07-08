@@ -5,6 +5,7 @@ import (
 
 	"stokaj-backend/database"
 	"stokaj-backend/models"
+	"stokaj-backend/utils"
 
 	"github.com/gin-gonic/gin"
 )
@@ -46,6 +47,11 @@ func CreateMotorcycle(c *gin.Context) {
 		return
 	}
 
+	if err := utils.ValidateVIN(motorcycle.ChassisNumber); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
 	if err := database.DB.Create(&motorcycle).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Motosiklet kaydedilirken bir hata oluştu"})
 		return
@@ -63,6 +69,11 @@ func UpdateMotorcycle(c *gin.Context) {
 
 	if err := c.ShouldBindJSON(&motorcycle); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Geçersiz veri formatı"})
+		return
+	}
+
+	if err := utils.ValidateVIN(motorcycle.ChassisNumber); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
