@@ -28,30 +28,37 @@ func init() {
 	
 	apiGroup := app.Group("/api")
 
-	apiGroup.GET("/motorcycles", handlers.GetMotorcycles)
-	apiGroup.GET("/motorcycles/:id", handlers.GetMotorcycle)
-	apiGroup.POST("/motorcycles", handlers.CreateMotorcycle)
-	apiGroup.PUT("/motorcycles/:id", handlers.UpdateMotorcycle)
-	apiGroup.DELETE("/motorcycles/:id", handlers.DeleteMotorcycle)
+	// Public: login endpoint
+	apiGroup.POST("/login", handlers.Login)
 
-	apiGroup.GET("/spare-parts", handlers.GetSpareParts)
-	apiGroup.GET("/spare-parts/:id", handlers.GetSparePart)
-	apiGroup.POST("/spare-parts", handlers.CreateSparePart)
-	apiGroup.PUT("/spare-parts/:id", handlers.UpdateSparePart)
-	apiGroup.DELETE("/spare-parts/:id", handlers.DeleteSparePart)
+	// Protected: all other routes require valid JWT
+	protected := apiGroup.Group("/")
+	protected.Use(middleware.RequireAuth())
 
-	apiGroup.GET("/customers", handlers.GetCustomers)
-	apiGroup.GET("/customers/:id", handlers.GetCustomer)
-	apiGroup.POST("/customers", handlers.CreateCustomer)
-	apiGroup.PUT("/customers/:id", handlers.UpdateCustomer)
-	apiGroup.DELETE("/customers/:id", handlers.DeleteCustomer)
+	protected.GET("/motorcycles", handlers.GetMotorcycles)
+	protected.GET("/motorcycles/:id", handlers.GetMotorcycle)
+	protected.POST("/motorcycles", handlers.CreateMotorcycle)
+	protected.PUT("/motorcycles/:id", handlers.UpdateMotorcycle)
+	protected.DELETE("/motorcycles/:id", handlers.DeleteMotorcycle)
 
-	apiGroup.GET("/sales", handlers.GetSales)
-	apiGroup.GET("/sales/:id", handlers.GetSale)
-	apiGroup.POST("/sales", handlers.CreateSale)
-	apiGroup.DELETE("/sales/:id", handlers.DeleteSale)
+	protected.GET("/spare-parts", handlers.GetSpareParts)
+	protected.GET("/spare-parts/:id", handlers.GetSparePart)
+	protected.POST("/spare-parts", handlers.CreateSparePart)
+	protected.PUT("/spare-parts/:id", handlers.UpdateSparePart)
+	protected.DELETE("/spare-parts/:id", handlers.DeleteSparePart)
 
-	apiGroup.GET("/dashboard/stats", handlers.GetDashboardStats)
+	protected.GET("/customers", handlers.GetCustomers)
+	protected.GET("/customers/:id", handlers.GetCustomer)
+	protected.POST("/customers", handlers.CreateCustomer)
+	protected.PUT("/customers/:id", handlers.UpdateCustomer)
+	protected.DELETE("/customers/:id", handlers.DeleteCustomer)
+
+	protected.GET("/sales", handlers.GetSales)
+	protected.GET("/sales/:id", handlers.GetSale)
+	protected.POST("/sales", handlers.CreateSale)
+	protected.DELETE("/sales/:id", handlers.DeleteSale)
+
+	protected.GET("/dashboard/stats", handlers.GetDashboardStats)
 }
 
 // Handler is the entrypoint for Vercel Serverless
