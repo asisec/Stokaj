@@ -37,44 +37,47 @@ func init() {
 	// Typically, Vercel preserves the rewritten path if it's a proxy.
 	// But actually the Vercel Go runtime will see the original path "/api/backend/api/motorcycles"
 	// OR "/api/motorcycles" depending on rewrite.
-	// Let's mount both just in case, or just mount `/api` because the rewrite sends it to the service.
-	
 	apiGroup := app.Group("/api")
+	vercelApiGroup := app.Group("/api/backend/api")
 
-	// Public: login endpoint
-	apiGroup.POST("/login", handlers.Login)
+	setupRoutes := func(g *gin.RouterGroup) {
+		g.POST("/login", handlers.Login)
 
-	// Protected: all other routes require valid JWT
-	protected := apiGroup.Group("/")
-	protected.Use(middleware.RequireAuth())
+		protected := g.Group("/")
+		protected.Use(middleware.RequireAuth())
 
-	protected.GET("/motorcycles", handlers.GetMotorcycles)
-	protected.GET("/motorcycles/:id", handlers.GetMotorcycle)
-	protected.POST("/motorcycles", handlers.CreateMotorcycle)
-	protected.PUT("/motorcycles/:id", handlers.UpdateMotorcycle)
-	protected.DELETE("/motorcycles/:id", handlers.DeleteMotorcycle)
+		protected.GET("/motorcycles", handlers.GetMotorcycles)
+		protected.GET("/motorcycles/:id", handlers.GetMotorcycle)
+		protected.POST("/motorcycles", handlers.CreateMotorcycle)
+		protected.PUT("/motorcycles/:id", handlers.UpdateMotorcycle)
+		protected.DELETE("/motorcycles/:id", handlers.DeleteMotorcycle)
 
-	protected.GET("/spare-parts", handlers.GetSpareParts)
-	protected.GET("/spare-parts/:id", handlers.GetSparePart)
-	protected.POST("/spare-parts", handlers.CreateSparePart)
-	protected.PUT("/spare-parts/:id", handlers.UpdateSparePart)
-	protected.DELETE("/spare-parts/:id", handlers.DeleteSparePart)
+		protected.GET("/spare-parts", handlers.GetSpareParts)
+		protected.GET("/spare-parts/:id", handlers.GetSparePart)
+		protected.POST("/spare-parts", handlers.CreateSparePart)
+		protected.PUT("/spare-parts/:id", handlers.UpdateSparePart)
+		protected.DELETE("/spare-parts/:id", handlers.DeleteSparePart)
 
-	protected.GET("/customers", handlers.GetCustomers)
-	protected.GET("/customers/:id", handlers.GetCustomer)
-	protected.POST("/customers", handlers.CreateCustomer)
-	protected.PUT("/customers/:id", handlers.UpdateCustomer)
-	protected.DELETE("/customers/:id", handlers.DeleteCustomer)
+		protected.GET("/customers", handlers.GetCustomers)
+		protected.GET("/customers/:id", handlers.GetCustomer)
+		protected.POST("/customers", handlers.CreateCustomer)
+		protected.PUT("/customers/:id", handlers.UpdateCustomer)
+		protected.DELETE("/customers/:id", handlers.DeleteCustomer)
 
-	protected.GET("/sales", handlers.GetSales)
-	protected.GET("/sales/:id", handlers.GetSale)
-	protected.POST("/sales", handlers.CreateSale)
-	protected.DELETE("/sales/:id", handlers.DeleteSale)
+		protected.GET("/sales", handlers.GetSales)
+		protected.GET("/sales/:id", handlers.GetSale)
+		protected.POST("/sales", handlers.CreateSale)
+		protected.DELETE("/sales/:id", handlers.DeleteSale)
 
-	protected.GET("/dashboard/stats", handlers.GetDashboardStats)
+		protected.GET("/dashboard/stats", handlers.GetDashboardStats)
+	}
+
+	setupRoutes(apiGroup)
+	setupRoutes(vercelApiGroup)
 }
 
 // Handler is the entrypoint for Vercel Serverless
 func Handler(w http.ResponseWriter, r *http.Request) {
 	app.ServeHTTP(w, r)
 }
+
