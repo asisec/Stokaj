@@ -17,7 +17,7 @@ export function validateVIN(vin: string): VinValidationResult {
   }
 
   if (/[OQ]/.test(cleanedVin) || cleanedVin.includes('I')) {
-    return { status: 'invalid', message: "Şasi numarasında I, O ve Q harfleri bulunamaz." };
+    return { status: 'invalid', message: "Yanlış şasi numarası girdiniz." };
   }
 
   return { status: 'valid', message: "Geçerli bir şasi numarası." };

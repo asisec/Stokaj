@@ -7,7 +7,7 @@ import (
 
 var (
 	ErrInvalidLength = errors.New("şasi numarası en fazla 17 haneli olmalıdır")
-	ErrInvalidChar   = errors.New("şasi numarasında I, O ve Q harfleri bulunamaz")
+	ErrInvalidChar   = errors.New("yanlış şasi numarası girdiniz")
 )
 
 func ValidateVIN(vin string) error {
