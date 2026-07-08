@@ -2,8 +2,9 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Bike, LayoutDashboard, Wrench, Users, ShoppingCart } from "lucide-react"
+import { Bike, LayoutDashboard, Wrench, Users, ShoppingCart, LogOut } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { removeToken } from "@/lib/auth"
 
 const navigationItems = [
   { label: "Gösterge Paneli", href: "/", icon: LayoutDashboard },
@@ -47,6 +48,19 @@ export function Sidebar() {
       <nav className="flex-1 space-y-1 p-3">
         {navigationItems.map((item) => navLink(item.href, item.label, item.icon))}
       </nav>
+
+      <div className="p-3 border-t border-sidebar-border">
+        <button
+          onClick={() => {
+            removeToken()
+            window.location.href = "/login"
+          }}
+          className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-red-500 hover:bg-red-500/10 transition-all duration-200"
+        >
+          <LogOut className="h-5 w-5" />
+          Çıkış Yap
+        </button>
+      </div>
     </aside>
   )
 }
