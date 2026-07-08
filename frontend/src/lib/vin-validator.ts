@@ -8,7 +8,9 @@ export function validateVIN(vin: string): VinValidationResult {
     return { status: 'invalid', message: "Şasi numarası boş bırakılamaz." };
   }
 
-  const cleanedVin = vin.trim().toUpperCase();
+  let cleanedVin = vin.trim();
+  cleanedVin = cleanedVin.replace(/i/g, "I").replace(/ı/g, "I");
+  cleanedVin = cleanedVin.toUpperCase();
 
   if (cleanedVin.length < 17) {
     return { status: 'partial', message: "Şasi numarası yazılıyor..." };

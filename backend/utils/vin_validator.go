@@ -21,14 +21,19 @@ var transliterationTable = map[rune]int{
 var weights = [17]int{8, 7, 6, 5, 4, 3, 2, 10, 0, 9, 8, 7, 6, 5, 4, 3, 2}
 
 func ValidateVIN(vin string) error {
+	vin = strings.ReplaceAll(vin, "i", "I")
+	vin = strings.ReplaceAll(vin, "ı", "I")
+	
 	cleaned := strings.ToUpper(strings.TrimSpace(vin))
+	runes := []rune(cleaned)
 
-	if len(cleaned) != 17 {
+	if len(runes) != 17 {
 		return ErrInvalidLength
 	}
 
 	totalSum := 0
-	for i, char := range cleaned {
+	for i := 0; i < 17; i++ {
+		char := runes[i]
 		numericValue, exists := transliterationTable[char]
 		if !exists {
 			return ErrInvalidChar
@@ -45,7 +50,7 @@ func ValidateVIN(vin string) error {
 		expectedCheckDigit = byte('0' + remainder)
 	}
 
-	if cleaned[8] != expectedCheckDigit {
+	if byte(runes[8]) != expectedCheckDigit {
 		return ErrCheckDigit
 	}
 
