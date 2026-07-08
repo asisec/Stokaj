@@ -9,17 +9,21 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func main() {
-	cfg := config.Load()
-	dbErr := database.Connect(cfg)
+var dbInitialized bool
 
+func main() {
 	r := gin.Default()
 	r.Use(middleware.SetupCORS())
 
 	r.Use(func(c *gin.Context) {
-		if dbErr != nil {
-			c.AbortWithStatusJSON(500, gin.H{"error": "DB Hatası: " + dbErr.Error()})
-			return
+		if !dbInitialized {
+			cfg := config.Load()
+			err := database.Connect(cfg)
+			if err != nil {
+				c.AbortWithStatusJSON(500, gin.H{"error": "DB Hatası: " + err.Error()})
+				return
+			}
+			dbInitialized = true
 		}
 		c.Next()
 	})

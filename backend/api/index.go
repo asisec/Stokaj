@@ -11,20 +11,22 @@ import (
 )
 
 var app *gin.Engine
-var dbErr error
+var dbInitialized bool
 
 func init() {
-	cfg := config.Load()
-	dbErr = database.Connect(cfg)
-
 	app = gin.Default()
 	app.Use(middleware.SetupCORS())
 
-	// Add middleware to check DB connection
+	// Add middleware to check DB connection lazily
 	app.Use(func(c *gin.Context) {
-		if dbErr != nil {
-			c.AbortWithStatusJSON(500, gin.H{"error": "DB Hatası: " + dbErr.Error()})
-			return
+		if !dbInitialized {
+			cfg := config.Load()
+			err := database.Connect(cfg)
+			if err != nil {
+				c.AbortWithStatusJSON(500, gin.H{"error": "DB Hatası: " + err.Error()})
+				return
+			}
+			dbInitialized = true
 		}
 		c.Next()
 	})
