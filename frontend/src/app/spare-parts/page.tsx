@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { SparePartTable } from "@/components/spare-parts/spare-part-table";
 import { SparePartForm } from "@/components/spare-parts/spare-part-form";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
 
 export default function SparePartsPage() {
@@ -15,6 +16,8 @@ export default function SparePartsPage() {
   const [editingSparePart, setEditingSparePart] = useState<SparePart | null>(
     null
   );
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
 
   const fetchSpareParts = useCallback(() => {
     setLoading(true);
@@ -34,16 +37,21 @@ export default function SparePartsPage() {
     setDialogOpen(true);
   };
 
-  const handleDelete = async (id: number) => {
-    if (!window.confirm("Bu yedek parçayı silmek istediğinizden emin misiniz?")) {
-      return;
-    }
+  const handleDeleteClick = (id: number) => {
+    setDeletingId(id);
+    setConfirmOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (deletingId === null) return;
     try {
-      await api.deleteSparePart(id);
+      await api.deleteSparePart(deletingId);
       toast.success("Yedek parça başarıyla silindi");
       fetchSpareParts();
     } catch {
       toast.error("Yedek parça silinirken hata oluştu");
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -77,7 +85,7 @@ export default function SparePartsPage() {
       <SparePartTable
         spareParts={spareParts}
         onEdit={handleEdit}
-        onDelete={handleDelete}
+        onDelete={handleDeleteClick}
         loading={loading}
       />
 
@@ -86,6 +94,14 @@ export default function SparePartsPage() {
         onOpenChange={handleDialogChange}
         sparePart={editingSparePart}
         onSuccess={fetchSpareParts}
+      />
+
+      <ConfirmDialog
+        isOpen={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        onConfirm={handleConfirmDelete}
+        title="Yedek Parçayı Sil"
+        description="Bu yedek parçayı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz."
       />
     </div>
   );

@@ -55,7 +55,7 @@ export default function RootLayout({
             // Standalone pages: full screen, no sidebar/header
             <>
               {children}
-              <Toaster richColors position="top-right" />
+              <Toaster position="top-right" />
             </>
           ) : (
             // App pages: with sidebar and header
@@ -69,7 +69,7 @@ export default function RootLayout({
               </div>
             </div>
           )}
-          {!isStandalonePage && <Toaster richColors position="top-right" />}
+          {!isStandalonePage && <Toaster position="top-right" />}
         </ThemeProvider>
       </body>
     </html>

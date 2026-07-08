@@ -7,6 +7,7 @@ import { Plus } from "lucide-react";
 import { MotorcycleTable } from "@/components/motorcycles/motorcycle-table";
 import { MotorcycleForm } from "@/components/motorcycles/motorcycle-form";
 import { QRCodeModal } from "@/components/motorcycles/qr-code-modal";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
 
 export default function MotorcyclesPage() {
@@ -18,6 +19,8 @@ export default function MotorcyclesPage() {
     null
   );
   const [qrMotorcycle, setQrMotorcycle] = useState<Motorcycle | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
 
   const fetchMotorcycles = useCallback(() => {
     setLoading(true);
@@ -42,16 +45,21 @@ export default function MotorcyclesPage() {
     setQrDialogOpen(true);
   };
 
-  const handleDelete = async (id: number) => {
-    if (!window.confirm("Bu motosikleti silmek istediğinizden emin misiniz?")) {
-      return;
-    }
+  const handleDeleteClick = (id: number) => {
+    setDeletingId(id);
+    setConfirmOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (deletingId === null) return;
     try {
-      await api.deleteMotorcycle(id);
+      await api.deleteMotorcycle(deletingId);
       toast.success("Motosiklet başarıyla silindi");
       fetchMotorcycles();
     } catch {
       toast.error("Motosiklet silinirken hata oluştu");
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -92,7 +100,7 @@ export default function MotorcyclesPage() {
       <MotorcycleTable
         motorcycles={motorcycles}
         onEdit={handleEdit}
-        onDelete={handleDelete}
+        onDelete={handleDeleteClick}
         onShowQR={handleShowQR}
         loading={loading}
       />
@@ -108,6 +116,14 @@ export default function MotorcyclesPage() {
         open={qrDialogOpen}
         onOpenChange={handleQrDialogChange}
         motorcycle={qrMotorcycle}
+      />
+
+      <ConfirmDialog
+        isOpen={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        onConfirm={handleConfirmDelete}
+        title="Motosikleti Sil"
+        description="Bu motosikleti silmek istediğinizden emin misiniz? Bu işlem geri alınamaz."
       />
     </div>
   );

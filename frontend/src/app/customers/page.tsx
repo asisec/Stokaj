@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { CustomerTable } from "@/components/customers/customer-table";
 import { CustomerForm } from "@/components/customers/customer-form";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
 
 export default function CustomersPage() {
@@ -13,6 +14,8 @@ export default function CustomersPage() {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
 
   const fetchCustomers = useCallback(() => {
     setLoading(true);
@@ -32,16 +35,21 @@ export default function CustomersPage() {
     setDialogOpen(true);
   };
 
-  const handleDelete = async (id: number) => {
-    if (!window.confirm("Bu müşteriyi silmek istediğinizden emin misiniz?")) {
-      return;
-    }
+  const handleDeleteClick = (id: number) => {
+    setDeletingId(id);
+    setConfirmOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (deletingId === null) return;
     try {
-      await api.deleteCustomer(id);
+      await api.deleteCustomer(deletingId);
       toast.success("Müşteri başarıyla silindi");
       fetchCustomers();
     } catch {
       toast.error("Müşteri silinirken hata oluştu");
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -75,7 +83,7 @@ export default function CustomersPage() {
       <CustomerTable
         customers={customers}
         onEdit={handleEdit}
-        onDelete={handleDelete}
+        onDelete={handleDeleteClick}
         loading={loading}
       />
 
@@ -84,6 +92,14 @@ export default function CustomersPage() {
         onOpenChange={handleDialogChange}
         customer={editingCustomer}
         onSuccess={fetchCustomers}
+      />
+
+      <ConfirmDialog
+        isOpen={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        onConfirm={handleConfirmDelete}
+        title="Müşteriyi Sil"
+        description="Bu müşteriyi silmek istediğinizden emin misiniz? Bu işlem geri alınamaz."
       />
     </div>
   );
