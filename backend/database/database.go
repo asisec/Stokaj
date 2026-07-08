@@ -12,18 +12,19 @@ import (
 
 var DB *gorm.DB
 
-func Connect(cfg config.Config) {
+func Connect(cfg config.Config) error {
 	dsn := fmt.Sprintf(
 		"host=%s user=%s password=%s dbname=%s port=%s sslmode=%s",
 		cfg.DBHost, cfg.DBUser, cfg.DBPassword, cfg.DBName, cfg.DBPort, cfg.DBSSLMode,
 	)
 
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	var err error
+	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
-		panic("Veritabanına bağlanılamadı: " + err.Error())
+		return fmt.Errorf("Veritabanına bağlanılamadı: %v", err)
 	}
 
-	db.AutoMigrate(
+	err = DB.AutoMigrate(
 		&models.Motorcycle{},
 		&models.SparePart{},
 		&models.Customer{},
@@ -31,6 +32,9 @@ func Connect(cfg config.Config) {
 		&models.SalePayment{},
 		&models.SaleItem{},
 	)
+	if err != nil {
+		return fmt.Errorf("Veritabanı tabloları oluşturulamadı: %v", err)
+	}
 
-	DB = db
+	return nil
 }

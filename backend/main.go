@@ -11,10 +11,19 @@ import (
 
 func main() {
 	cfg := config.Load()
-	database.Connect(cfg)
+	dbErr := database.Connect(cfg)
 
 	r := gin.Default()
 	r.Use(middleware.SetupCORS())
+
+	r.Use(func(c *gin.Context) {
+		if dbErr != nil {
+			c.AbortWithStatusJSON(500, gin.H{"error": "DB Hatası: " + dbErr.Error()})
+			return
+		}
+		c.Next()
+	})
+
 
 	api := r.Group("/api")
 

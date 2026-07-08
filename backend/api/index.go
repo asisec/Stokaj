@@ -11,13 +11,24 @@ import (
 )
 
 var app *gin.Engine
+var dbErr error
 
 func init() {
 	cfg := config.Load()
-	database.Connect(cfg)
+	dbErr = database.Connect(cfg)
 
 	app = gin.Default()
 	app.Use(middleware.SetupCORS())
+
+	// Add middleware to check DB connection
+	app.Use(func(c *gin.Context) {
+		if dbErr != nil {
+			c.AbortWithStatusJSON(500, gin.H{"error": "DB Hatası: " + dbErr.Error()})
+			return
+		}
+		c.Next()
+	})
+
 
 	// Note: When deployed on Vercel with rewrites "/api/backend(/.*)?",
 	// the incoming request path might be stripped or not.

@@ -30,7 +30,7 @@ func Login(c *gin.Context) {
 	// Compare password with bcrypt hash from env
 	passwordHash := os.Getenv("ADMIN_PASSWORD_HASH")
 	if passwordHash == "" {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Sunucu yapılandırma hatası"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Sunucu yapılandırma hatası: ADMIN_PASSWORD_HASH eksik"})
 		return
 	}
 
@@ -42,7 +42,7 @@ func Login(c *gin.Context) {
 	// Generate JWT token
 	jwtSecret := os.Getenv("JWT_SECRET")
 	if jwtSecret == "" {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Sunucu yapılandırma hatası"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Sunucu yapılandırma hatası: JWT_SECRET eksik"})
 		return
 	}
 
