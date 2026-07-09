@@ -45,11 +45,10 @@ func GetDashboardStats(c *gin.Context) {
 
 	var revenueResult struct{ Total float64 }
 	database.DB.Model(&models.Sale{}).Select("COALESCE(SUM(total_amount), 0) as total").Scan(&revenueResult)
-	totalRevenue = revenueResult.Total
 
 	var totalCostResult struct{ Total float64 }
 	database.DB.Table("sale_items").Select("COALESCE(SUM(purchase_price * quantity), 0) as total").Scan(&totalCostResult)
-	
+
 	totalRevenue = revenueResult.Total - totalCostResult.Total
 
 	var recentSales []models.Sale
@@ -70,7 +69,7 @@ func GetDashboardStats(c *gin.Context) {
 		FROM sale_items si 
 		JOIN motorcycles m ON si.item_id = m.id 
 		WHERE si.item_type = 'motorcycle' 
-		GROUP BY m.brand 
+		GROUP BY m.brand `
 		ORDER BY count DESC 
 		LIMIT 5
 	`).Scan(&topBrands)
