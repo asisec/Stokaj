@@ -34,7 +34,6 @@ import {
   Plus,
   Trash2,
   AlertCircle,
-  CalendarClock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
