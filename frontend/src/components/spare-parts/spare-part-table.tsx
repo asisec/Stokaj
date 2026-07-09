@@ -45,11 +45,6 @@ import {
   AlertTriangle,
 } from "lucide-react";
 
-const formatCurrency = (value: number) =>
-  new Intl.NumberFormat("tr-TR", { style: "currency", currency: "TRY" }).format(
-    value
-  );
-
 interface SparePartTableProps {
   spareParts: SparePart[];
   onEdit: (sparePart: SparePart) => void;
