@@ -69,7 +69,7 @@ func GetDashboardStats(c *gin.Context) {
 		FROM sale_items si 
 		JOIN motorcycles m ON si.item_id = m.id 
 		WHERE si.item_type = 'motorcycle' 
-		GROUP BY m.brand `
+		GROUP BY m.brand 
 		ORDER BY count DESC 
 		LIMIT 5
 	`).Scan(&topBrands)
