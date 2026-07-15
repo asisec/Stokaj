@@ -121,6 +121,8 @@ export function MotorcycleForm({
   const uniqueColors = Array.from(new Set(existingMotorcycles.map((m) => m.color.toUpperCase())));
   const suggestedColor = getSuggestion(formData.color, uniqueColors);
 
+  const vinValidation = validateVIN(formData.chassis_number);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="bg-zinc-950 border-zinc-800 text-zinc-100 sm:max-w-[520px]">
