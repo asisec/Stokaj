@@ -21,6 +21,7 @@ interface MotorcycleFormProps {
   onOpenChange: (open: boolean) => void;
   motorcycle: Motorcycle | null;
   onSuccess: () => void;
+  existingMotorcycles?: Motorcycle[];
 }
 
 const initialFormState = {
@@ -32,24 +33,14 @@ const initialFormState = {
   purchase_price: 0,
 };
 
-const SUGGESTED_BRANDS = ["LEKSAS", "APACHI", "REBAT", "ZLIN", "ARORA", "LYM"];
 
-function getBrandSuggestion(input: string): string | null {
-  if (!input) return null;
-  const upperInput = input.toUpperCase();
-  for (const brand of SUGGESTED_BRANDS) {
-    if (brand.startsWith(upperInput) && brand !== upperInput) {
-      return brand;
-    }
-  }
-  return null;
-}
 
 export function MotorcycleForm({
   open,
   onOpenChange,
   motorcycle,
   onSuccess,
+  existingMotorcycles = [],
 }: MotorcycleFormProps) {
   const [formData, setFormData] = useState(initialFormState);
   const [submitting, setSubmitting] = useState(false);
@@ -107,8 +98,25 @@ export function MotorcycleForm({
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const vinValidation = validateVIN(formData.chassis_number);
-  const suggestedBrand = getBrandSuggestion(formData.brand);
+  const getSuggestion = (input: string, list: string[]) => {
+    if (!input) return null;
+    const upperInput = input.toUpperCase();
+    for (const item of list) {
+      if (item.startsWith(upperInput) && item !== upperInput) {
+        return item;
+      }
+    }
+    return null;
+  };
+
+  const uniqueBrands = Array.from(new Set(existingMotorcycles.map((m) => m.brand.toUpperCase())));
+  const suggestedBrand = getSuggestion(formData.brand, uniqueBrands);
+
+  const availableModels = existingMotorcycles
+    .filter((m) => !formData.brand || m.brand.toUpperCase() === formData.brand.toUpperCase())
+    .map((m) => m.model.toUpperCase());
+  const uniqueModels = Array.from(new Set(availableModels));
+  const suggestedModel = getSuggestion(formData.model, uniqueModels);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -192,13 +200,27 @@ export function MotorcycleForm({
               <Label htmlFor="model" className="text-zinc-400 text-sm">
                 Model
               </Label>
-              <Input
-                id="model"
-                value={formData.model}
-                onChange={(e) => handleChange("model", e.target.value)}
-                className="bg-zinc-900/50 border-zinc-800 text-zinc-200 focus:border-blue-500/50 transition-colors"
-                required
-              />
+              <div className="relative flex items-center">
+                <Input
+                  id="model"
+                  value={formData.model}
+                  onChange={(e) => handleChange("model", e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Tab" && suggestedModel) {
+                      e.preventDefault();
+                      handleChange("model", suggestedModel);
+                    }
+                  }}
+                  className="bg-zinc-900/50 border-zinc-800 text-zinc-200 focus:border-blue-500/50 transition-colors"
+                  required
+                />
+                {suggestedModel && (
+                  <div className="absolute inset-0 pointer-events-none flex items-center px-3 text-sm border border-transparent">
+                    <span className="text-transparent">{formData.model}</span>
+                    <span className="text-zinc-500/50">{suggestedModel.slice(formData.model.length)}</span>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 

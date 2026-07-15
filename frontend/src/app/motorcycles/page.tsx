@@ -110,6 +110,7 @@ export default function MotorcyclesPage() {
         onOpenChange={handleDialogChange}
         motorcycle={editingMotorcycle}
         onSuccess={fetchMotorcycles}
+        existingMotorcycles={motorcycles}
       />
 
       <QRCodeModal
