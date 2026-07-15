@@ -20,5 +20,9 @@ export function validateVIN(vin: string): VinValidationResult {
     return { status: 'invalid', message: "Yanlış şasi numarası girdiniz." };
   }
 
+  if (cleanedVin.length < 17) {
+    return { status: 'partial', message: `${17 - cleanedVin.length} hane daha girmelisiniz.` };
+  }
+
   return { status: 'valid', message: "Geçerli bir şasi numarası." };
 }
