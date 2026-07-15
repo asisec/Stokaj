@@ -49,14 +49,14 @@ export default function RootLayout({
         <title>Stokaj - Motosiklet Bayi Yönetimi</title>
         <meta name="description" content="Motosiklet bayi envanter ve satış yönetim sistemi" />
       </head>
-      <body className={inter.className}>
+      <body className={`${inter.className} overflow-hidden`}>
         <ThemeProvider attribute="class" defaultTheme="dark" disableTransitionOnChange>
           {isStandalonePage ? (
             // Standalone pages: full screen, no sidebar/header
-            <>
+            <div className="h-screen w-full overflow-y-auto">
               {children}
               <Toaster position="top-right" />
-            </>
+            </div>
           ) : (
             // App pages: with sidebar and header
             <div className="flex h-screen overflow-hidden">
