@@ -139,7 +139,10 @@ export function CustomerTable({
         accessorKey: "address",
         header: () => <span className="text-zinc-400">Adres</span>,
         cell: ({ row }) => (
-          <span className="text-zinc-500 text-sm max-w-[200px] truncate block">
+          <span 
+            className="text-zinc-400 text-sm max-w-[250px] whitespace-normal break-words block"
+            title={row.getValue("address") || ""}
+          >
             {row.getValue("address") || "-"}
           </span>
         ),

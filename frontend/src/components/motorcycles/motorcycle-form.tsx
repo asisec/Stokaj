@@ -32,7 +32,7 @@ const initialFormState = {
   purchase_price: 0,
 };
 
-const SUGGESTED_BRANDS = ["LEKSAS", "APACHI", "REBAT", "ZLIN", "ARORA"];
+const SUGGESTED_BRANDS = ["LEKSAS", "APACHI", "REBAT", "ZLIN", "ARORA", "LYM"];
 
 function getBrandSuggestion(input: string): string | null {
   if (!input) return null;
