@@ -233,7 +233,10 @@ export function CustomerForm({
             <Button
               type="button"
               variant="ghost"
-              onClick={() => onOpenChange(false)}
+              onClick={() => {
+                setFormData(initialFormState);
+                onOpenChange(false);
+              }}
               className="text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800"
             >
               İptal

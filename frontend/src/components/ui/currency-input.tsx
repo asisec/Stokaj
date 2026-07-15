@@ -10,8 +10,10 @@ export function CurrencyInput({ value, onChange, className, ...props }: Currency
   const [displayValue, setDisplayValue] = useState("");
 
   useEffect(() => {
-    // Sync external value to display value when it changes externally
-    // Avoid overriding while the user is typing (e.g. typing "90," shouldn't be erased)
+    if (value === 0 && displayValue === "") {
+      setDisplayValue("0");
+      return;
+    }
     const currentNumeric = parseFloat(displayValue.replace(/\./g, "").replace(",", ".")) || 0;
     
     if (value !== currentNumeric) {
