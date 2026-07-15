@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { api, type SparePart } from "@/lib/api";
 import {
   Dialog,
@@ -44,6 +44,8 @@ export function SparePartForm({
   const [formData, setFormData] = useState(initialFormState);
   const [submitting, setSubmitting] = useState(false);
 
+  const wasEditing = useRef(false);
+
   useEffect(() => {
     if (sparePart) {
       setFormData({
@@ -52,10 +54,14 @@ export function SparePartForm({
         description: sparePart.description || "",
         is_defective: sparePart.is_defective || false,
       });
+      wasEditing.current = true;
     } else {
-      setFormData(initialFormState);
+      if (wasEditing.current) {
+        setFormData(initialFormState);
+        wasEditing.current = false;
+      }
     }
-  }, [sparePart, open]);
+  }, [sparePart]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,6 +89,9 @@ export function SparePartForm({
   };
 
   const handleChange = (field: string, value: string | number | boolean) => {
+    if (field === "name" && typeof value === "string") {
+      value = value.toLocaleUpperCase("tr-TR");
+    }
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
@@ -103,8 +112,8 @@ export function SparePartForm({
               <Input
                 id="name"
                 value={formData.name}
-                onChange={(e) => handleChange("name", e.target.value)}
-                className="bg-zinc-900/50 border-zinc-800 text-zinc-200 focus:border-emerald-500/50 transition-colors"
+                onChange={(e) => handleChange("name", e.target.value.toLocaleUpperCase("tr-TR"))}
+                className="bg-zinc-900/50 border-zinc-800 text-zinc-200 focus:border-emerald-500/50 transition-colors uppercase"
                 required
               />
             </div>

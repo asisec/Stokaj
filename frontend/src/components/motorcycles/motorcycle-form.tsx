@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { api, type Motorcycle } from "@/lib/api";
 import {
   Dialog,
@@ -54,6 +54,8 @@ export function MotorcycleForm({
   const [formData, setFormData] = useState(initialFormState);
   const [submitting, setSubmitting] = useState(false);
 
+  const wasEditing = useRef(false);
+
   useEffect(() => {
     if (motorcycle) {
       setFormData({
@@ -64,10 +66,14 @@ export function MotorcycleForm({
         color: motorcycle.color,
         purchase_price: motorcycle.purchase_price,
       });
+      wasEditing.current = true;
     } else {
-      setFormData(initialFormState);
+      if (wasEditing.current) {
+        setFormData(initialFormState);
+        wasEditing.current = false;
+      }
     }
-  }, [motorcycle, open]);
+  }, [motorcycle]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -95,11 +101,8 @@ export function MotorcycleForm({
   };
 
   const handleChange = (field: string, value: string | number) => {
-    if (field === "chassis_number" && typeof value === "string") {
-      value = value.toUpperCase();
-    }
-    if (field === "brand" && typeof value === "string") {
-      value = value.toUpperCase();
+    if (["chassis_number", "brand", "model", "color"].includes(field) && typeof value === "string") {
+      value = value.toLocaleUpperCase("tr-TR");
     }
     setFormData((prev) => ({ ...prev, [field]: value }));
   };

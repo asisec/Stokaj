@@ -147,35 +147,7 @@ export function CustomerTable({
           </span>
         ),
       },
-      {
-        accessorKey: "balance",
-        header: ({ column }) => (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="text-zinc-400 hover:text-zinc-200 -ml-4"
-          >
-            Bakiye
-            <ArrowUpDown className="ml-2 h-3.5 w-3.5" />
-          </Button>
-        ),
-        cell: ({ row }) => {
-          const balance = row.getValue("balance") as number;
-          return (
-            <span
-              className={`font-semibold tabular-nums ${
-                balance > 0
-                  ? "text-emerald-400"
-                  : balance < 0
-                  ? "text-red-400"
-                  : "text-zinc-400"
-              }`}
-            >
-              {formatCurrency(balance)}
-            </span>
-          );
-        },
-      },
+
       {
         id: "actions",
         header: () => <span className="text-zinc-400">İşlemler</span>,

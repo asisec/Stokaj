@@ -493,7 +493,7 @@ export default function POSPage() {
                             value={line.method}
                             onValueChange={(val) => updatePaymentLine(line.id, "method", val)}
                           >
-                            <SelectTrigger className="h-9 flex-1 bg-zinc-800/50 border-zinc-700/50 text-zinc-300 text-xs">
+                            <SelectTrigger className="h-9 flex-1 bg-zinc-800/50 border-zinc-700/50 text-zinc-300 text-xs focus:ring-0 focus:ring-offset-0 focus:border-blue-500/50">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent className="bg-zinc-900 border-zinc-800">
@@ -520,8 +520,8 @@ export default function POSPage() {
                               value={line.installments?.toString() || "0"}
                               onValueChange={(val) => updatePaymentLine(line.id, "installments", parseInt(val))}
                             >
-                              <SelectTrigger className="h-9 w-28 bg-zinc-800/50 border-zinc-700/50 text-zinc-300 text-xs">
-                                <SelectValue />
+                              <SelectTrigger className="h-9 w-[110px] bg-zinc-800/50 border-zinc-700/50 text-zinc-300 text-xs focus:ring-0 focus:ring-offset-0 focus:border-blue-500/50">
+                                <SelectValue placeholder="Taksit" />
                               </SelectTrigger>
                               <SelectContent className="bg-zinc-900 border-zinc-800">
                                 {installmentOptions.map((opt) => (

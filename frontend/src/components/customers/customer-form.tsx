@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { api, type Customer } from "@/lib/api";
 import {
   Dialog,
@@ -28,7 +28,6 @@ const initialFormState = {
   phone: "+90",
   email: "",
   address: "",
-  balance: 0,
 };
 
 export function CustomerForm({
@@ -40,6 +39,8 @@ export function CustomerForm({
   const [formData, setFormData] = useState(initialFormState);
   const [submitting, setSubmitting] = useState(false);
 
+  const wasEditing = useRef(false);
+
   useEffect(() => {
     if (customer) {
       setFormData({
@@ -49,12 +50,15 @@ export function CustomerForm({
         phone: customer.phone || "+90",
         email: customer.email || "",
         address: customer.address || "",
-        balance: customer.balance,
       });
+      wasEditing.current = true;
     } else {
-      setFormData(initialFormState);
+      if (wasEditing.current) {
+        setFormData(initialFormState);
+        wasEditing.current = false;
+      }
     }
-  }, [customer, open]);
+  }, [customer]);
 
   const formatPhone = (value: string) => {
     let digits = value.replace(/\D/g, "");
@@ -166,8 +170,8 @@ export function CustomerForm({
               <Input
                 id="first_name"
                 value={formData.first_name}
-                onChange={(e) => handleChange("first_name", e.target.value)}
-                className="bg-zinc-900/50 border-zinc-800 text-zinc-200 focus:border-purple-500/50 transition-colors"
+                onChange={(e) => handleChange("first_name", e.target.value.toLocaleUpperCase("tr-TR"))}
+                className="bg-zinc-900/50 border-zinc-800 text-zinc-200 focus:border-purple-500/50 transition-colors uppercase"
                 required
               />
             </div>
@@ -178,8 +182,8 @@ export function CustomerForm({
               <Input
                 id="last_name"
                 value={formData.last_name}
-                onChange={(e) => handleChange("last_name", e.target.value)}
-                className="bg-zinc-900/50 border-zinc-800 text-zinc-200 focus:border-purple-500/50 transition-colors"
+                onChange={(e) => handleChange("last_name", e.target.value.toLocaleUpperCase("tr-TR"))}
+                className="bg-zinc-900/50 border-zinc-800 text-zinc-200 focus:border-purple-500/50 transition-colors uppercase"
                 required
               />
             </div>
@@ -206,8 +210,8 @@ export function CustomerForm({
                 id="email"
                 type="email"
                 value={formData.email}
-                onChange={(e) => handleChange("email", e.target.value)}
-                className="bg-zinc-900/50 border-zinc-800 text-zinc-200 focus:border-purple-500/50 transition-colors"
+                onChange={(e) => handleChange("email", e.target.value.toLocaleUpperCase("tr-TR"))}
+                className="bg-zinc-900/50 border-zinc-800 text-zinc-200 focus:border-purple-500/50 transition-colors uppercase"
               />
             </div>
           </div>
