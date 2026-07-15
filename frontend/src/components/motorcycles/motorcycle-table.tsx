@@ -7,6 +7,7 @@ import {
   getCoreRowModel,
   getFilteredRowModel,
   getSortedRowModel,
+  getPaginationRowModel,
   flexRender,
   type ColumnDef,
   type SortingState,
@@ -44,6 +45,7 @@ import {
   ArrowUpDown,
   QrCode,
 } from "lucide-react";
+import { DataTablePagination } from "@/components/ui/data-table-pagination";
 
 const formatCurrency = (value: number) =>
   new Intl.NumberFormat("tr-TR", { style: "currency", currency: "TRY" }).format(
@@ -279,6 +281,12 @@ export function MotorcycleTable({
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    initialState: {
+      pagination: {
+        pageSize: 20,
+      },
+    },
   });
 
   if (loading) {
@@ -331,8 +339,9 @@ export function MotorcycleTable({
         </Select>
       </div>
 
-      <div className="rounded-xl border border-zinc-800/50 overflow-hidden bg-zinc-900/30">
-        <Table>
+      <div className="rounded-xl border border-zinc-800/50 bg-zinc-900/30 overflow-hidden flex flex-col">
+        <div className="overflow-auto max-h-[calc(100vh-250px)]">
+          <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow
@@ -381,11 +390,10 @@ export function MotorcycleTable({
             )}
           </TableBody>
         </Table>
+        </div>
       </div>
 
-      <div className="text-xs text-zinc-600 text-right">
-        {filteredData.length} kayıt gösteriliyor
-      </div>
+      <DataTablePagination table={table} />
     </div>
   );
 }
