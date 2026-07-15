@@ -118,6 +118,9 @@ export function MotorcycleForm({
   const uniqueModels = Array.from(new Set(availableModels));
   const suggestedModel = getSuggestion(formData.model, uniqueModels);
 
+  const uniqueColors = Array.from(new Set(existingMotorcycles.map((m) => m.color.toUpperCase())));
+  const suggestedColor = getSuggestion(formData.color, uniqueColors);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="bg-zinc-950 border-zinc-800 text-zinc-100 sm:max-w-[520px]">
@@ -244,13 +247,27 @@ export function MotorcycleForm({
               <Label htmlFor="color" className="text-zinc-400 text-sm">
                 Renk
               </Label>
-              <Input
-                id="color"
-                value={formData.color}
-                onChange={(e) => handleChange("color", e.target.value)}
-                className="bg-zinc-900/50 border-zinc-800 text-zinc-200 focus:border-blue-500/50 transition-colors"
-                required
-              />
+              <div className="relative flex items-center">
+                <Input
+                  id="color"
+                  value={formData.color}
+                  onChange={(e) => handleChange("color", e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Tab" && suggestedColor) {
+                      e.preventDefault();
+                      handleChange("color", suggestedColor);
+                    }
+                  }}
+                  className="bg-zinc-900/50 border-zinc-800 text-zinc-200 focus:border-blue-500/50 transition-colors"
+                  required
+                />
+                {suggestedColor && (
+                  <div className="absolute inset-0 pointer-events-none flex items-center px-3 text-sm border border-transparent">
+                    <span className="text-transparent">{formData.color}</span>
+                    <span className="text-zinc-500/50">{suggestedColor.slice(formData.color.length)}</span>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
