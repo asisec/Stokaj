@@ -229,9 +229,8 @@ export function CustomerTable({
         />
       </div>
 
-      <div className="rounded-xl border border-zinc-800/50 bg-zinc-900/30 overflow-hidden flex flex-col">
-        <div className="overflow-auto max-h-[calc(100vh-250px)]">
-          <Table>
+      <div className="rounded-xl border border-zinc-800/50 bg-zinc-900/30 overflow-hidden">
+        <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow
@@ -280,7 +279,6 @@ export function CustomerTable({
             )}
           </TableBody>
         </Table>
-        </div>
       </div>
 
       <DataTablePagination table={table} />
