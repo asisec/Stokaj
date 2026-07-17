@@ -8,7 +8,7 @@ import { MotorcycleTable } from "@/components/motorcycles/motorcycle-table";
 import { MotorcycleForm } from "@/components/motorcycles/motorcycle-form";
 import { QRCodeModal } from "@/components/motorcycles/qr-code-modal";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { toast } from "sonner";
+import { customToast as toast } from "@/lib/toast";
 
 export default function MotorcyclesPage() {
   const [motorcycles, setMotorcycles] = useState<Motorcycle[]>([]);

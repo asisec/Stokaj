@@ -19,7 +19,7 @@ const typeIcons = {
 };
 
 export function NotificationButton() {
-  const { notifications, unreadCount, markAsRead, markAllAsRead, clearAll } =
+  const { notifications, unreadCount, markAsRead, markAllAsRead, clearAll, removeNotification } =
     useNotificationStore();
 
   const count = unreadCount();
@@ -64,15 +64,31 @@ export function NotificationButton() {
             notifications.map((notification) => (
               <div
                 key={notification.id}
-                onClick={() => markAsRead(notification.id)}
-                className={`flex gap-3 items-start p-3 rounded-lg transition-all cursor-pointer hover:bg-zinc-900/50 ${
+                className={`relative group/item flex gap-3 items-start p-3 rounded-lg transition-all ${
                   notification.read ? "opacity-60" : "bg-zinc-900/20"
                 }`}
               >
-                <div className="mt-0.5 shrink-0">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    removeNotification(notification.id);
+                  }}
+                  className="absolute right-2 top-2 p-1 text-zinc-500 hover:text-zinc-300 opacity-0 group-hover/item:opacity-100 transition-opacity"
+                  title="Bildirimi sil"
+                >
+                  <XCircle className="h-4 w-4" />
+                </button>
+                <div 
+                  className="mt-0.5 shrink-0 cursor-pointer"
+                  onClick={() => markAsRead(notification.id)}
+                >
                   {typeIcons[notification.type]}
                 </div>
-                <div className="flex-1 space-y-1">
+                <div 
+                  className="flex-1 space-y-1 cursor-pointer pr-4"
+                  onClick={() => markAsRead(notification.id)}
+                >
                   <p className="text-sm font-medium leading-none text-zinc-200">
                     {notification.title}
                   </p>
@@ -89,7 +105,7 @@ export function NotificationButton() {
                   </p>
                 </div>
                 {!notification.read && (
-                  <div className="w-2 h-2 rounded-full bg-blue-500 mt-1.5 shrink-0" />
+                  <div className="w-2 h-2 rounded-full bg-blue-500 mt-1.5 shrink-0 cursor-pointer" onClick={() => markAsRead(notification.id)} />
                 )}
               </div>
             ))

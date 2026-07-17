@@ -7,7 +7,7 @@ import { Plus } from "lucide-react";
 import { SparePartTable } from "@/components/spare-parts/spare-part-table";
 import { SparePartForm } from "@/components/spare-parts/spare-part-form";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { toast } from "sonner";
+import { customToast as toast } from "@/lib/toast";
 
 export default function SparePartsPage() {
   const [spareParts, setSpareParts] = useState<SparePart[]>([]);

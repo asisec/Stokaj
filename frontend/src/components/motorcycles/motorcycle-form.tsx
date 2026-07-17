@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CurrencyInput } from "@/components/ui/currency-input";
 import { Label } from "@/components/ui/label";
-import { toast } from "sonner";
+import { customToast as toast } from "@/lib/toast";
 import { Loader2, CheckCircle2, XCircle } from "lucide-react";
 import { validateVIN } from "@/lib/vin-validator";
 

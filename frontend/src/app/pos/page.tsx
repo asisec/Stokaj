@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { toast } from "sonner";
+import { customToast as toast } from "@/lib/toast";
 import {
   Search,
   X,

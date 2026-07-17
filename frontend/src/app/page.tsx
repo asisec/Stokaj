@@ -26,7 +26,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Bike, Wrench, Users, ShoppingCart, Trash2, ShieldAlert } from "lucide-react";
-import { toast } from "sonner";
+import { customToast as toast } from "@/lib/toast";
 import {
   AlertDialog,
   AlertDialogAction,

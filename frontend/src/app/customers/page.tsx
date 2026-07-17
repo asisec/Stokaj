@@ -7,7 +7,7 @@ import { Plus } from "lucide-react";
 import { CustomerTable } from "@/components/customers/customer-table";
 import { CustomerForm } from "@/components/customers/customer-form";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { toast } from "sonner";
+import { customToast as toast } from "@/lib/toast";
 
 export default function CustomersPage() {
   const [customers, setCustomers] = useState<Customer[]>([]);
