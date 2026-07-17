@@ -46,6 +46,8 @@ export interface Motorcycle {
   purchase_price: number
   sale_price: number
   status: string
+  is_other_branch: boolean
+  branch_name: string
   created_at: string
   updated_at: string
 }

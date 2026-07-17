@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CurrencyInput } from "@/components/ui/currency-input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { customToast as toast } from "@/lib/toast";
 import { Loader2, CheckCircle2, XCircle } from "lucide-react";
 import { validateVIN } from "@/lib/vin-validator";
@@ -31,6 +32,8 @@ const initialFormState = {
   year: new Date().getFullYear(),
   color: "",
   purchase_price: 0,
+  is_other_branch: false,
+  branch_name: "",
 };
 
 
@@ -56,6 +59,8 @@ export function MotorcycleForm({
         year: motorcycle.year,
         color: motorcycle.color,
         purchase_price: motorcycle.purchase_price,
+        is_other_branch: motorcycle.is_other_branch || false,
+        branch_name: motorcycle.branch_name || "",
       });
       wasEditing.current = true;
     } else {
@@ -92,7 +97,7 @@ export function MotorcycleForm({
   };
 
   const handleChange = (field: string, value: string | number) => {
-    if (["chassis_number", "brand", "model", "color"].includes(field) && typeof value === "string") {
+    if (["chassis_number", "brand", "model", "color", "branch_name"].includes(field) && typeof value === "string") {
       value = value.toLocaleUpperCase("tr-TR");
     }
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -120,6 +125,9 @@ export function MotorcycleForm({
 
   const uniqueColors = Array.from(new Set(existingMotorcycles.map((m) => m.color.toUpperCase())));
   const suggestedColor = getSuggestion(formData.color, uniqueColors);
+
+  const uniqueBranches = Array.from(new Set(existingMotorcycles.map((m) => (m.branch_name || "").toUpperCase()))).filter(Boolean);
+  const suggestedBranch = getSuggestion(formData.branch_name, uniqueBranches);
 
   const vinValidation = validateVIN(formData.chassis_number);
 
@@ -228,6 +236,54 @@ export function MotorcycleForm({
               </div>
             </div>
           </div>
+
+          <div className="flex items-center space-x-3 py-2">
+            <Checkbox
+              id="is_other_branch"
+              checked={formData.is_other_branch}
+              onCheckedChange={(checked) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  is_other_branch: checked === true,
+                  branch_name: checked === true ? prev.branch_name : "",
+                }))
+              }
+              className="border-zinc-700 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+            />
+            <Label htmlFor="is_other_branch" className="text-zinc-300 text-sm font-medium leading-none cursor-pointer">
+              Motosiklet farklı bir şubede / depoda bulunuyor
+            </Label>
+          </div>
+
+          {formData.is_other_branch && (
+            <div className="space-y-2">
+              <Label htmlFor="branch_name" className="text-zinc-400 text-sm">
+                Şube / Depo Adı
+              </Label>
+              <div className="relative flex items-center">
+                <Input
+                  id="branch_name"
+                  value={formData.branch_name}
+                  onChange={(e) => handleChange("branch_name", e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Tab" && suggestedBranch) {
+                      e.preventDefault();
+                      handleChange("branch_name", suggestedBranch);
+                    }
+                  }}
+                  className="bg-zinc-900/50 border-zinc-800 text-zinc-200 focus:border-blue-500/50 transition-colors"
+                  required={formData.is_other_branch}
+                  placeholder="Örn: KADIKÖY ŞUBE, ANA DEPO..."
+                />
+                {suggestedBranch && (
+                  <div className="absolute inset-0 pointer-events-none flex items-center px-3 text-sm border border-transparent">
+                    <span className="text-transparent">{formData.branch_name}</span>
+                    <span className="text-zinc-500/50">{suggestedBranch.slice(formData.branch_name.length)}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
