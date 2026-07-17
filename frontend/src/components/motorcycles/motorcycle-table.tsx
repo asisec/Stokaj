@@ -44,6 +44,7 @@ import {
   Trash2,
   ArrowUpDown,
   QrCode,
+  Printer,
 } from "lucide-react";
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
 
@@ -289,6 +290,65 @@ export function MotorcycleTable({
     },
   });
 
+  const handlePrint = () => {
+    const printContent = `
+      <html>
+        <head>
+          <title>Motosiklet Listesi</title>
+          <style>
+            body { font-family: sans-serif; padding: 20px; color: #000; }
+            h2 { text-align: center; margin-bottom: 20px; font-size: 24px; }
+            table { width: 100%; border-collapse: collapse; font-size: 14px; }
+            th, td { border: 1px solid #000; padding: 8px 12px; text-align: left; }
+            th { background-color: #f3f4f6; font-weight: bold; }
+            @media print {
+              body { padding: 0; }
+              table { page-break-inside: auto; }
+              tr { page-break-inside: avoid; page-break-after: auto; }
+            }
+          </style>
+        </head>
+        <body>
+          <h2>Motosiklet Listesi</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Şasi No</th>
+                <th>Marka</th>
+                <th>Model</th>
+                <th>Yıl</th>
+                <th>Renk</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${table.getRowModel().rows.map(row => `
+                <tr>
+                  <td>${row.original.chassis_number}</td>
+                  <td>${row.original.brand}</td>
+                  <td>${row.original.model}</td>
+                  <td>${row.original.year}</td>
+                  <td>${row.original.color}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+          <script>
+            window.onload = () => {
+              window.print();
+              setTimeout(() => window.close(), 500);
+            }
+          </script>
+        </body>
+      </html>
+    `;
+
+    const printWindow = window.open("", "_blank");
+    if (printWindow) {
+      printWindow.document.write(printContent);
+      printWindow.document.close();
+    }
+  };
+
   if (loading) {
     return (
       <div className="space-y-4">
@@ -337,6 +397,14 @@ export function MotorcycleTable({
             </SelectItem>
           </SelectContent>
         </Select>
+        <Button
+          variant="outline"
+          onClick={handlePrint}
+          className="border-zinc-800 bg-zinc-900/50 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100"
+        >
+          <Printer className="mr-2 h-4 w-4" />
+          Yazdır
+        </Button>
       </div>
 
       <div className="rounded-xl border border-zinc-800/50 bg-zinc-900/30 overflow-hidden">
