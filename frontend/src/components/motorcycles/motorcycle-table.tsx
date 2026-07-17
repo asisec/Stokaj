@@ -231,12 +231,14 @@ export function MotorcycleTable({
           const branch = row.original.branch_name;
           if (isOther && branch) {
             return (
-              <Badge variant="outline" className="border-blue-500/30 text-blue-400 bg-blue-500/10 text-xs">
-                {branch}
-              </Badge>
+              <div title={branch} className="max-w-[140px]">
+                <Badge variant="outline" className="border-blue-500/30 text-blue-400 bg-blue-500/10 text-[11px] whitespace-nowrap truncate block w-full text-center">
+                  {branch}
+                </Badge>
+              </div>
             );
           }
-          return <span className="text-zinc-500 text-sm">Merkez</span>;
+          return <span className="text-zinc-500 text-sm whitespace-nowrap">Merkez</span>;
         },
       },
       {
