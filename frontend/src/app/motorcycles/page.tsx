@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { MotorcycleTable } from "@/components/motorcycles/motorcycle-table";
 import { MotorcycleForm } from "@/components/motorcycles/motorcycle-form";
-import { QRCodeModal } from "@/components/motorcycles/qr-code-modal";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { customToast as toast } from "@/lib/toast";
 
@@ -14,11 +13,9 @@ export default function MotorcyclesPage() {
   const [motorcycles, setMotorcycles] = useState<Motorcycle[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [qrDialogOpen, setQrDialogOpen] = useState(false);
   const [editingMotorcycle, setEditingMotorcycle] = useState<Motorcycle | null>(
     null
   );
-  const [qrMotorcycle, setQrMotorcycle] = useState<Motorcycle | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
 
@@ -38,11 +35,6 @@ export default function MotorcyclesPage() {
   const handleEdit = (motorcycle: Motorcycle) => {
     setEditingMotorcycle(motorcycle);
     setDialogOpen(true);
-  };
-
-  const handleShowQR = (motorcycle: Motorcycle) => {
-    setQrMotorcycle(motorcycle);
-    setQrDialogOpen(true);
   };
 
   const handleDeleteClick = (id: number) => {
@@ -70,13 +62,6 @@ export default function MotorcyclesPage() {
     }
   };
 
-  const handleQrDialogChange = (open: boolean) => {
-    setQrDialogOpen(open);
-    if (!open) {
-      setQrMotorcycle(null);
-    }
-  };
-
   return (
     <div className="space-y-6 p-2">
       <div className="flex items-center justify-between">
@@ -101,7 +86,6 @@ export default function MotorcyclesPage() {
         motorcycles={motorcycles}
         onEdit={handleEdit}
         onDelete={handleDeleteClick}
-        onShowQR={handleShowQR}
         loading={loading}
       />
 
@@ -111,12 +95,6 @@ export default function MotorcyclesPage() {
         motorcycle={editingMotorcycle}
         onSuccess={fetchMotorcycles}
         existingMotorcycles={motorcycles}
-      />
-
-      <QRCodeModal
-        open={qrDialogOpen}
-        onOpenChange={handleQrDialogChange}
-        motorcycle={qrMotorcycle}
       />
 
       <ConfirmDialog

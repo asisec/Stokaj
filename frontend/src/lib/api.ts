@@ -138,7 +138,6 @@ export const api = {
     return request<Motorcycle[]>(`/api/motorcycles${query ? `?${query}` : ""}`)
   },
   getMotorcycle: (id: number) => request<Motorcycle>(`/api/motorcycles/${id}`),
-  getPublicMotorcycleByChassis: (chassis: string) => request<Motorcycle>(`/api/public/motorcycles/${chassis}`),
   createMotorcycle: (data: Partial<Motorcycle>) => request<Motorcycle>("/api/motorcycles", { method: "POST", body: JSON.stringify(data) }),
   updateMotorcycle: (id: number, data: Partial<Motorcycle>) => request<Motorcycle>(`/api/motorcycles/${id}`, { method: "PUT", body: JSON.stringify(data) }),
   deleteMotorcycle: (id: number) => request<void>(`/api/motorcycles/${id}`, { method: "DELETE" }),

@@ -43,7 +43,6 @@ import {
   Pencil,
   Trash2,
   ArrowUpDown,
-  QrCode,
   Printer,
 } from "lucide-react";
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
@@ -57,7 +56,6 @@ interface MotorcycleTableProps {
   motorcycles: Motorcycle[];
   onEdit: (motorcycle: Motorcycle) => void;
   onDelete: (id: number) => void;
-  onShowQR: (motorcycle: Motorcycle) => void;
   loading: boolean;
 }
 
@@ -65,7 +63,6 @@ export function MotorcycleTable({
   motorcycles,
   onEdit,
   onDelete,
-  onShowQR,
   loading,
 }: MotorcycleTableProps) {
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -246,15 +243,6 @@ export function MotorcycleTable({
         header: () => <span className="text-zinc-400">İşlemler</span>,
         cell: ({ row }) => (
           <div className="flex items-center gap-1">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => onShowQR(row.original)}
-              className="h-8 w-8 text-blue-400 hover:text-blue-300 hover:bg-blue-500/10"
-              title="QR Kod Göster"
-            >
-              <QrCode className="h-4 w-4" />
-            </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
