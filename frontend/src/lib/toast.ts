@@ -8,7 +8,11 @@ export const customToast = {
       description,
       type: "success",
     });
-    return sonnerToast.success(message, { description });
+    const id: string | number = sonnerToast.success(message, { 
+      description,
+      onClick: () => sonnerToast.dismiss(id)
+    });
+    return id;
   },
   error: (message: string, description?: string) => {
     useNotificationStore.getState().addNotification({
@@ -16,7 +20,11 @@ export const customToast = {
       description,
       type: "error",
     });
-    return sonnerToast.error(message, { description });
+    const id: string | number = sonnerToast.error(message, { 
+      description,
+      onClick: () => sonnerToast.dismiss(id)
+    });
+    return id;
   },
   info: (message: string, description?: string) => {
     useNotificationStore.getState().addNotification({
@@ -24,7 +32,11 @@ export const customToast = {
       description,
       type: "info",
     });
-    return sonnerToast.info(message, { description });
+    const id: string | number = sonnerToast.info(message, { 
+      description,
+      onClick: () => sonnerToast.dismiss(id)
+    });
+    return id;
   },
   warning: (message: string, description?: string) => {
     useNotificationStore.getState().addNotification({
@@ -32,6 +44,10 @@ export const customToast = {
       description,
       type: "warning",
     });
-    return sonnerToast.warning(message, { description });
+    const id: string | number = sonnerToast.warning(message, { 
+      description,
+      onClick: () => sonnerToast.dismiss(id)
+    });
+    return id;
   },
 };
