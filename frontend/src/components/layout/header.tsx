@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation"
 import { useEffect, useState } from "react"
+import { NotificationButton } from "@/components/layout/notification-button"
 
 const pageTitles: Record<string, string> = {
   "/": "Gösterge Paneli",
@@ -36,9 +37,13 @@ export function Header() {
   const title = pageTitles[pathname] || "Stokaj"
 
   return (
-    <header className="flex h-16 items-center justify-between border-b border-border bg-card px-6">
+    <header className="flex h-16 items-center justify-between border-b border-border bg-card px-6 shrink-0">
       <h1 className="text-xl font-semibold text-foreground">{title}</h1>
-      <span className="text-sm text-muted-foreground">{currentTime}</span>
+      <div className="flex items-center gap-4">
+        <span className="text-sm text-muted-foreground">{currentTime}</span>
+        <div className="w-px h-6 bg-zinc-800" />
+        <NotificationButton />
+      </div>
     </header>
   )
 }
