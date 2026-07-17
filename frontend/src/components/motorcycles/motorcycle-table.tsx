@@ -224,6 +224,22 @@ export function MotorcycleTable({
         },
       },
       {
+        id: "location",
+        header: () => <span className="text-zinc-400">Konum</span>,
+        cell: ({ row }) => {
+          const isOther = row.original.is_other_branch;
+          const branch = row.original.branch_name;
+          if (isOther && branch) {
+            return (
+              <Badge variant="outline" className="border-blue-500/30 text-blue-400 bg-blue-500/10 text-xs">
+                {branch}
+              </Badge>
+            );
+          }
+          return <span className="text-zinc-500 text-sm">Merkez</span>;
+        },
+      },
+      {
         id: "actions",
         header: () => <span className="text-zinc-400">İşlemler</span>,
         cell: ({ row }) => (
