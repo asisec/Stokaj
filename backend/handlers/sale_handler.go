@@ -154,6 +154,7 @@ func DeleteSale(c *gin.Context) {
 				var motorcycle models.Motorcycle
 				if err := tx.First(&motorcycle, item.ItemID).Error; err == nil {
 					motorcycle.Status = "available"
+					motorcycle.SalePrice = 0
 					tx.Save(&motorcycle)
 				}
 			}
