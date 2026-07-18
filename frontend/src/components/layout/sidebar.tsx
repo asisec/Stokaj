@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Bike, LayoutDashboard, Wrench, Users, ShoppingCart, LogOut, Tags, Settings } from "lucide-react"
+import { Bike, LayoutDashboard, Wrench, Users, ShoppingCart, LogOut, Tags } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { removeToken } from "@/lib/auth"
 
@@ -50,8 +50,7 @@ export function Sidebar() {
         {navigationItems.map((item) => navLink(item.href, item.label, item.icon))}
       </nav>
 
-      <div className="p-3 border-t border-sidebar-border space-y-1">
-        {navLink("/settings", "Ayarlar", Settings)}
+      <div className="p-3 border-t border-sidebar-border">
         <button
           onClick={() => {
             removeToken()
