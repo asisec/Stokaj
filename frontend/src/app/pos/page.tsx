@@ -283,7 +283,7 @@ export default function POSPage() {
                     )}
                   >
                     <div className="font-medium text-sm text-zinc-200 group-hover:text-zinc-100 transition-colors">
-                      {customer.first_name} {customer.last_name}
+                      {isCensored ? "**** ****" : `${customer.first_name} ${customer.last_name}`}
                     </div>
                     <div className="flex items-center gap-1.5 text-xs text-zinc-500 mt-1">
                       <Phone className="h-3 w-3" />
@@ -421,9 +421,9 @@ export default function POSPage() {
             {selectedCustomer && (
               <div className="mt-2 p-2.5 rounded-lg bg-blue-500/10 border border-blue-500/20">
                 <div className="text-xs font-semibold text-blue-300">
-                  {selectedCustomer.first_name} {selectedCustomer.last_name}
+                  {isCensored ? "**** ****" : `${selectedCustomer.first_name} ${selectedCustomer.last_name}`}
                 </div>
-                <div className="text-[11px] text-zinc-500 mt-0.5">{selectedCustomer.phone}</div>
+                <div className="text-[11px] text-zinc-500 mt-0.5">{isCensored ? "***********" : selectedCustomer.phone}</div>
               </div>
             )}
           </CardHeader>

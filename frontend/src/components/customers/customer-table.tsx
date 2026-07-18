@@ -99,7 +99,7 @@ export function CustomerTable({
         ),
         cell: ({ row }) => (
           <span className="font-semibold text-zinc-200">
-            {row.getValue("first_name")}
+            {isCensored ? "****" : row.getValue("first_name")}
           </span>
         ),
       },
@@ -117,7 +117,7 @@ export function CustomerTable({
         ),
         cell: ({ row }) => (
           <span className="font-semibold text-zinc-200">
-            {row.getValue("last_name")}
+            {isCensored ? "****" : row.getValue("last_name")}
           </span>
         ),
       },
@@ -135,7 +135,7 @@ export function CustomerTable({
         header: () => <span className="text-zinc-400">E-posta</span>,
         cell: ({ row }) => (
           <span className="text-zinc-400 text-sm">
-            {row.getValue("email") || "-"}
+            {isCensored ? "****" : (row.getValue("email") || "-")}
           </span>
         ),
       },
@@ -145,9 +145,9 @@ export function CustomerTable({
         cell: ({ row }) => (
           <span 
             className="text-zinc-400 text-sm max-w-[250px] whitespace-normal break-words block"
-            title={row.getValue("address") || ""}
+            title={isCensored ? "****" : (row.getValue("address") || "") as string}
           >
-            {row.getValue("address") || "-"}
+            {isCensored ? "****" : (row.getValue("address") || "-")}
           </span>
         ),
       },
