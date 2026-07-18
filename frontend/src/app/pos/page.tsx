@@ -682,30 +682,38 @@ export default function POSPage() {
           </CardHeader>
 
           <CardContent className="flex-1 flex flex-col p-0 min-h-0 overflow-hidden relative z-10">
-            <ScrollArea className="flex-1 px-5">
-              <AnimatePresence>
-                {selectedCustomer && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -8 }}
-                    className="pt-4"
-                  >
-                    <div className="p-3.5 rounded-xl bg-gradient-to-r from-blue-500/10 to-transparent border-l-2 border-blue-500 mb-3">
-                      <div className="text-sm font-semibold text-blue-100">
-                        {isCensored ? "**** ****" : `${selectedCustomer.first_name} ${selectedCustomer.last_name}`}
-                      </div>
-                      <div className="text-xs text-blue-300/60 mt-0.5 flex items-center gap-1">
-                        <User className="h-3 w-3" />
-                        {isCensored ? "***********" : selectedCustomer.identity_number}
-                      </div>
+
+            {/* Müşteri Bloğu - sabit, küçülmez */}
+            {selectedCustomer && (
+              <div className="px-5 pt-3 pb-2 shrink-0">
+                <div className="flex items-center gap-3 p-3 rounded-xl bg-blue-500/10 border border-blue-500/20">
+                  <div className="w-9 h-9 rounded-full bg-blue-500 flex items-center justify-center font-bold text-sm text-white shrink-0">
+                    {getInitials(selectedCustomer.first_name, selectedCustomer.last_name)}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-semibold text-blue-100 truncate">
+                      {isCensored ? "**** ****" : `${selectedCustomer.first_name} ${selectedCustomer.last_name}`}
                     </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                    <div className="text-xs text-blue-300/70 flex items-center gap-1">
+                      <User className="h-3 w-3" />
+                      {isCensored ? "***********" : selectedCustomer.identity_number}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setSelectedCustomer(null)}
+                    className="p-1 rounded-lg text-blue-400/50 hover:text-blue-300 hover:bg-blue-500/20 transition-colors shrink-0"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Sepet Ürünleri - esnek, kaydırılabilir */}
+            <ScrollArea className="flex-1 px-5 min-h-0">
               <AnimatePresence mode="popLayout">
                 {cart.length > 0 ? (
-                  <div className="space-y-3 pb-4">
+                  <div className="space-y-2 py-3">
                     {cart.map((item, index) => (
                       <motion.div
                         layout
@@ -713,42 +721,25 @@ export default function POSPage() {
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, x: 20 }}
                         key={`${item.item_type}-${item.item_id}`}
-                        className="p-3.5 rounded-2xl border border-zinc-800/50 bg-zinc-900/60 shadow-sm relative group"
+                        className="flex items-center justify-between gap-2 p-3 rounded-xl border border-zinc-800/50 bg-zinc-900/60"
                       >
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex-1 min-w-0">
-                            <div className="text-sm font-semibold text-zinc-100 truncate">
-                              {item.item_name}
-                            </div>
-                            <div className="text-xs text-zinc-500 mt-1 font-medium">
-                              {isCensored ? "****" : formatCurrency(item.unit_price)}
-                            </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-semibold text-zinc-100 truncate">{item.item_name}</div>
+                          <div className="text-xs text-emerald-400 font-medium mt-0.5">
+                            {isCensored ? "****" : formatCurrency(item.unit_price)}
                           </div>
-                          <div className="flex flex-col items-end gap-2">
-                            <button
-                              onClick={() => removeFromCart(index)}
-                              className="p-1.5 rounded-lg text-zinc-600 hover:text-red-400 hover:bg-red-500/10 transition-colors"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </button>
-                            {item.item_type === "spare_part" && (
-                              <div className="flex items-center gap-1 bg-zinc-950/50 rounded-lg p-0.5 border border-zinc-800/50">
-                                <button
-                                  onClick={() => updateCartQuantity(index, item.quantity - 1)}
-                                  className="w-6 h-6 flex items-center justify-center text-zinc-400 hover:text-zinc-100 rounded-md hover:bg-zinc-800 transition-colors"
-                                >
-                                  -
-                                </button>
-                                <span className="text-xs font-medium w-4 text-center text-zinc-200">{item.quantity}</span>
-                                <button
-                                  onClick={() => updateCartQuantity(index, item.quantity + 1)}
-                                  className="w-6 h-6 flex items-center justify-center text-zinc-400 hover:text-zinc-100 rounded-md hover:bg-zinc-800 transition-colors"
-                                >
-                                  +
-                                </button>
-                              </div>
-                            )}
-                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          {item.item_type === "spare_part" && (
+                            <div className="flex items-center gap-1 bg-zinc-950/50 rounded-lg p-0.5 border border-zinc-800/50">
+                              <button onClick={() => updateCartQuantity(index, item.quantity - 1)} className="w-6 h-6 flex items-center justify-center text-zinc-400 hover:text-zinc-100 rounded-md hover:bg-zinc-800 transition-colors text-sm font-bold">-</button>
+                              <span className="text-xs font-medium w-5 text-center text-zinc-200">{item.quantity}</span>
+                              <button onClick={() => updateCartQuantity(index, item.quantity + 1)} className="w-6 h-6 flex items-center justify-center text-zinc-400 hover:text-zinc-100 rounded-md hover:bg-zinc-800 transition-colors text-sm font-bold">+</button>
+                            </div>
+                          )}
+                          <button onClick={() => removeFromCart(index)} className="p-1.5 rounded-lg text-zinc-600 hover:text-red-400 hover:bg-red-500/10 transition-colors">
+                            <Trash2 className="h-4 w-4" />
+                          </button>
                         </div>
                       </motion.div>
                     ))}
@@ -757,69 +748,56 @@ export default function POSPage() {
                   <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className="flex flex-col items-center justify-center py-24 text-zinc-500"
+                    className="flex flex-col items-center justify-center py-16 text-zinc-500"
                   >
-                    <motion.div
-                      animate={{ y: [0, -10, 0] }}
-                      transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                    >
-                      <ShoppingBag className="h-16 w-16 mb-6 opacity-20" />
+                    <motion.div animate={{ y: [0, -10, 0] }} transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}>
+                      <ShoppingBag className="h-14 w-14 mb-4 opacity-20" />
                     </motion.div>
-                    <p className="text-base font-medium text-zinc-400">Sepetiniz boş</p>
-                    <p className="text-xs mt-2 text-zinc-600 text-center max-w-[200px]">
-                      Satışa başlamak için sol taraftan ürün ekleyin.
-                    </p>
+                    <p className="text-sm font-medium text-zinc-400">Sepetiniz boş</p>
+                    <p className="text-xs mt-1.5 text-zinc-600 text-center max-w-[180px]">Satışa başlamak için sol taraftan ürün ekleyin.</p>
                   </motion.div>
                 )}
               </AnimatePresence>
             </ScrollArea>
 
+            {/* Ödeme Footer - sabit, hiç büyümez */}
             {cart.length > 0 && (
-              <div className="bg-zinc-900/80 border-t border-zinc-800/50 px-5 pt-4 pb-4 shrink-0 backdrop-blur-md flex flex-col gap-3">
+              <div className="shrink-0 bg-zinc-900/90 border-t border-zinc-800/60 px-5 pt-3 pb-4 backdrop-blur-md flex flex-col gap-2.5">
+
                 {/* Genel Toplam */}
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between py-1">
                   <span className="text-sm font-medium text-zinc-400">Genel Toplam</span>
-                  <span className="text-2xl font-bold text-emerald-400 tabular-nums">
+                  <span className="text-xl font-bold text-emerald-400 tabular-nums">
                     {isCensored ? "****" : formatCurrency(cartTotal)}
                   </span>
                 </div>
 
-                {/* Tahsilat başlığı */}
+                {/* TAHSİLAT başlık */}
                 <div className="flex items-center justify-between">
-                  <Label className="text-xs font-semibold text-zinc-300 uppercase tracking-wider">Tahsilat</Label>
+                  <span className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest">Tahsilat</span>
                   <button
                     onClick={addPaymentLine}
-                    className="flex items-center gap-1.5 text-xs text-blue-400 hover:text-blue-300 transition-colors font-medium bg-blue-500/10 px-2 py-1 rounded-md"
+                    className="flex items-center gap-1.5 text-xs text-blue-400 hover:text-blue-300 transition-colors font-semibold bg-blue-500/10 hover:bg-blue-500/20 px-3 py-1.5 rounded-lg"
                   >
                     <Plus className="h-3.5 w-3.5" />
                     Yöntem Ekle
                   </button>
                 </div>
 
-                {/* Ödeme yöntemleri listesi — max yükseklik + scroll */}
-                <div className="flex flex-col gap-2 max-h-[168px] overflow-y-auto pr-0.5">
+                {/* Ödeme satırları - max 2 görünür, geri scroll */}
+                <div className="flex flex-col gap-2 max-h-[96px] overflow-y-auto">
                   {paymentLines.map((line) => (
                     <div key={line.id} className="flex items-center gap-2">
-                      <Select
-                        value={line.method}
-                        onValueChange={(val) => updatePaymentLine(line.id, "method", val)}
-                      >
-                        <SelectTrigger className="h-10 flex-1 bg-zinc-950/50 border-zinc-800 rounded-xl text-zinc-200 text-xs focus:ring-0 focus:ring-offset-0 focus:border-blue-500/50">
+                      <Select value={line.method} onValueChange={(val) => updatePaymentLine(line.id, "method", val)}>
+                        <SelectTrigger className="h-10 flex-1 bg-zinc-950/60 border-zinc-800 rounded-xl text-zinc-200 text-xs focus:ring-0 focus:border-blue-500/50">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent className="bg-zinc-900 border-zinc-800 rounded-xl">
                           {paymentMethods.map((m) => {
                             const Icon = m.icon;
                             return (
-                              <SelectItem
-                                key={m.value}
-                                value={m.value}
-                                className="text-zinc-300 focus:bg-zinc-800 text-xs rounded-lg my-0.5"
-                              >
-                                <span className="flex items-center gap-2">
-                                  <Icon className="h-3.5 w-3.5 opacity-70" />
-                                  {m.label}
-                                </span>
+                              <SelectItem key={m.value} value={m.value} className="text-zinc-300 focus:bg-zinc-800 text-xs rounded-lg my-0.5">
+                                <span className="flex items-center gap-2"><Icon className="h-3.5 w-3.5 opacity-70" />{m.label}</span>
                               </SelectItem>
                             );
                           })}
@@ -827,20 +805,13 @@ export default function POSPage() {
                       </Select>
 
                       {line.method === "credit_card" && (
-                        <Select
-                          value={line.installments?.toString() || "0"}
-                          onValueChange={(val) => updatePaymentLine(line.id, "installments", parseInt(val))}
-                        >
-                          <SelectTrigger className="h-10 w-[90px] bg-zinc-950/50 border-zinc-800 rounded-xl text-zinc-200 text-xs focus:ring-0 focus:ring-offset-0 focus:border-blue-500/50">
+                        <Select value={line.installments?.toString() || "0"} onValueChange={(val) => updatePaymentLine(line.id, "installments", parseInt(val))}>
+                          <SelectTrigger className="h-10 w-[85px] bg-zinc-950/60 border-zinc-800 rounded-xl text-zinc-200 text-xs focus:ring-0 focus:border-blue-500/50">
                             <SelectValue placeholder="Taksit" />
                           </SelectTrigger>
                           <SelectContent className="bg-zinc-900 border-zinc-800 rounded-xl">
                             {installmentOptions.map((opt) => (
-                              <SelectItem
-                                key={opt}
-                                value={opt.toString()}
-                                className="text-zinc-300 focus:bg-zinc-800 text-xs rounded-lg"
-                              >
+                              <SelectItem key={opt} value={opt.toString()} className="text-zinc-300 focus:bg-zinc-800 text-xs rounded-lg">
                                 {opt === 0 ? "Tek Çekim" : `${opt} Taksit`}
                               </SelectItem>
                             ))}
@@ -848,31 +819,18 @@ export default function POSPage() {
                         </Select>
                       )}
 
-                      {/* Tutar input + TÜMÜ butonu yan yana */}
-                      <div className="flex items-center gap-1 shrink-0">
-                        <Input
-                          type="number"
-                          step="0.01"
-                          min="0"
-                          placeholder="Tutar"
-                          value={line.amount || ""}
-                          onChange={(e) => updatePaymentLine(line.id, "amount", parseFloat(e.target.value))}
-                          className="w-[75px] h-10 px-2 rounded-xl bg-zinc-950/50 border-zinc-800 text-zinc-100 font-medium text-sm focus:border-blue-500/50 text-right [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                        />
-                        <button
-                          onClick={() => fillRemaining(line.id)}
-                          title="Kalan tutarı doldur"
-                          className="h-10 px-2 bg-zinc-800 hover:bg-blue-600 text-zinc-300 hover:text-white transition-colors text-[9px] font-bold rounded-xl whitespace-nowrap"
-                        >
-                          TÜMÜ
-                        </button>
-                      </div>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        placeholder="Tutar"
+                        value={line.amount || ""}
+                        onChange={(e) => updatePaymentLine(line.id, "amount", parseFloat(e.target.value))}
+                        className="w-[90px] h-10 px-3 rounded-xl bg-zinc-950/60 border-zinc-800 text-zinc-100 font-medium text-sm focus:border-blue-500/50 text-right [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      />
 
                       {paymentLines.length > 1 && (
-                        <button
-                          onClick={() => removePaymentLine(line.id)}
-                          className="p-2 rounded-xl text-zinc-500 hover:text-red-400 hover:bg-red-500/10 transition-colors shrink-0"
-                        >
+                        <button onClick={() => removePaymentLine(line.id)} className="p-2 rounded-xl text-zinc-500 hover:text-red-400 hover:bg-red-500/10 transition-colors shrink-0">
                           <Trash2 className="h-4 w-4" />
                         </button>
                       )}
@@ -881,54 +839,35 @@ export default function POSPage() {
                 </div>
 
                 {/* Kalan Tutar */}
-                <div
-                  className={cn(
-                    "flex items-center justify-between p-3 rounded-xl text-xs font-semibold transition-all duration-300",
-                    Math.abs(remaining) < 0.01
-                      ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-400"
-                      : remaining > 0
-                      ? "bg-amber-500/10 border border-amber-500/20 text-amber-400"
-                      : "bg-red-500/10 border border-red-500/20 text-red-400"
-                  )}
-                >
+                <div className={cn(
+                  "flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-all duration-300",
+                  Math.abs(remaining) < 0.01
+                    ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-400"
+                    : remaining > 0
+                    ? "bg-amber-500/10 border border-amber-500/20 text-amber-400"
+                    : "bg-red-500/10 border border-red-500/20 text-red-400"
+                )}>
                   <span className="flex items-center gap-2">
-                    {Math.abs(remaining) < 0.01 ? (
-                      <Check className="h-4 w-4" />
-                    ) : (
-                      <AlertCircle className="h-4 w-4" />
-                    )}
-                    {Math.abs(remaining) < 0.01
-                      ? "Ödeme Tamam"
-                      : remaining > 0
-                      ? "Kalan Tutar"
-                      : "Fazla Ödeme"}
+                    {Math.abs(remaining) < 0.01 ? <Check className="h-4 w-4" /> : <AlertCircle className="h-4 w-4" />}
+                    {Math.abs(remaining) < 0.01 ? "Ödeme Tamam" : remaining > 0 ? "Kalan Tutar" : "Fazla Ödeme"}
                   </span>
                   {Math.abs(remaining) >= 0.01 && (
-                    <span className="tabular-nums text-sm">
-                      {formatCurrency(Math.abs(remaining))}
-                    </span>
+                    <span className="tabular-nums text-sm">{formatCurrency(Math.abs(remaining))}</span>
                   )}
                 </div>
 
                 {!selectedCustomer && (
-                  <div className="text-xs text-amber-400/90 bg-amber-500/10 border border-amber-500/20 rounded-xl px-4 py-2.5 text-center font-medium shadow-sm">
-                    Satışı tamamlamak için sol taraftan müşteri seçin
+                  <div className="text-xs text-amber-400/90 bg-amber-500/10 border border-amber-500/20 rounded-xl px-4 py-2 text-center font-medium">
+                    Satışı tamamlamak için müşteri seçin
                   </div>
                 )}
 
                 <Button
                   onClick={handleCompleteSale}
                   disabled={!canComplete || submitting}
-                  className="w-full h-12 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm gap-2 transition-all duration-300 hover:shadow-lg hover:shadow-blue-600/25 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full h-11 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm gap-2 transition-all duration-300 hover:shadow-lg hover:shadow-blue-600/25 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {submitting ? (
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                  ) : (
-                    <>
-                      <Check className="h-5 w-5" />
-                      SATIŞI TAMAMLA
-                    </>
-                  )}
+                  {submitting ? <Loader2 className="h-5 w-5 animate-spin" /> : <><Check className="h-5 w-5" />SATIŞI TAMAMLA</>}
                 </Button>
               </div>
             )}
