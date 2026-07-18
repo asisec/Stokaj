@@ -46,7 +46,7 @@ func init() {
 	})
 
 	// Vercel routes all requests to /api/backend to this handler
-	apiGroup := app.Group("/api/backend")
+	apiGroup := app.Group("/api/backend/api")
 
 	apiGroup.POST("/login", handlers.Login)
 
