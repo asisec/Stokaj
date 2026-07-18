@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo, useCallback } from "react";
-import { api, type Customer, type Motorcycle } from "@/lib/api";
+import { api, type Customer, type Motorcycle, type SparePart } from "@/lib/api";
 import { useCensorStore } from "@/store/censor";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   Select,
   SelectContent,
@@ -26,6 +27,7 @@ import {
   User,
   Phone,
   Bike,
+  Wrench,
   CreditCard,
   Banknote,
   Building2,
@@ -35,15 +37,18 @@ import {
   Plus,
   Trash2,
   AlertCircle,
+  ShoppingBag,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface CartItem {
-  item_type: "motorcycle";
+  item_type: "motorcycle" | "spare_part";
   item_id: number;
   item_name: string;
   quantity: number;
   unit_price: number;
+  max_quantity?: number; // Only for spare parts to limit input
 }
 
 interface PaymentLine {
@@ -70,6 +75,7 @@ const formatCurrency = (value: number) =>
 export default function POSPage() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [motorcycles, setMotorcycles] = useState<Motorcycle[]>([]);
+  const [spareParts, setSpareParts] = useState<SparePart[]>([]);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [paymentLines, setPaymentLines] = useState<PaymentLine[]>([
@@ -79,19 +85,23 @@ export default function POSPage() {
   const [productSearch, setProductSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [customPrices, setCustomPrices] = useState<Record<number, string>>({});
+  const [customPrices, setCustomPrices] = useState<Record<string, string>>({});
+  const [sparePartQuantities, setSparePartQuantities] = useState<Record<number, number>>({});
   const [nextId, setNextId] = useState(2);
+  const [activeTab, setActiveTab] = useState<"motorcycles" | "spare_parts">("motorcycles");
   const { isCensored } = useCensorStore();
 
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const [customersData, motorcyclesData] = await Promise.all([
+      const [customersData, motorcyclesData, sparePartsData] = await Promise.all([
         api.getCustomers(),
         api.getMotorcycles(),
+        api.getSpareParts(),
       ]);
       setCustomers(customersData);
       setMotorcycles(motorcyclesData);
+      setSpareParts(sparePartsData);
     } catch {
       toast.error("Veriler yüklenirken hata oluştu");
     } finally {
@@ -126,6 +136,19 @@ export default function POSPage() {
     );
   }, [motorcycles, productSearch]);
 
+  const availableSpareParts = useMemo(() => {
+    const available = spareParts.filter((sp) => sp.quantity > 0 && !sp.is_defective);
+    if (!productSearch) return available;
+    const query = productSearch.toLowerCase();
+    return available.filter(
+      (sp) =>
+        sp.name.toLowerCase().includes(query) ||
+        sp.category.toLowerCase().includes(query) ||
+        sp.compatible_brand.toLowerCase().includes(query) ||
+        sp.compatible_model.toLowerCase().includes(query)
+    );
+  }, [spareParts, productSearch]);
+
   const cartTotal = useMemo(
     () => cart.reduce((sum, item) => sum + item.unit_price * item.quantity, 0),
     [cart]
@@ -142,6 +165,8 @@ export default function POSPage() {
 
   const remaining = cartTotal - paidTotal;
 
+  const getCustomPriceKey = (type: string, id: number) => `${type}_${id}`;
+
   const addMotorcycleToCart = (motorcycle: Motorcycle) => {
     const existing = cart.find(
       (item) => item.item_type === "motorcycle" && item.item_id === motorcycle.id
@@ -150,7 +175,8 @@ export default function POSPage() {
       toast.error("Bu motosiklet zaten sepette");
       return;
     }
-    const priceStr = customPrices[motorcycle.id];
+    const priceKey = getCustomPriceKey("motorcycle", motorcycle.id);
+    const priceStr = customPrices[priceKey];
     const price = priceStr ? parseFloat(priceStr) : 0;
     if (!price || price <= 0) {
       toast.error("Lütfen önce satış fiyatını girin");
@@ -167,6 +193,67 @@ export default function POSPage() {
       },
     ]);
     toast.success("Motosiklet sepete eklendi");
+  };
+
+  const addSparePartToCart = (sparePart: SparePart) => {
+    const quantity = sparePartQuantities[sparePart.id] || 1;
+    if (quantity > sparePart.quantity) {
+      toast.error("Yeterli stok bulunmuyor");
+      return;
+    }
+
+    const priceKey = getCustomPriceKey("spare_part", sparePart.id);
+    const priceStr = customPrices[priceKey];
+    const price = priceStr ? parseFloat(priceStr) : 0;
+    if (!price || price <= 0) {
+      toast.error("Lütfen önce satış fiyatını girin");
+      return;
+    }
+
+    setCart((prev) => {
+      const existingIdx = prev.findIndex(
+        (item) => item.item_type === "spare_part" && item.item_id === sparePart.id
+      );
+      if (existingIdx >= 0) {
+        const newCart = [...prev];
+        const newTotalQty = newCart[existingIdx].quantity + quantity;
+        if (newTotalQty > sparePart.quantity) {
+          toast.error("Toplam miktar stoktan fazla olamaz");
+          return prev;
+        }
+        newCart[existingIdx].quantity = newTotalQty;
+        // Optionally update unit price to latest entered
+        newCart[existingIdx].unit_price = price;
+        toast.success("Yedek parça miktarı güncellendi");
+        return newCart;
+      }
+
+      toast.success("Yedek parça sepete eklendi");
+      return [
+        ...prev,
+        {
+          item_type: "spare_part",
+          item_id: sparePart.id,
+          item_name: sparePart.name,
+          quantity: quantity,
+          unit_price: price,
+          max_quantity: sparePart.quantity,
+        },
+      ];
+    });
+
+    // Reset local quantity input
+    setSparePartQuantities((prev) => ({ ...prev, [sparePart.id]: 1 }));
+  };
+
+  const updateCartQuantity = (index: number, newQty: number) => {
+    const item = cart[index];
+    if (newQty < 1) return;
+    if (item.max_quantity && newQty > item.max_quantity) {
+      toast.error(`Stokta sadece ${item.max_quantity} adet bulunuyor`);
+      return;
+    }
+    setCart((prev) => prev.map((p, i) => (i === index ? { ...p, quantity: newQty } : p)));
   };
 
   const removeFromCart = (index: number) => {
@@ -231,6 +318,7 @@ export default function POSPage() {
       setPaymentLines([{ id: 1, method: "cash", amount: "" }]);
       setNextId(2);
       setCustomPrices({});
+      setSparePartQuantities({});
       await fetchData();
     } catch {
       toast.error("Satış tamamlanırken hata oluştu");
@@ -242,36 +330,33 @@ export default function POSPage() {
   if (loading) {
     return (
       <div className="flex gap-6 h-[calc(100vh-8rem)] p-2">
-        {/* Customers Skeleton */}
         <div className="w-80 flex flex-col">
-          <Skeleton className="h-14 mb-4 rounded-xl bg-zinc-800/50" />
-          <div className="space-y-2 flex-1">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <Skeleton key={i} className="h-16 w-full rounded-xl bg-zinc-800/50" />
+          <Skeleton className="h-14 mb-4 rounded-2xl bg-zinc-800/50" />
+          <div className="space-y-3 flex-1">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <Skeleton key={i} className="h-20 w-full rounded-2xl bg-zinc-800/50" />
             ))}
           </div>
         </div>
 
-        {/* Products Skeleton */}
         <div className="flex-1 flex flex-col">
-          <Skeleton className="h-12 w-48 mb-4 rounded-xl bg-zinc-800/50" />
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-            {Array.from({ length: 9 }).map((_, i) => (
-              <Skeleton key={i} className="h-32 w-full rounded-2xl bg-zinc-800/50" />
+          <Skeleton className="h-14 mb-4 rounded-2xl bg-zinc-800/50" />
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <Skeleton key={i} className="h-32 w-full rounded-3xl bg-zinc-800/50" />
             ))}
           </div>
         </div>
 
-        {/* Cart Skeleton */}
-        <div className="w-96 flex flex-col">
-          <Skeleton className="h-14 mb-4 rounded-xl bg-zinc-800/50" />
-          <div className="flex-1 bg-zinc-900/50 border border-zinc-800/50 rounded-2xl p-4 space-y-4">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <Skeleton key={i} className="h-16 w-full rounded-xl bg-zinc-800/50" />
+        <div className="w-[420px] flex flex-col">
+          <Skeleton className="h-14 mb-4 rounded-2xl bg-zinc-800/50" />
+          <div className="flex-1 bg-zinc-900/50 border border-zinc-800/50 rounded-3xl p-6 space-y-4">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <Skeleton key={i} className="h-20 w-full rounded-2xl bg-zinc-800/50" />
             ))}
-            <div className="mt-auto space-y-4 pt-4 border-t border-zinc-800/50">
-              <Skeleton className="h-10 w-full rounded-xl bg-zinc-800/50" />
-              <Skeleton className="h-12 w-full rounded-xl bg-zinc-800/50" />
+            <div className="mt-auto space-y-4 pt-6 border-t border-zinc-800/50">
+              <Skeleton className="h-12 w-full rounded-2xl bg-zinc-800/50" />
+              <Skeleton className="h-14 w-full rounded-2xl bg-zinc-800/50" />
             </div>
           </div>
         </div>
@@ -279,50 +364,81 @@ export default function POSPage() {
     );
   }
 
+  // Generate initials for avatar
+  const getInitials = (first: string, last: string) => {
+    return `${first.charAt(0)}${last.charAt(0)}`.toUpperCase();
+  };
+
   return (
-    <div className="flex gap-4 h-[calc(100vh-8rem)] p-2">
-      <div className="w-72 flex flex-col gap-4 shrink-0">
-        <Card className="border-zinc-800/50 bg-zinc-900/50 backdrop-blur-sm flex flex-col h-full">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base font-semibold text-zinc-200 flex items-center gap-2">
-              <User className="h-4 w-4 text-blue-400" />
+    <div className="flex gap-6 h-[calc(100vh-8rem)] p-2">
+      {/* 1. SOL PANEL: Müşteri Seçimi */}
+      <div className="w-80 flex flex-col gap-4 shrink-0">
+        <Card className="border-zinc-800/60 bg-zinc-950/40 backdrop-blur-xl flex flex-col h-full rounded-3xl shadow-2xl">
+          <CardHeader className="pb-4 px-5 pt-5">
+            <CardTitle className="text-lg font-semibold text-zinc-100 flex items-center gap-2.5">
+              <div className="p-2 bg-blue-500/10 rounded-xl text-blue-400">
+                <User className="h-4 w-4" />
+              </div>
               Müşteri Seçimi
             </CardTitle>
-            <div className="relative mt-2">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-500" />
+            <div className="relative mt-4">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
               <Input
                 placeholder="Müşteri ara..."
                 value={customerSearch}
                 onChange={(e) => setCustomerSearch(e.target.value)}
-                className="pl-9 h-9 bg-zinc-800/50 border-zinc-700/50 text-zinc-200 text-sm placeholder:text-zinc-600 focus:border-blue-500/50 transition-colors"
+                className="pl-10 h-11 rounded-xl bg-zinc-900/50 border-zinc-800/50 text-zinc-200 placeholder:text-zinc-500 focus:border-blue-500/50 focus:ring-blue-500/20 transition-all shadow-inner"
               />
             </div>
           </CardHeader>
-          <CardContent className="flex-1 p-0 min-h-0">
-            <ScrollArea className="h-full px-4 pb-4">
-              <div className="space-y-2">
-                {filteredCustomers.map((customer) => (
-                  <button
-                    key={customer.id}
-                    onClick={() => setSelectedCustomer(customer)}
-                    className={cn(
-                      "w-full text-left p-3 rounded-xl border transition-all duration-200 group",
-                      selectedCustomer?.id === customer.id
-                        ? "border-blue-500/50 bg-blue-500/10 shadow-lg shadow-blue-500/5"
-                        : "border-zinc-800/50 bg-zinc-800/20 hover:bg-zinc-800/40 hover:border-zinc-700/50"
-                    )}
-                  >
-                    <div className="font-medium text-sm text-zinc-200 group-hover:text-zinc-100 transition-colors">
-                      {isCensored ? "**** ****" : `${customer.first_name} ${customer.last_name}`}
-                    </div>
-                    <div className="flex items-center gap-1.5 text-xs text-zinc-500 mt-1">
-                      <Phone className="h-3 w-3" />
-                      {isCensored ? "***********" : customer.phone}
-                    </div>
-                  </button>
-                ))}
+          <CardContent className="flex-1 p-0 min-h-0 px-3 pb-3">
+            <ScrollArea className="h-full px-2">
+              <div className="space-y-2 pb-4">
+                {filteredCustomers.map((customer) => {
+                  const isSelected = selectedCustomer?.id === customer.id;
+                  return (
+                    <button
+                      key={customer.id}
+                      onClick={() => setSelectedCustomer(customer)}
+                      className={cn(
+                        "w-full text-left p-3.5 rounded-2xl border transition-all duration-300 group relative overflow-hidden",
+                        isSelected
+                          ? "border-blue-500/40 bg-blue-500/10 shadow-[0_0_20px_-5px_rgba(59,130,246,0.2)]"
+                          : "border-zinc-800/50 bg-zinc-900/30 hover:bg-zinc-800/40 hover:border-zinc-700/60"
+                      )}
+                    >
+                      {isSelected && (
+                        <motion.div
+                          layoutId="active-customer-glow"
+                          className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-transparent pointer-events-none"
+                        />
+                      )}
+                      <div className="flex items-center gap-3 relative z-10">
+                        <div
+                          className={cn(
+                            "w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0 transition-colors duration-300",
+                            isSelected
+                              ? "bg-blue-500 text-white shadow-lg shadow-blue-500/30"
+                              : "bg-zinc-800 text-zinc-400 group-hover:bg-zinc-700 group-hover:text-zinc-200"
+                          )}
+                        >
+                          {getInitials(customer.first_name, customer.last_name)}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className={cn("font-medium text-sm truncate transition-colors", isSelected ? "text-blue-100" : "text-zinc-200 group-hover:text-white")}>
+                            {isCensored ? "**** ****" : `${customer.first_name} ${customer.last_name}`}
+                          </div>
+                          <div className="flex items-center gap-1.5 text-xs text-zinc-500 mt-1">
+                            <Phone className="h-3 w-3" />
+                            {isCensored ? "***********" : customer.phone}
+                          </div>
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
                 {filteredCustomers.length === 0 && (
-                  <div className="text-center py-8 text-zinc-600 text-sm">
+                  <div className="text-center py-10 text-zinc-500 text-sm">
                     Müşteri bulunamadı
                   </div>
                 )}
@@ -332,327 +448,480 @@ export default function POSPage() {
         </Card>
       </div>
 
+      {/* 2. ORTA PANEL: Ürünler */}
       <div className="flex-1 flex flex-col gap-4 min-w-0">
-        <Card className="border-zinc-800/50 bg-zinc-900/50 backdrop-blur-sm flex flex-col h-full">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base font-semibold text-zinc-200 flex items-center gap-2">
-              <Bike className="h-4 w-4 text-blue-400" />
-              Mevcut Motosikletler
-            </CardTitle>
-            <div className="relative mt-2">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-500" />
-              <Input
-                placeholder="Marka, model veya şasi no ara..."
-                value={productSearch}
-                onChange={(e) => setProductSearch(e.target.value)}
-                className="pl-9 h-9 bg-zinc-800/50 border-zinc-700/50 text-zinc-200 text-sm placeholder:text-zinc-600 focus:border-zinc-500/50 transition-colors"
-              />
-            </div>
-          </CardHeader>
-          <CardContent className="flex-1 p-0 min-h-0">
-            <ScrollArea className="h-full px-4 pb-4">
-              <div className="space-y-3">
-                {availableMotorcycles.map((motorcycle) => {
-                  const inCart = cart.some(
-                    (item) =>
-                      item.item_type === "motorcycle" && item.item_id === motorcycle.id
-                  );
-                  return (
-                    <div
-                      key={motorcycle.id}
-                      className={cn(
-                        "p-4 rounded-xl border transition-all duration-200",
-                        inCart
-                          ? "border-zinc-800/30 bg-zinc-800/10 opacity-50"
-                          : "border-zinc-800/50 bg-zinc-800/20 hover:border-blue-500/20"
-                      )}
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex-1 min-w-0">
-                          <div className="font-semibold text-sm text-zinc-200">
-                            {motorcycle.brand} {motorcycle.model}
-                          </div>
-                          <div className="flex items-center gap-3 mt-1">
-                            <span className="text-xs text-zinc-500">{motorcycle.year}</span>
-                            <span className="text-xs text-zinc-600">•</span>
-                            <span className="text-xs text-zinc-500">{motorcycle.color}</span>
-                            <span className="text-xs text-zinc-600">•</span>
-                            <span className="text-[10px] font-mono text-zinc-600">
-                              {isCensored ? "*****************" : motorcycle.chassis_number}
-                            </span>
-                            <span className="text-xs text-zinc-600">•</span>
-                            <span className="text-xs text-emerald-500 font-medium">
-                              Alış: {isCensored ? "****" : formatCurrency(motorcycle.purchase_price)}
-                            </span>
-                          </div>
-                          {!inCart && (
-                            <div className="flex items-center gap-2 mt-3">
+        <Card className="border-zinc-800/60 bg-zinc-950/40 backdrop-blur-xl flex flex-col h-full rounded-3xl shadow-2xl">
+          <Tabs
+            value={activeTab}
+            onValueChange={(v) => setActiveTab(v as "motorcycles" | "spare_parts")}
+            className="flex flex-col h-full"
+          >
+            <CardHeader className="pb-2 px-5 pt-5">
+              <div className="flex items-center justify-between gap-4">
+                <TabsList className="bg-zinc-900/80 border border-zinc-800/50 p-1 rounded-xl h-12">
+                  <TabsTrigger value="motorcycles" className="rounded-lg px-4 gap-2 data-[state=active]:bg-zinc-800 data-[state=active]:text-zinc-100 text-zinc-400">
+                    <Bike className="h-4 w-4" />
+                    Motosikletler
+                  </TabsTrigger>
+                  <TabsTrigger value="spare_parts" className="rounded-lg px-4 gap-2 data-[state=active]:bg-zinc-800 data-[state=active]:text-zinc-100 text-zinc-400">
+                    <Wrench className="h-4 w-4" />
+                    Yedek Parçalar
+                  </TabsTrigger>
+                </TabsList>
+                <div className="relative flex-1 max-w-sm">
+                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
+                  <Input
+                    placeholder="Ara..."
+                    value={productSearch}
+                    onChange={(e) => setProductSearch(e.target.value)}
+                    className="pl-10 h-11 rounded-xl bg-zinc-900/50 border-zinc-800/50 text-zinc-200 placeholder:text-zinc-500 focus:border-blue-500/50 focus:ring-blue-500/20 transition-all shadow-inner"
+                  />
+                </div>
+              </div>
+            </CardHeader>
+
+            <CardContent className="flex-1 p-0 min-h-0">
+              <TabsContent value="motorcycles" className="h-full m-0 data-[state=inactive]:hidden">
+                <ScrollArea className="h-full px-5 pb-5">
+                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 pt-2 pb-4">
+                    {availableMotorcycles.map((motorcycle) => {
+                      const inCart = cart.some(
+                        (item) => item.item_type === "motorcycle" && item.item_id === motorcycle.id
+                      );
+                      const priceKey = getCustomPriceKey("motorcycle", motorcycle.id);
+                      return (
+                        <div
+                          key={motorcycle.id}
+                          className={cn(
+                            "group relative overflow-hidden rounded-2xl border transition-all duration-300",
+                            inCart
+                              ? "border-zinc-800/30 bg-zinc-900/20 opacity-50 grayscale-[0.5]"
+                              : "border-zinc-800/50 bg-zinc-900/40 hover:bg-zinc-800/40 hover:border-blue-500/30 shadow-sm hover:shadow-lg"
+                          )}
+                        >
+                          <div className="p-4 flex flex-col h-full">
+                            <div className="flex justify-between items-start mb-3">
+                              <div>
+                                <h3 className="font-semibold text-zinc-100 text-base group-hover:text-blue-200 transition-colors">
+                                  {motorcycle.brand} {motorcycle.model}
+                                </h3>
+                                <div className="text-[11px] font-mono text-zinc-500 mt-0.5">
+                                  SN: {isCensored ? "*****************" : motorcycle.chassis_number}
+                                </div>
+                              </div>
+                              {inCart && (
+                                <Badge className="bg-blue-500/20 text-blue-300 border-none px-2 rounded-lg text-[10px]">
+                                  <Check className="h-3 w-3 mr-1" />
+                                  Sepette
+                                </Badge>
+                              )}
+                            </div>
+                            
+                            <div className="flex flex-wrap gap-2 mb-4">
+                              <Badge variant="secondary" className="bg-zinc-800/50 text-zinc-300 border-zinc-700/50">
+                                {motorcycle.year}
+                              </Badge>
+                              <Badge variant="secondary" className="bg-zinc-800/50 text-zinc-300 border-zinc-700/50">
+                                {motorcycle.color}
+                              </Badge>
+                              <Badge variant="outline" className="text-emerald-400 border-emerald-500/20 bg-emerald-500/5">
+                                Alış: {isCensored ? "****" : formatCurrency(motorcycle.purchase_price)}
+                              </Badge>
+                            </div>
+
+                            <div className="mt-auto pt-3 border-t border-zinc-800/50 flex items-center gap-3">
                               <div className="relative flex-1">
-                                <Tag className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3 w-3 text-zinc-500" />
+                                <Tag className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-500" />
                                 <Input
                                   type="number"
                                   step="0.01"
                                   min="0"
-                                  placeholder="Satış fiyatı (₺)"
-                                  value={customPrices[motorcycle.id] || ""}
+                                  disabled={inCart}
+                                  placeholder="Satış Fiyatı"
+                                  value={customPrices[priceKey] || ""}
                                   onChange={(e) =>
                                     setCustomPrices((prev) => ({
                                       ...prev,
-                                      [motorcycle.id]: e.target.value,
+                                      [priceKey]: e.target.value,
                                     }))
                                   }
-                                  className="pl-8 h-8 text-sm bg-zinc-900/50 border-zinc-700/50 text-zinc-200 placeholder:text-zinc-600 focus:border-blue-500/50"
+                                  className="pl-9 h-10 rounded-xl bg-zinc-950/50 border-zinc-800 text-zinc-200 focus:border-blue-500/50 disabled:opacity-50 font-medium"
                                 />
                               </div>
                               <Button
-                                size="sm"
+                                disabled={inCart}
                                 onClick={() => addMotorcycleToCart(motorcycle)}
-                                className="h-8 px-3 bg-blue-600 hover:bg-blue-700 text-white text-xs"
+                                className="h-10 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-medium px-5 shadow-lg shadow-blue-600/20 transition-all disabled:opacity-50"
                               >
                                 Ekle
                               </Button>
                             </div>
-                          )}
+                          </div>
                         </div>
-                        {inCart && (
-                          <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30 text-[10px] shrink-0">
-                            <Check className="h-3 w-3 mr-1" />
-                            Sepette
-                          </Badge>
-                        )}
+                      );
+                    })}
+                    {availableMotorcycles.length === 0 && (
+                      <div className="col-span-full flex flex-col items-center justify-center py-20 text-zinc-500">
+                        <Bike className="h-12 w-12 mb-4 opacity-20" />
+                        <p className="text-sm font-medium">Motosiklet bulunamadı</p>
                       </div>
-                    </div>
-                  );
-                })}
-                {availableMotorcycles.length === 0 && (
-                  <div className="flex flex-col items-center justify-center py-16 text-zinc-600">
-                    <Bike className="h-10 w-10 mb-3 opacity-30" />
-                    <p className="text-sm">Mevcut motosiklet bulunamadı</p>
+                    )}
                   </div>
-                )}
-              </div>
-            </ScrollArea>
-          </CardContent>
+                </ScrollArea>
+              </TabsContent>
+
+              <TabsContent value="spare_parts" className="h-full m-0 data-[state=inactive]:hidden">
+                <ScrollArea className="h-full px-5 pb-5">
+                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 pt-2 pb-4">
+                    {availableSpareParts.map((sp) => {
+                      const priceKey = getCustomPriceKey("spare_part", sp.id);
+                      return (
+                        <div
+                          key={sp.id}
+                          className="group relative overflow-hidden rounded-2xl border border-zinc-800/50 bg-zinc-900/40 hover:bg-zinc-800/40 hover:border-blue-500/30 transition-all duration-300 shadow-sm hover:shadow-lg"
+                        >
+                          <div className="p-4 flex flex-col h-full">
+                            <div className="flex justify-between items-start mb-3">
+                              <div className="flex-1 min-w-0 pr-4">
+                                <h3 className="font-semibold text-zinc-100 text-base group-hover:text-blue-200 transition-colors truncate">
+                                  {sp.name}
+                                </h3>
+                                <div className="text-xs text-zinc-500 mt-0.5 truncate">
+                                  {sp.category} • {sp.compatible_brand} {sp.compatible_model}
+                                </div>
+                              </div>
+                              <Badge className="bg-amber-500/10 text-amber-400 border-amber-500/20 px-2 rounded-lg text-xs shrink-0">
+                                {sp.quantity} adet
+                              </Badge>
+                            </div>
+
+                            <div className="mt-auto pt-3 border-t border-zinc-800/50 flex items-center gap-2">
+                              <div className="w-20 shrink-0">
+                                <Input
+                                  type="number"
+                                  min="1"
+                                  max={sp.quantity}
+                                  placeholder="Adet"
+                                  value={sparePartQuantities[sp.id] || 1}
+                                  onChange={(e) =>
+                                    setSparePartQuantities((prev) => ({
+                                      ...prev,
+                                      [sp.id]: parseInt(e.target.value) || 1,
+                                    }))
+                                  }
+                                  className="h-10 text-center rounded-xl bg-zinc-950/50 border-zinc-800 text-zinc-200 focus:border-blue-500/50 font-medium"
+                                />
+                              </div>
+                              <div className="relative flex-1">
+                                <Tag className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-500" />
+                                <Input
+                                  type="number"
+                                  step="0.01"
+                                  min="0"
+                                  placeholder="Satış Fiyatı"
+                                  value={customPrices[priceKey] || ""}
+                                  onChange={(e) =>
+                                    setCustomPrices((prev) => ({
+                                      ...prev,
+                                      [priceKey]: e.target.value,
+                                    }))
+                                  }
+                                  className="pl-9 h-10 rounded-xl bg-zinc-950/50 border-zinc-800 text-zinc-200 focus:border-blue-500/50 font-medium"
+                                />
+                              </div>
+                              <Button
+                                onClick={() => addSparePartToCart(sp)}
+                                className="h-10 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-medium px-4 shadow-lg shadow-blue-600/20 transition-all"
+                              >
+                                <Plus className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                    {availableSpareParts.length === 0 && (
+                      <div className="col-span-full flex flex-col items-center justify-center py-20 text-zinc-500">
+                        <Wrench className="h-12 w-12 mb-4 opacity-20" />
+                        <p className="text-sm font-medium">Yedek parça bulunamadı</p>
+                      </div>
+                    )}
+                  </div>
+                </ScrollArea>
+              </TabsContent>
+            </CardContent>
+          </Tabs>
         </Card>
       </div>
 
+      {/* 3. SAĞ PANEL: Sepet */}
       <div className="w-[420px] flex flex-col gap-4 shrink-0">
-        <Card className="border-zinc-800/50 bg-zinc-900/50 backdrop-blur-sm flex flex-col h-full">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base font-semibold text-zinc-200 flex items-center gap-2">
-              <ShoppingCart className="h-4 w-4 text-amber-400" />
-              Sepet
+        <Card className="border-zinc-800/60 bg-zinc-950/40 backdrop-blur-xl flex flex-col h-full rounded-3xl shadow-2xl relative overflow-hidden">
+          {/* Subtle glow in background */}
+          <div className="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl pointer-events-none" />
+
+          <CardHeader className="pb-4 px-6 pt-6 relative z-10">
+            <CardTitle className="text-xl font-bold text-zinc-100 flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 bg-amber-500/10 rounded-xl text-amber-400">
+                  <ShoppingBag className="h-5 w-5" />
+                </div>
+                Sepet
+              </div>
               {cart.length > 0 && (
-                <Badge className="ml-auto bg-amber-500/20 text-amber-300 border-amber-500/30 text-xs">
-                  {cart.length} ürün
+                <Badge className="bg-zinc-800 text-zinc-300 border-zinc-700/50 px-2.5 py-1 rounded-lg">
+                  {cart.length} Ürün
                 </Badge>
               )}
             </CardTitle>
-            {selectedCustomer && (
-              <div className="mt-2 p-2.5 rounded-lg bg-blue-500/10 border border-blue-500/20">
-                <div className="text-xs font-semibold text-blue-300">
-                  {isCensored ? "**** ****" : `${selectedCustomer.first_name} ${selectedCustomer.last_name}`}
-                </div>
-                <div className="text-[11px] text-zinc-500 mt-0.5">{isCensored ? "***********" : selectedCustomer.phone}</div>
-              </div>
-            )}
+
+            <AnimatePresence>
+              {selectedCustomer && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                  animate={{ opacity: 1, height: "auto", marginTop: 16 }}
+                  exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                  className="overflow-hidden"
+                >
+                  <div className="p-3.5 rounded-xl bg-gradient-to-r from-blue-500/10 to-transparent border-l-2 border-blue-500">
+                    <div className="text-sm font-semibold text-blue-100">
+                      {isCensored ? "**** ****" : `${selectedCustomer.first_name} ${selectedCustomer.last_name}`}
+                    </div>
+                    <div className="text-xs text-blue-300/60 mt-0.5">{isCensored ? "***********" : selectedCustomer.phone}</div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </CardHeader>
 
-          <CardContent className="flex-1 flex flex-col p-0 min-h-0 overflow-hidden">
-            <ScrollArea className="flex-1 px-4">
-              {cart.length > 0 ? (
-                <div className="space-y-2 pb-2">
-                  {cart.map((item, index) => (
-                    <div
-                      key={`${item.item_type}-${item.item_id}`}
-                      className="p-3 rounded-xl border border-zinc-800/50 bg-zinc-800/20 animate-in slide-in-from-right-2"
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex-1 min-w-0">
-                          <div className="text-sm font-medium text-zinc-200 truncate">
-                            {item.item_name}
+          <CardContent className="flex-1 flex flex-col p-0 min-h-0 overflow-hidden relative z-10">
+            <ScrollArea className="flex-1 px-6">
+              <AnimatePresence mode="popLayout">
+                {cart.length > 0 ? (
+                  <div className="space-y-3 pb-4">
+                    {cart.map((item, index) => (
+                      <motion.div
+                        layout
+                        initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95, x: 20 }}
+                        key={`${item.item_type}-${item.item_id}`}
+                        className="p-3.5 rounded-2xl border border-zinc-800/50 bg-zinc-900/60 shadow-sm relative group"
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm font-semibold text-zinc-100 truncate">
+                              {item.item_name}
+                            </div>
+                            <div className="text-xs text-zinc-500 mt-1 font-medium">
+                              {isCensored ? "****" : formatCurrency(item.unit_price)}
+                            </div>
                           </div>
-                          <div className="text-xs text-zinc-500 mt-0.5">
-                            {isCensored ? "****" : formatCurrency(item.unit_price)}
+                          <div className="flex flex-col items-end gap-2">
+                            <button
+                              onClick={() => removeFromCart(index)}
+                              className="p-1.5 rounded-lg text-zinc-600 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                            {item.item_type === "spare_part" && (
+                              <div className="flex items-center gap-1 bg-zinc-950/50 rounded-lg p-0.5 border border-zinc-800/50">
+                                <button
+                                  onClick={() => updateCartQuantity(index, item.quantity - 1)}
+                                  className="w-6 h-6 flex items-center justify-center text-zinc-400 hover:text-zinc-100 rounded-md hover:bg-zinc-800 transition-colors"
+                                >
+                                  -
+                                </button>
+                                <span className="text-xs font-medium w-4 text-center text-zinc-200">{item.quantity}</span>
+                                <button
+                                  onClick={() => updateCartQuantity(index, item.quantity + 1)}
+                                  className="w-6 h-6 flex items-center justify-center text-zinc-400 hover:text-zinc-100 rounded-md hover:bg-zinc-800 transition-colors"
+                                >
+                                  +
+                                </button>
+                              </div>
+                            )}
                           </div>
                         </div>
-                        <button
-                          onClick={() => removeFromCart(index)}
-                          className="p-1 rounded-md text-zinc-600 hover:text-red-400 hover:bg-red-500/10 transition-colors"
-                        >
-                          <X className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center py-8 text-zinc-600">
-                  <ShoppingCart className="h-8 w-8 mb-2 opacity-20" />
-                  <p className="text-sm">Sepet boş</p>
-                </div>
-              )}
+                      </motion.div>
+                    ))}
+                  </div>
+                ) : (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="flex flex-col items-center justify-center py-24 text-zinc-500"
+                  >
+                    <motion.div
+                      animate={{ y: [0, -10, 0] }}
+                      transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                    >
+                      <ShoppingBag className="h-16 w-16 mb-6 opacity-20" />
+                    </motion.div>
+                    <p className="text-base font-medium text-zinc-400">Sepetiniz boş</p>
+                    <p className="text-xs mt-2 text-zinc-600 text-center max-w-[200px]">
+                      Satışa başlamak için sol taraftan ürün ekleyin.
+                    </p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </ScrollArea>
 
-              {cart.length > 0 && (
-                <div className="pb-4 space-y-3">
-                  <Separator className="bg-zinc-800/50" />
+            {cart.length > 0 && (
+              <div className="bg-zinc-900/80 border-t border-zinc-800/50 p-6 space-y-5 backdrop-blur-md">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-zinc-400">Genel Toplam</span>
+                  <span className="text-2xl font-bold text-emerald-400 tabular-nums">
+                    {isCensored ? "****" : formatCurrency(cartTotal)}
+                  </span>
+                </div>
 
+                <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-zinc-400">Toplam Tutar</span>
-                    <span className="text-lg font-bold text-zinc-100 tabular-nums">
-                      {isCensored ? "****" : formatCurrency(cartTotal)}
-                    </span>
+                    <Label className="text-xs font-semibold text-zinc-300 uppercase tracking-wider">Tahsilat</Label>
+                    <button
+                      onClick={addPaymentLine}
+                      className="flex items-center gap-1.5 text-xs text-blue-400 hover:text-blue-300 transition-colors font-medium bg-blue-500/10 px-2 py-1 rounded-md"
+                    >
+                      <Plus className="h-3.5 w-3.5" />
+                      Yöntem Ekle
+                    </button>
                   </div>
 
-                  <Separator className="bg-zinc-800/50" />
+                  <div className="space-y-2.5">
+                    {paymentLines.map((line) => (
+                      <div key={line.id} className="flex items-center gap-2">
+                        <Select
+                          value={line.method}
+                          onValueChange={(val) => updatePaymentLine(line.id, "method", val)}
+                        >
+                          <SelectTrigger className="h-10 flex-1 bg-zinc-950/50 border-zinc-800 rounded-xl text-zinc-200 text-xs focus:ring-0 focus:ring-offset-0 focus:border-blue-500/50">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent className="bg-zinc-900 border-zinc-800 rounded-xl">
+                            {paymentMethods.map((m) => {
+                              const Icon = m.icon;
+                              return (
+                                <SelectItem
+                                  key={m.value}
+                                  value={m.value}
+                                  className="text-zinc-300 focus:bg-zinc-800 text-xs rounded-lg my-0.5"
+                                >
+                                  <span className="flex items-center gap-2">
+                                    <Icon className="h-3.5 w-3.5 opacity-70" />
+                                    {m.label}
+                                  </span>
+                                </SelectItem>
+                              );
+                            })}
+                          </SelectContent>
+                        </Select>
 
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <Label className="text-xs text-zinc-400 font-medium">Ödeme Yöntemleri</Label>
-                      <button
-                        onClick={addPaymentLine}
-                        className="flex items-center gap-1 text-xs text-blue-400 hover:text-blue-300 transition-colors"
-                      >
-                        <Plus className="h-3 w-3" />
-                        Ekle
-                      </button>
-                    </div>
-
-                    <div className="space-y-2">
-                      {paymentLines.map((line) => (
-                        <div key={line.id} className="flex items-center gap-2">
+                        {line.method === "credit_card" && (
                           <Select
-                            value={line.method}
-                            onValueChange={(val) => updatePaymentLine(line.id, "method", val)}
+                            value={line.installments?.toString() || "0"}
+                            onValueChange={(val) => updatePaymentLine(line.id, "installments", parseInt(val))}
                           >
-                            <SelectTrigger className="h-9 flex-1 bg-zinc-800/50 border-zinc-700/50 text-zinc-300 text-xs focus:ring-0 focus:ring-offset-0 focus:border-blue-500/50">
-                              <SelectValue />
+                            <SelectTrigger className="h-10 w-[95px] bg-zinc-950/50 border-zinc-800 rounded-xl text-zinc-200 text-xs focus:ring-0 focus:ring-offset-0 focus:border-blue-500/50">
+                              <SelectValue placeholder="Taksit" />
                             </SelectTrigger>
-                            <SelectContent className="bg-zinc-900 border-zinc-800">
-                              {paymentMethods.map((m) => {
-                                const Icon = m.icon;
-                                return (
-                                  <SelectItem
-                                    key={m.value}
-                                    value={m.value}
-                                    className="text-zinc-300 focus:bg-zinc-800 text-xs"
-                                  >
-                                    <span className="flex items-center gap-1.5">
-                                      <Icon className="h-3.5 w-3.5" />
-                                      {m.label}
-                                    </span>
-                                  </SelectItem>
-                                );
-                              })}
+                            <SelectContent className="bg-zinc-900 border-zinc-800 rounded-xl">
+                              {installmentOptions.map((opt) => (
+                                <SelectItem
+                                  key={opt}
+                                  value={opt.toString()}
+                                  className="text-zinc-300 focus:bg-zinc-800 text-xs rounded-lg"
+                                >
+                                  {opt === 0 ? "Tek Çekim" : `${opt} Taksit`}
+                                </SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
-
-                          {line.method === "credit_card" && (
-                            <Select
-                              value={line.installments?.toString() || "0"}
-                              onValueChange={(val) => updatePaymentLine(line.id, "installments", parseInt(val))}
-                            >
-                              <SelectTrigger className="h-9 w-[110px] bg-zinc-800/50 border-zinc-700/50 text-zinc-300 text-xs focus:ring-0 focus:ring-offset-0 focus:border-blue-500/50">
-                                <SelectValue placeholder="Taksit" />
-                              </SelectTrigger>
-                              <SelectContent className="bg-zinc-900 border-zinc-800">
-                                {installmentOptions.map((opt) => (
-                                  <SelectItem
-                                    key={opt}
-                                    value={opt.toString()}
-                                    className="text-zinc-300 focus:bg-zinc-800 text-xs"
-                                  >
-                                    {opt === 0 ? "Tek Çekim" : `${opt} Taksit`}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          )}
-
-                          <div className="relative w-32">
-                            <Input
-                              type="number"
-                              step="0.01"
-                              min="0"
-                              placeholder="Tutar"
-                              value={line.amount}
-                              onChange={(e) => updatePaymentLine(line.id, "amount", e.target.value)}
-                              className="h-9 pr-8 bg-zinc-800/50 border-zinc-700/50 text-zinc-200 text-xs placeholder:text-zinc-600 focus:border-blue-500/50"
-                            />
-                            <button
-                              onClick={() => fillRemaining(line.id)}
-                              title="Kalan tutarı doldur"
-                              className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-600 hover:text-blue-400 transition-colors text-[10px] font-bold"
-                            >
-                              ↓
-                            </button>
-                          </div>
-
-                          {paymentLines.length > 1 && (
-                            <button
-                              onClick={() => removePaymentLine(line.id)}
-                              className="p-1.5 rounded-md text-zinc-600 hover:text-red-400 hover:bg-red-500/10 transition-colors"
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </button>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-
-                    <div
-                      className={cn(
-                        "flex items-center justify-between p-2.5 rounded-lg text-xs font-semibold transition-colors",
-                        Math.abs(remaining) < 0.01
-                          ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-400"
-                          : remaining > 0
-                          ? "bg-amber-500/10 border border-amber-500/20 text-amber-400"
-                          : "bg-red-500/10 border border-red-500/20 text-red-400"
-                      )}
-                    >
-                      <span className="flex items-center gap-1.5">
-                        {Math.abs(remaining) < 0.01 ? (
-                          <Check className="h-3.5 w-3.5" />
-                        ) : (
-                          <AlertCircle className="h-3.5 w-3.5" />
                         )}
-                        {Math.abs(remaining) < 0.01
-                          ? "Ödeme tamamlandı"
-                          : remaining > 0
-                          ? "Kalan"
-                          : "Fazla ödeme"}
-                      </span>
-                      {Math.abs(remaining) >= 0.01 && (
-                        <span className="tabular-nums">
-                          {formatCurrency(Math.abs(remaining))}
-                        </span>
-                      )}
-                    </div>
+
+                        <div className="relative w-28 shrink-0">
+                          <Input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            placeholder="Tutar"
+                            value={line.amount}
+                            onChange={(e) => updatePaymentLine(line.id, "amount", e.target.value)}
+                            className="h-10 pr-7 rounded-xl bg-zinc-950/50 border-zinc-800 text-zinc-100 font-medium text-sm focus:border-blue-500/50 text-right"
+                          />
+                          <button
+                            onClick={() => fillRemaining(line.id)}
+                            title="Kalan tutarı doldur"
+                            className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-blue-400 transition-colors"
+                          >
+                            <svg width="12" height="12" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M7.5 2C7.77614 2 8 2.22386 8 2.5L8 11.2929L11.1464 8.14645C11.3417 7.95118 11.6583 7.95118 11.8536 8.14645C12.0488 8.34171 12.0488 8.65829 11.8536 8.85355L7.85355 12.8536C7.75979 12.9473 7.63261 13 7.5 13C7.36739 13 7.24021 12.9473 7.14645 12.8536L3.14645 8.85355C2.95118 8.65829 2.95118 8.34171 3.14645 8.14645C3.34171 7.95118 3.65829 7.95118 3.85355 8.14645L7 11.2929L7 2.5C7 2.22386 7.22386 2 7.5 2Z" fill="currentColor" fillRule="evenodd" clipRule="evenodd"></path></svg>
+                          </button>
+                        </div>
+
+                        {paymentLines.length > 1 && (
+                          <button
+                            onClick={() => removePaymentLine(line.id)}
+                            className="p-2 rounded-xl text-zinc-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        )}
+                      </div>
+                    ))}
                   </div>
 
-                  {!selectedCustomer && (
-                    <div className="text-xs text-amber-400/80 bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-2 text-center">
-                      Satışı tamamlamak için müşteri seçin
-                    </div>
-                  )}
-
-                  <Button
-                    onClick={handleCompleteSale}
-                    disabled={!canComplete || submitting}
-                    className="w-full h-11 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm gap-2 transition-all duration-200 hover:shadow-lg hover:shadow-emerald-600/20 disabled:opacity-40 disabled:cursor-not-allowed"
-                  >
-                    {submitting ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <>
-                        <Check className="h-4 w-4" />
-                        Satışı Tamamla
-                      </>
+                  <div
+                    className={cn(
+                      "flex items-center justify-between p-3 rounded-xl text-xs font-semibold transition-all duration-300",
+                      Math.abs(remaining) < 0.01
+                        ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-400"
+                        : remaining > 0
+                        ? "bg-amber-500/10 border border-amber-500/20 text-amber-400"
+                        : "bg-red-500/10 border border-red-500/20 text-red-400"
                     )}
-                  </Button>
+                  >
+                    <span className="flex items-center gap-2">
+                      {Math.abs(remaining) < 0.01 ? (
+                        <Check className="h-4 w-4" />
+                      ) : (
+                        <AlertCircle className="h-4 w-4" />
+                      )}
+                      {Math.abs(remaining) < 0.01
+                        ? "Ödeme Tamam"
+                        : remaining > 0
+                        ? "Kalan Tutar"
+                        : "Fazla Ödeme"}
+                    </span>
+                    {Math.abs(remaining) >= 0.01 && (
+                      <span className="tabular-nums text-sm">
+                        {formatCurrency(Math.abs(remaining))}
+                      </span>
+                    )}
+                  </div>
                 </div>
-              )}
-            </ScrollArea>
+
+                {!selectedCustomer && (
+                  <div className="text-xs text-amber-400/90 bg-amber-500/10 border border-amber-500/20 rounded-xl px-4 py-2.5 text-center font-medium shadow-sm">
+                    Satışı tamamlamak için sol taraftan müşteri seçin
+                  </div>
+                )}
+
+                <Button
+                  onClick={handleCompleteSale}
+                  disabled={!canComplete || submitting}
+                  className="w-full h-12 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm gap-2 transition-all duration-300 hover:shadow-lg hover:shadow-blue-600/25 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {submitting ? (
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                  ) : (
+                    <>
+                      <Check className="h-5 w-5" />
+                      SATIŞI TAMAMLA
+                    </>
+                  )}
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
