@@ -826,7 +826,7 @@ export default function POSPage() {
                         placeholder="Tutar"
                         value={line.amount || ""}
                         onChange={(e) => updatePaymentLine(line.id, "amount", parseFloat(e.target.value))}
-                        className="w-[90px] h-10 px-3 rounded-xl bg-zinc-950/60 border-zinc-800 text-zinc-100 font-medium text-sm focus:border-blue-500/50 text-right [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        className="w-[90px] h-10 px-3 rounded-xl bg-zinc-950/60 border-zinc-800 text-zinc-100 font-medium text-sm focus:border-blue-500/50 text-left [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       />
 
                       {paymentLines.length > 1 && (
