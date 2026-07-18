@@ -81,8 +81,5 @@ func init() {
 
 // Handler is the entrypoint for Vercel Serverless Function
 func Handler(w http.ResponseWriter, r *http.Request) {
-	if path := r.URL.Query().Get("path"); path != "" {
-		r.URL.Path = "/" + path
-	}
 	app.ServeHTTP(w, r)
 }
