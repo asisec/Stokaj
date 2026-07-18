@@ -496,11 +496,11 @@ export function MotorcycleTable({
               
               <div className="h-px w-full bg-gradient-to-r from-zinc-800/0 via-zinc-800 to-zinc-800/0" />
               
-              <div className="grid grid-cols-2 gap-5 max-h-[60vh] overflow-y-auto pr-3 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-zinc-800 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-zinc-700 transition-colors">
+              <div className="grid grid-cols-2 gap-5 max-h-[350px] overflow-y-auto pr-3 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-zinc-800 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-zinc-700 transition-colors">
                 <div className="space-y-2">
                   <Label className="text-zinc-400 text-xs font-medium uppercase tracking-wider">Durum</Label>
                   <Select value={filters.status} onValueChange={(v) => handleFilterChange("status", v)}>
-                    <SelectTrigger className="bg-zinc-900/50 border-zinc-800/80 text-zinc-200 h-10 hover:border-zinc-700 focus:ring-1 focus:ring-blue-500/50 transition-all rounded-xl">
+                    <SelectTrigger className="bg-zinc-900/50 border-zinc-800/80 text-zinc-200 h-10 hover:border-zinc-700 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all rounded-xl focus:ring-offset-0">
                       <SelectValue placeholder="Tümü" />
                     </SelectTrigger>
                     <SelectContent className="bg-zinc-900 border-zinc-800 rounded-xl shadow-xl shadow-black/50">
@@ -514,7 +514,7 @@ export function MotorcycleTable({
                 <div className="space-y-2">
                   <Label className="text-zinc-400 text-xs font-medium uppercase tracking-wider">Konum</Label>
                   <Select value={filters.location} onValueChange={(v) => handleFilterChange("location", v)}>
-                    <SelectTrigger className="bg-zinc-900/50 border-zinc-800/80 text-zinc-200 h-10 hover:border-zinc-700 focus:ring-1 focus:ring-blue-500/50 transition-all rounded-xl">
+                    <SelectTrigger className="bg-zinc-900/50 border-zinc-800/80 text-zinc-200 h-10 hover:border-zinc-700 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all rounded-xl focus:ring-offset-0">
                       <SelectValue placeholder="Tümü" />
                     </SelectTrigger>
                     <SelectContent className="bg-zinc-900 border-zinc-800 rounded-xl shadow-xl shadow-black/50 max-h-40">
@@ -527,27 +527,27 @@ export function MotorcycleTable({
 
                 <div className="space-y-2">
                   <Label className="text-zinc-400 text-xs font-medium uppercase tracking-wider">Şasi No</Label>
-                  <Input placeholder="Örn: 123456" value={filters.chassis_number} onChange={(e) => handleFilterChange("chassis_number", e.target.value)} className="bg-zinc-900/50 border-zinc-800/80 text-zinc-200 h-10 placeholder:text-zinc-600 hover:border-zinc-700 focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 transition-all rounded-xl" />
+                  <Input placeholder="Örn: 123456" value={filters.chassis_number} onChange={(e) => handleFilterChange("chassis_number", e.target.value)} className="bg-zinc-900/50 border-zinc-800/80 text-zinc-200 h-10 placeholder:text-zinc-600 hover:border-zinc-700 focus:border-blue-500 focus-visible:ring-1 focus-visible:ring-blue-500 focus-visible:ring-offset-0 transition-all rounded-xl" />
                 </div>
 
                 <div className="space-y-2">
                   <Label className="text-zinc-400 text-xs font-medium uppercase tracking-wider">Marka</Label>
-                  <Input placeholder="Örn: Honda" value={filters.brand} onChange={(e) => handleFilterChange("brand", e.target.value)} className="bg-zinc-900/50 border-zinc-800/80 text-zinc-200 h-10 placeholder:text-zinc-600 hover:border-zinc-700 focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 transition-all rounded-xl" />
+                  <Input placeholder="Örn: Honda" value={filters.brand} onChange={(e) => handleFilterChange("brand", e.target.value)} className="bg-zinc-900/50 border-zinc-800/80 text-zinc-200 h-10 placeholder:text-zinc-600 hover:border-zinc-700 focus:border-blue-500 focus-visible:ring-1 focus-visible:ring-blue-500 focus-visible:ring-offset-0 transition-all rounded-xl" />
                 </div>
 
                 <div className="space-y-2">
                   <Label className="text-zinc-400 text-xs font-medium uppercase tracking-wider">Model</Label>
-                  <Input placeholder="Örn: CBR650R" value={filters.model} onChange={(e) => handleFilterChange("model", e.target.value)} className="bg-zinc-900/50 border-zinc-800/80 text-zinc-200 h-10 placeholder:text-zinc-600 hover:border-zinc-700 focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 transition-all rounded-xl" />
+                  <Input placeholder="Örn: CBR650R" value={filters.model} onChange={(e) => handleFilterChange("model", e.target.value)} className="bg-zinc-900/50 border-zinc-800/80 text-zinc-200 h-10 placeholder:text-zinc-600 hover:border-zinc-700 focus:border-blue-500 focus-visible:ring-1 focus-visible:ring-blue-500 focus-visible:ring-offset-0 transition-all rounded-xl" />
                 </div>
 
                 <div className="space-y-2">
                   <Label className="text-zinc-400 text-xs font-medium uppercase tracking-wider">Yıl</Label>
-                  <Input type="number" placeholder="Örn: 2024" value={filters.year} onChange={(e) => handleFilterChange("year", e.target.value)} className="bg-zinc-900/50 border-zinc-800/80 text-zinc-200 h-10 placeholder:text-zinc-600 hover:border-zinc-700 focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 transition-all rounded-xl" />
+                  <Input type="number" placeholder="Örn: 2024" value={filters.year} onChange={(e) => handleFilterChange("year", e.target.value)} className="bg-zinc-900/50 border-zinc-800/80 text-zinc-200 h-10 placeholder:text-zinc-600 hover:border-zinc-700 focus:border-blue-500 focus-visible:ring-1 focus-visible:ring-blue-500 focus-visible:ring-offset-0 transition-all rounded-xl" />
                 </div>
 
                 <div className="space-y-2 col-span-2">
                   <Label className="text-zinc-400 text-xs font-medium uppercase tracking-wider">Renk</Label>
-                  <Input placeholder="Örn: Kırmızı" value={filters.color} onChange={(e) => handleFilterChange("color", e.target.value)} className="bg-zinc-900/50 border-zinc-800/80 text-zinc-200 h-10 placeholder:text-zinc-600 hover:border-zinc-700 focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 transition-all rounded-xl" />
+                  <Input placeholder="Örn: Kırmızı" value={filters.color} onChange={(e) => handleFilterChange("color", e.target.value)} className="bg-zinc-900/50 border-zinc-800/80 text-zinc-200 h-10 placeholder:text-zinc-600 hover:border-zinc-700 focus:border-blue-500 focus-visible:ring-1 focus-visible:ring-blue-500 focus-visible:ring-offset-0 transition-all rounded-xl" />
                 </div>
 
                 <div className="col-span-2 my-2">
@@ -556,20 +556,20 @@ export function MotorcycleTable({
 
                 <div className="space-y-2">
                   <Label className="text-zinc-400 text-xs font-medium uppercase tracking-wider">Min Alış Fiyatı (₺)</Label>
-                  <Input type="number" placeholder="0" value={filters.minPurchasePrice} onChange={(e) => handleFilterChange("minPurchasePrice", e.target.value)} className="bg-zinc-900/50 border-zinc-800/80 text-zinc-200 h-10 placeholder:text-zinc-600 hover:border-zinc-700 focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 transition-all rounded-xl" />
+                  <Input type="number" placeholder="0" value={filters.minPurchasePrice} onChange={(e) => handleFilterChange("minPurchasePrice", e.target.value)} className="bg-zinc-900/50 border-zinc-800/80 text-zinc-200 h-10 placeholder:text-zinc-600 hover:border-zinc-700 focus:border-blue-500 focus-visible:ring-1 focus-visible:ring-blue-500 focus-visible:ring-offset-0 transition-all rounded-xl" />
                 </div>
                 <div className="space-y-2">
                   <Label className="text-zinc-400 text-xs font-medium uppercase tracking-wider">Max Alış Fiyatı (₺)</Label>
-                  <Input type="number" placeholder="Sınırsız" value={filters.maxPurchasePrice} onChange={(e) => handleFilterChange("maxPurchasePrice", e.target.value)} className="bg-zinc-900/50 border-zinc-800/80 text-zinc-200 h-10 placeholder:text-zinc-600 hover:border-zinc-700 focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 transition-all rounded-xl" />
+                  <Input type="number" placeholder="Sınırsız" value={filters.maxPurchasePrice} onChange={(e) => handleFilterChange("maxPurchasePrice", e.target.value)} className="bg-zinc-900/50 border-zinc-800/80 text-zinc-200 h-10 placeholder:text-zinc-600 hover:border-zinc-700 focus:border-blue-500 focus-visible:ring-1 focus-visible:ring-blue-500 focus-visible:ring-offset-0 transition-all rounded-xl" />
                 </div>
 
                 <div className="space-y-2">
                   <Label className="text-zinc-400 text-xs font-medium uppercase tracking-wider">Min Satış Fiyatı (₺)</Label>
-                  <Input type="number" placeholder="0" value={filters.minSalePrice} onChange={(e) => handleFilterChange("minSalePrice", e.target.value)} className="bg-zinc-900/50 border-zinc-800/80 text-zinc-200 h-10 placeholder:text-zinc-600 hover:border-zinc-700 focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 transition-all rounded-xl" />
+                  <Input type="number" placeholder="0" value={filters.minSalePrice} onChange={(e) => handleFilterChange("minSalePrice", e.target.value)} className="bg-zinc-900/50 border-zinc-800/80 text-zinc-200 h-10 placeholder:text-zinc-600 hover:border-zinc-700 focus:border-blue-500 focus-visible:ring-1 focus-visible:ring-blue-500 focus-visible:ring-offset-0 transition-all rounded-xl" />
                 </div>
                 <div className="space-y-2">
                   <Label className="text-zinc-400 text-xs font-medium uppercase tracking-wider">Max Satış Fiyatı (₺)</Label>
-                  <Input type="number" placeholder="Sınırsız" value={filters.maxSalePrice} onChange={(e) => handleFilterChange("maxSalePrice", e.target.value)} className="bg-zinc-900/50 border-zinc-800/80 text-zinc-200 h-10 placeholder:text-zinc-600 hover:border-zinc-700 focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 transition-all rounded-xl" />
+                  <Input type="number" placeholder="Sınırsız" value={filters.maxSalePrice} onChange={(e) => handleFilterChange("maxSalePrice", e.target.value)} className="bg-zinc-900/50 border-zinc-800/80 text-zinc-200 h-10 placeholder:text-zinc-600 hover:border-zinc-700 focus:border-blue-500 focus-visible:ring-1 focus-visible:ring-blue-500 focus-visible:ring-offset-0 transition-all rounded-xl" />
                 </div>
               </div>
             </div>
