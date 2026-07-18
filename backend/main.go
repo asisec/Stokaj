@@ -12,12 +12,12 @@ import (
 var dbInitialized bool
 
 func main() {
+	cfg := config.Load()
 	r := gin.Default()
 	r.Use(middleware.SetupCORS())
 
 	r.Use(func(c *gin.Context) {
 		if !dbInitialized {
-			cfg := config.Load()
 			err := database.Connect(cfg)
 			if err != nil {
 				c.AbortWithStatusJSON(500, gin.H{"error": "DB Hatası: " + err.Error()})
@@ -27,7 +27,6 @@ func main() {
 		}
 		c.Next()
 	})
-
 
 	api := r.Group("/api")
 
@@ -49,6 +48,8 @@ func main() {
 	api.POST("/customers", handlers.CreateCustomer)
 	api.PUT("/customers/:id", handlers.UpdateCustomer)
 	api.DELETE("/customers/:id", handlers.DeleteCustomer)
+	api.POST("/customers/:id/payments", handlers.AddCustomerPayment)
+	api.GET("/customers/:id/transactions", handlers.GetCustomerTransactions)
 
 	api.GET("/sales", handlers.GetSales)
 	api.GET("/sales/:id", handlers.GetSale)

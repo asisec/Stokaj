@@ -39,6 +39,8 @@ import {
   Pencil,
   Trash2,
   ArrowUpDown,
+  Banknote,
+  ListOrdered,
 } from "lucide-react";
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
 
@@ -51,6 +53,8 @@ interface CustomerTableProps {
   customers: Customer[];
   onEdit: (customer: Customer) => void;
   onDelete: (id: number) => void;
+  onPayment?: (customer: Customer) => void;
+  onTransactions?: (customer: Customer) => void;
   loading: boolean;
 }
 
@@ -58,6 +62,8 @@ export function CustomerTable({
   customers,
   onEdit,
   onDelete,
+  onPayment,
+  onTransactions,
   loading,
 }: CustomerTableProps) {
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -154,6 +160,27 @@ export function CustomerTable({
           </span>
         ),
       },
+      {
+        accessorKey: "balance",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="text-zinc-400 hover:text-zinc-200 -ml-4"
+          >
+            Bakiye (Borç)
+            <ArrowUpDown className="ml-2 h-3.5 w-3.5" />
+          </Button>
+        ),
+        cell: ({ row }) => {
+          const balance = parseFloat(row.getValue("balance") as string || "0");
+          return (
+            <span className={`font-semibold ${balance > 0 ? "text-rose-400" : "text-zinc-400"}`}>
+              {isCensored ? "****" : formatCurrency(balance)}
+            </span>
+          );
+        },
+      },
 
       {
         id: "actions",
@@ -173,6 +200,25 @@ export function CustomerTable({
               align="end"
               className="bg-zinc-900 border-zinc-800"
             >
+              {onPayment && (
+                <DropdownMenuItem
+                  onClick={() => onPayment(row.original)}
+                  className="text-emerald-400 focus:bg-emerald-500/10 focus:text-emerald-300 cursor-pointer"
+                >
+                  <Banknote className="mr-2 h-4 w-4" />
+                  Tahsilat Al
+                </DropdownMenuItem>
+              )}
+              {onTransactions && (
+                <DropdownMenuItem
+                  onClick={() => onTransactions(row.original)}
+                  className="text-blue-400 focus:bg-blue-500/10 focus:text-blue-300 cursor-pointer"
+                >
+                  <ListOrdered className="mr-2 h-4 w-4" />
+                  Hesap Hareketleri
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuSeparator className="bg-zinc-800" />
               <DropdownMenuItem
                 onClick={() => onEdit(row.original)}
                 className="text-zinc-300 focus:bg-zinc-800 focus:text-zinc-100 cursor-pointer"

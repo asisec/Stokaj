@@ -104,12 +104,17 @@ func CreateSale(c *gin.Context) {
 
 		var payments []models.SalePayment
 		var paidTotal float64
+		var openAccountAmount float64
+
 		for _, p := range req.Payments {
 			payments = append(payments, models.SalePayment{
 				Method: p.Method,
 				Amount: p.Amount,
 			})
 			paidTotal += p.Amount
+			if p.Method == "open_account" {
+				openAccountAmount += p.Amount
+			}
 		}
 
 		if paidTotal < totalAmount {
@@ -127,11 +132,27 @@ func CreateSale(c *gin.Context) {
 			return err
 		}
 
+		if openAccountAmount > 0 {
+			customer.Balance += openAccountAmount
+			if err := tx.Save(&customer).Error; err != nil {
+				return err
+			}
+
+			transaction := models.CustomerTransaction{
+				CustomerID:    customer.ID,
+				Type:          "debt",
+				Amount:        openAccountAmount,
+				Description:   "Satış - Açık Hesap",
+				ReferenceType: "sale",
+				ReferenceID:   sale.ID,
+			}
+			if err := tx.Create(&transaction).Error; err != nil {
+				return err
+			}
+		}
+
 		tx.Preload("Customer").Preload("Items").Preload("Payments").First(&sale, sale.ID)
 		c.JSON(http.StatusCreated, sale)
-
-
-
 		return nil
 	})
 
@@ -167,6 +188,23 @@ func DeleteSale(c *gin.Context) {
 		if err := tx.Where("sale_id = ?", sale.ID).Delete(&models.SalePayment{}).Error; err != nil {
 			return err
 		}
+
+		// Revert customer transactions and balances
+		var transactions []models.CustomerTransaction
+		if err := tx.Where("reference_type = ? AND reference_id = ?", "sale", sale.ID).Find(&transactions).Error; err != nil {
+			return err
+		}
+		for _, t := range transactions {
+			if t.Type == "debt" {
+				if err := tx.Model(&models.Customer{}).Where("id = ?", sale.CustomerID).Update("balance", gorm.Expr("balance - ?", t.Amount)).Error; err != nil {
+					return err
+				}
+			}
+			if err := tx.Delete(&t).Error; err != nil {
+				return err
+			}
+		}
+
 		if err := tx.Delete(&sale).Error; err != nil {
 			return err
 		}

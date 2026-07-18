@@ -25,7 +25,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Bike, Wrench, Users, ShoppingCart, Trash2, ShieldAlert, Eye, EyeOff } from "lucide-react";
+import { Bike, Wrench, Users, ShoppingCart, Trash2, ShieldAlert, Eye, EyeOff, Wallet } from "lucide-react";
 import { customToast as toast } from "@/lib/toast";
 import {
   AlertDialog,
@@ -138,6 +138,16 @@ export default function DashboardPage() {
       bgGlow: "bg-purple-500/10",
     },
     {
+      title: "Toplam Alacaklar",
+      value: formatCurrency(stats.total_receivables),
+      subtitle: "Açık Hesap (Veresiye)",
+      icon: Wallet,
+      gradient: "from-rose-500/20 to-rose-600/5",
+      border: "border-l-rose-500",
+      iconColor: "text-rose-400",
+      bgGlow: "bg-rose-500/10",
+    },
+    {
       title: "Net Ciro",
       value: formatCurrency(stats.total_revenue),
       subtitle: "Toplam Net Kâr",
@@ -165,7 +175,7 @@ export default function DashboardPage() {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
         {statCards.map((card) => {
           const Icon = card.icon;
           return (

@@ -79,6 +79,17 @@ export interface Customer {
   updated_at: string
 }
 
+export interface CustomerTransaction {
+  id: number;
+  customer_id: number;
+  type: string;
+  amount: number;
+  description: string;
+  reference_type: string;
+  reference_id: number;
+  created_at: string;
+}
+
 export interface SaleItem {
   id: number
   sale_id: number
@@ -118,18 +129,19 @@ export interface BrandStat {
 }
 
 export interface DashboardStats {
-  total_motorcycles: number
-  available_motorcycles: number
-  sold_motorcycles: number
-  total_spare_parts: number
-  total_spare_parts_quantity: number
-  low_stock_parts: number
-  total_customers: number
-  total_sales: number
-  total_revenue: number
-  recent_sales: Sale[]
-  sales_trend: SalesTrend[]
-  top_brands: BrandStat[]
+  total_motorcycles: number;
+  available_motorcycles: number;
+  sold_motorcycles: number;
+  total_spare_parts: number;
+  total_spare_parts_quantity: number;
+  low_stock_parts: number;
+  total_customers: number;
+  total_sales: number;
+  total_revenue: number;
+  total_receivables: number;
+  recent_sales: Sale[];
+  sales_trend: SalesTrend[];
+  top_brands: BrandStat[];
 }
 
 export const api = {
@@ -164,9 +176,25 @@ export const api = {
     return request<Customer[]>(`/api/customers${query ? `?${query}` : ""}`)
   },
   getCustomer: (id: number) => request<Customer>(`/api/customers/${id}`),
-  createCustomer: (data: Partial<Customer>) => request<Customer>("/api/customers", { method: "POST", body: JSON.stringify(data) }),
-  updateCustomer: (id: number, data: Partial<Customer>) => request<Customer>(`/api/customers/${id}`, { method: "PUT", body: JSON.stringify(data) }),
-  deleteCustomer: (id: number) => request<void>(`/api/customers/${id}`, { method: "DELETE" }),
+  createCustomer: (customer: Omit<Customer, "id" | "created_at" | "updated_at" | "balance" | "sales">) =>
+    request<Customer>("/api/customers", {
+      method: "POST",
+      body: JSON.stringify(customer),
+    }),
+  updateCustomer: (id: number, customer: Omit<Customer, "id" | "created_at" | "updated_at" | "balance" | "sales">) =>
+    request<Customer>(`/api/customers/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(customer),
+    }),
+  deleteCustomer: (id: number) =>
+    request<{ message: string }>(`/api/customers/${id}`, { method: "DELETE" }),
+  addCustomerPayment: (id: number, payment: { amount: number; method: string; description?: string }) =>
+    request<{ message: string; balance: number }>(`/api/customers/${id}/payments`, {
+      method: "POST",
+      body: JSON.stringify(payment),
+    }),
+  getCustomerTransactions: (id: number) =>
+    request<CustomerTransaction[]>(`/api/customers/${id}/transactions`),
 
   getSales: () => request<Sale[]>("/api/sales"),
   getSale: (id: number) => request<Sale>(`/api/sales/${id}`),

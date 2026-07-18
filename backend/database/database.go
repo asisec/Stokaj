@@ -28,6 +28,7 @@ func Connect(cfg config.Config) error {
 		&models.Motorcycle{},
 		&models.SparePart{},
 		&models.Customer{},
+		&models.CustomerTransaction{},
 		&models.Sale{},
 		&models.SalePayment{},
 		&models.SaleItem{},

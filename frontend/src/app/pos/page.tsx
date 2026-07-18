@@ -39,6 +39,7 @@ import {
   AlertCircle,
   ShoppingBag,
   Package,
+  BookOpen,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
@@ -63,6 +64,7 @@ const paymentMethods = [
   { value: "cash", label: "Nakit", icon: Banknote },
   { value: "credit_card", label: "Kredi Kartı", icon: CreditCard },
   { value: "bank_transfer", label: "Havale / EFT", icon: Building2 },
+  { value: "open_account", label: "Açık Hesap", icon: BookOpen },
 ];
 
 const installmentOptions = [0, 2, 3, 4, 6, 9, 12];

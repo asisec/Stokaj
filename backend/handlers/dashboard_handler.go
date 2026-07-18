@@ -29,6 +29,7 @@ func GetDashboardStats(c *gin.Context) {
 	var totalCustomers int64
 	var totalSales int64
 	var totalRevenue float64
+	var totalReceivables float64
 
 	database.DB.Model(&models.Motorcycle{}).Count(&totalMotorcycles)
 	database.DB.Model(&models.Motorcycle{}).Where("status = ?", "available").Count(&availableMotorcycles)
@@ -50,6 +51,10 @@ func GetDashboardStats(c *gin.Context) {
 	database.DB.Table("sale_items").Select("COALESCE(SUM(purchase_price * quantity), 0) as total").Scan(&totalCostResult)
 
 	totalRevenue = revenueResult.Total - totalCostResult.Total
+
+	var receivablesResult struct{ Total float64 }
+	database.DB.Model(&models.Customer{}).Select("COALESCE(SUM(balance), 0) as total").Scan(&receivablesResult)
+	totalReceivables = receivablesResult.Total
 
 	var recentSales []models.Sale
 	database.DB.Preload("Customer").Preload("Items").Preload("Payments").Order("created_at desc").Limit(5).Find(&recentSales)
@@ -84,6 +89,7 @@ func GetDashboardStats(c *gin.Context) {
 		"total_customers":          totalCustomers,
 		"total_sales":              totalSales,
 		"total_revenue":            totalRevenue,
+		"total_receivables":        totalReceivables,
 		"recent_sales":             recentSales,
 		"sales_trend":              salesTrend,
 		"top_brands":               topBrands,
