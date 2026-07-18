@@ -500,61 +500,64 @@ export default function POSPage() {
                           )}
                         >
                           <div className="p-4 flex flex-col h-full">
-                            <div className="flex justify-between items-start mb-3">
-                              <div>
-                                <h3 className="font-semibold text-zinc-100 text-base group-hover:text-blue-200 transition-colors">
+                            <div className="flex justify-between items-start mb-4">
+                              <div className="pr-4">
+                                <h3 className="font-bold text-zinc-100 text-[15px] group-hover:text-blue-400 transition-colors leading-tight">
                                   {motorcycle.brand} {motorcycle.model}
                                 </h3>
-                                <div className="text-[11px] font-mono text-zinc-500 mt-0.5">
-                                  SN: {isCensored ? "*****************" : motorcycle.chassis_number}
+                                <div className="text-xs text-zinc-500 mt-1.5 flex items-center gap-2">
+                                  <span className="flex items-center gap-1 font-medium text-zinc-400 bg-zinc-800/50 px-2 py-0.5 rounded-md">
+                                    {motorcycle.year}
+                                  </span>
+                                  <span>•</span>
+                                  <span className="capitalize">{motorcycle.color}</span>
+                                  <span>•</span>
+                                  <span className="font-mono text-[10px] opacity-70">
+                                    {isCensored ? "********" : motorcycle.chassis_number.slice(-8)}
+                                  </span>
                                 </div>
                               </div>
                               {inCart && (
-                                <Badge className="bg-blue-500/20 text-blue-300 border-none px-2 rounded-lg text-[10px]">
+                                <Badge className="bg-blue-500/20 text-blue-300 border-none px-2 rounded-lg text-[10px] shrink-0">
                                   <Check className="h-3 w-3 mr-1" />
                                   Sepette
                                 </Badge>
                               )}
                             </div>
-                            
-                            <div className="flex flex-wrap gap-2 mb-4">
-                              <Badge variant="secondary" className="bg-zinc-800/50 text-zinc-300 border-zinc-700/50">
-                                {motorcycle.year}
-                              </Badge>
-                              <Badge variant="secondary" className="bg-zinc-800/50 text-zinc-300 border-zinc-700/50">
-                                {motorcycle.color}
-                              </Badge>
-                              <Badge variant="outline" className="text-emerald-400 border-emerald-500/20 bg-emerald-500/5">
-                                Alış: {isCensored ? "****" : formatCurrency(motorcycle.purchase_price)}
-                              </Badge>
-                            </div>
 
-                            <div className="mt-auto pt-3 border-t border-zinc-800/50 flex items-center gap-3">
-                              <div className="relative flex-1">
-                                <Tag className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-500" />
-                                <Input
-                                  type="number"
-                                  step="0.01"
-                                  min="0"
-                                  disabled={inCart}
-                                  placeholder="Satış Fiyatı"
-                                  value={customPrices[priceKey] || ""}
-                                  onChange={(e) =>
-                                    setCustomPrices((prev) => ({
-                                      ...prev,
-                                      [priceKey]: e.target.value,
-                                    }))
-                                  }
-                                  className="pl-9 h-10 rounded-xl bg-zinc-950/50 border-zinc-800 text-zinc-200 focus:border-blue-500/50 disabled:opacity-50 font-medium"
-                                />
+                            <div className="mt-auto pt-3 border-t border-zinc-800/50 flex flex-col gap-3">
+                              <div className="flex items-center justify-between">
+                                <span className="text-[11px] text-emerald-500/80 font-medium">
+                                  Maliyet: {isCensored ? "****" : formatCurrency(motorcycle.purchase_price)}
+                                </span>
                               </div>
-                              <Button
-                                disabled={inCart}
-                                onClick={() => addMotorcycleToCart(motorcycle)}
-                                className="h-10 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-medium px-5 shadow-lg shadow-blue-600/20 transition-all disabled:opacity-50"
-                              >
-                                Ekle
-                              </Button>
+                              <div className="flex items-center gap-3">
+                                <div className="relative flex-1">
+                                  <Tag className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-500" />
+                                  <Input
+                                    type="number"
+                                    step="0.01"
+                                    min="0"
+                                    disabled={inCart}
+                                    placeholder="Satış Fiyatı"
+                                    value={customPrices[priceKey] || ""}
+                                    onChange={(e) =>
+                                      setCustomPrices((prev) => ({
+                                        ...prev,
+                                        [priceKey]: e.target.value,
+                                      }))
+                                    }
+                                    className="pl-9 h-10 rounded-xl bg-zinc-950/50 border-zinc-800 text-zinc-200 focus:border-blue-500/50 disabled:opacity-50 font-medium text-sm"
+                                  />
+                                </div>
+                                <Button
+                                  disabled={inCart}
+                                  onClick={() => addMotorcycleToCart(motorcycle)}
+                                  className="h-10 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-medium px-5 shadow-lg shadow-blue-600/20 transition-all disabled:opacity-50 shrink-0"
+                                >
+                                  Ekle
+                                </Button>
+                              </div>
                             </div>
                           </div>
                         </div>
