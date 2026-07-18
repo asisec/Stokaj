@@ -19,7 +19,7 @@ export function TableSkeleton({ columnsCount, rowCount = 5 }: TableSkeletonProps
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ duration: 0.3, delay: rowIndex * 0.05 }}
+                transition={{ duration: 0.5, delay: rowIndex * 0.1 }}
               >
                 <Skeleton className="h-5 w-full bg-zinc-800/80 rounded" />
               </motion.div>
