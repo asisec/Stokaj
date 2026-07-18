@@ -59,7 +59,7 @@ export function NotificationButton() {
               onClick={() => setActiveTab("inbox")}
               className={`text-sm font-medium transition-colors flex items-center gap-1.5 ${activeTab === "inbox" ? "text-zinc-100" : "text-zinc-500 hover:text-zinc-300"}`}
             >
-              Inbox
+              Gelen Kutusu
               {count > 0 && (
                 <span className={`px-1.5 py-0.5 rounded-full text-[10px] ${activeTab === "inbox" ? "bg-zinc-800 text-zinc-300" : "bg-zinc-900 text-zinc-500"}`}>
                   {count}
@@ -70,12 +70,9 @@ export function NotificationButton() {
               onClick={() => setActiveTab("archive")}
               className={`text-sm font-medium transition-colors ${activeTab === "archive" ? "text-zinc-100" : "text-zinc-500 hover:text-zinc-300"}`}
             >
-              Archive
+              Arşiv
             </button>
           </div>
-          <Button variant="ghost" size="icon" className="h-6 w-6 text-zinc-500 hover:text-zinc-300">
-            <Settings className="h-3.5 w-3.5" />
-          </Button>
         </div>
         
         <div className="max-h-[350px] overflow-y-auto flex flex-col [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-zinc-800 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-zinc-700">
@@ -84,12 +81,12 @@ export function NotificationButton() {
               {activeTab === "inbox" ? (
                 <>
                   <CheckCircle2 className="h-8 w-8 opacity-20" />
-                  <p>You're all caught up.</p>
+                  <p>Tüm bildirimleri okudunuz.</p>
                 </>
               ) : (
                 <>
                   <Archive className="h-8 w-8 opacity-20" />
-                  <p>No archived notifications.</p>
+                  <p>Arşivlenmiş bildirim yok.</p>
                 </>
               )}
             </div>
@@ -125,20 +122,34 @@ export function NotificationButton() {
                     {formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true, locale: tr }).replace('yaklaşık ', '').replace(' önce', '')}
                   </span>
                   
-                  <div className="hidden group-hover/item:flex items-center gap-1">
+                  <div className="hidden group-hover/item:flex items-center gap-1 bg-zinc-950/50 backdrop-blur-sm p-1 rounded-md border border-zinc-800/50">
                     {activeTab === "inbox" ? (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          archiveNotification(notification.id);
-                        }}
-                        title="Arşive Gönder"
-                      >
-                        <Archive className="h-3.5 w-3.5" />
-                      </Button>
+                      <>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            archiveNotification(notification.id);
+                          }}
+                          title="Arşive Gönder"
+                        >
+                          <Archive className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 text-zinc-400 hover:text-red-400 hover:bg-red-500/10"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removeNotification(notification.id);
+                          }}
+                          title="Tamamen Sil"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </>
                     ) : (
                       <Button
                         variant="ghost"
@@ -169,7 +180,7 @@ export function NotificationButton() {
                 onClick={archiveAll}
                 className="w-full text-xs font-medium h-9 text-zinc-300 hover:text-zinc-100 hover:bg-zinc-900"
               >
-                Archive All
+                Tümünü Arşivle
               </Button>
             ) : (
               <Button
@@ -178,7 +189,7 @@ export function NotificationButton() {
                 onClick={clearAll}
                 className="w-full text-xs font-medium h-9 text-red-400 hover:text-red-300 hover:bg-red-500/10"
               >
-                Delete All
+                Tümünü Sil
               </Button>
             )}
           </div>
