@@ -36,7 +36,12 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Label } from "@/components/ui/label";
 import {
   Search,
   MoreHorizontal,
@@ -67,9 +72,45 @@ export function MotorcycleTable({
   loading,
 }: MotorcycleTableProps) {
   const [sorting, setSorting] = useState<SortingState>([]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [locationFilter, setLocationFilter] = useState("all");
+  const [filters, setFilters] = useState({
+    global: "",
+    chassis_number: "",
+    brand: "",
+    model: "",
+    year: "",
+    color: "",
+    status: "all",
+    location: "all",
+    minPurchasePrice: "",
+    maxPurchasePrice: "",
+    minSalePrice: "",
+    maxSalePrice: "",
+  });
+
+  const handleFilterChange = (key: keyof typeof filters, value: string) => {
+    setFilters((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const clearFilters = () => {
+    setFilters({
+      global: filters.global,
+      chassis_number: "",
+      brand: "",
+      model: "",
+      year: "",
+      color: "",
+      status: "all",
+      location: "all",
+      minPurchasePrice: "",
+      maxPurchasePrice: "",
+      minSalePrice: "",
+      maxSalePrice: "",
+    });
+  };
+
+  const activeFiltersCount = Object.entries(filters).filter(
+    ([key, value]) => key !== "global" && value !== "" && value !== "all"
+  ).length;
 
   const uniqueBranches = useMemo(() => {
     return Array.from(
@@ -80,20 +121,32 @@ export function MotorcycleTable({
   const filteredData = useMemo(() => {
     let data = motorcycles;
 
-    if (statusFilter !== "all") {
-      data = data.filter((m) => m.status === statusFilter);
+    if (filters.status !== "all") {
+      data = data.filter((m) => m.status === filters.status);
     }
 
-    if (locationFilter !== "all") {
-      if (locationFilter === "merkez") {
+    if (filters.location !== "all") {
+      if (filters.location === "merkez") {
         data = data.filter((m) => !m.is_other_branch);
       } else {
-        data = data.filter((m) => m.is_other_branch && m.branch_name === locationFilter);
+        data = data.filter((m) => m.is_other_branch && m.branch_name === filters.location);
       }
     }
 
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
+    if (filters.chassis_number) data = data.filter(m => m.chassis_number.toLowerCase().includes(filters.chassis_number.toLowerCase()));
+    if (filters.brand) data = data.filter(m => m.brand.toLowerCase().includes(filters.brand.toLowerCase()));
+    if (filters.model) data = data.filter(m => m.model.toLowerCase().includes(filters.model.toLowerCase()));
+    if (filters.year) data = data.filter(m => m.year.toString() === filters.year);
+    if (filters.color) data = data.filter(m => m.color.toLowerCase().includes(filters.color.toLowerCase()));
+    
+    if (filters.minPurchasePrice) data = data.filter(m => m.purchase_price >= Number(filters.minPurchasePrice));
+    if (filters.maxPurchasePrice) data = data.filter(m => m.purchase_price <= Number(filters.maxPurchasePrice));
+    
+    if (filters.minSalePrice) data = data.filter(m => m.sale_price >= Number(filters.minSalePrice));
+    if (filters.maxSalePrice) data = data.filter(m => m.sale_price <= Number(filters.maxSalePrice));
+
+    if (filters.global) {
+      const query = filters.global.toLowerCase();
       data = data.filter((m) => {
         const statusText = m.status === "available" ? "bekliyor" : "satıldı";
         const locationText = (m.is_other_branch && m.branch_name) ? m.branch_name.toLowerCase() : "merkez";
@@ -113,7 +166,7 @@ export function MotorcycleTable({
     }
 
     return data;
-  }, [motorcycles, searchQuery, statusFilter, locationFilter]);
+  }, [motorcycles, filters]);
 
   const columns: ColumnDef<Motorcycle>[] = useMemo(
     () => [
@@ -402,48 +455,109 @@ export function MotorcycleTable({
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
           <Input
             placeholder="Tüm tablodaki verilerde ara (Şasi, Marka, Model, Yıl, Renk, Fiyat, Durum, Konum)..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            value={filters.global}
+            onChange={(e) => handleFilterChange("global", e.target.value)}
             className="pl-10 bg-zinc-900/50 border-zinc-800 text-zinc-200 placeholder:text-zinc-600 focus:border-zinc-600 transition-colors"
           />
         </div>
         
-        <Select value={locationFilter} onValueChange={setLocationFilter}>
-          <SelectTrigger className="w-full sm:w-44 bg-zinc-900/50 border-zinc-800 text-zinc-300">
-            <Filter className="w-4 h-4 mr-2 opacity-50" />
-            <SelectValue placeholder="Konum" />
-          </SelectTrigger>
-          <SelectContent className="bg-zinc-900 border-zinc-800 max-h-60">
-            <SelectItem value="all" className="text-zinc-300 focus:bg-zinc-800">Tüm Konumlar</SelectItem>
-            <SelectItem value="merkez" className="text-zinc-300 focus:bg-zinc-800">Merkez</SelectItem>
-            {uniqueBranches.map(branch => (
-              <SelectItem key={branch} value={branch} className="text-zinc-300 focus:bg-zinc-800">{branch}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="outline" className="bg-zinc-900/50 border-zinc-800 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100 relative w-full sm:w-auto">
+              <Filter className="w-4 h-4 mr-2" />
+              Gelişmiş Filtreler
+              {activeFiltersCount > 0 && (
+                <span className="absolute -top-2 -right-2 h-5 w-5 rounded-full bg-blue-600 text-white text-xs flex items-center justify-center font-semibold border-2 border-zinc-950">
+                  {activeFiltersCount}
+                </span>
+              )}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent align="end" className="w-full sm:w-[480px] bg-zinc-900 border-zinc-800 p-4">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h4 className="font-medium text-zinc-200">Gelişmiş Filtreleme</h4>
+                {activeFiltersCount > 0 && (
+                  <Button variant="ghost" size="sm" onClick={clearFilters} className="h-8 text-zinc-400 hover:text-zinc-200">Temizle</Button>
+                )}
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
+                <div className="space-y-2">
+                  <Label className="text-zinc-400 text-xs">Durum</Label>
+                  <Select value={filters.status} onValueChange={(v) => handleFilterChange("status", v)}>
+                    <SelectTrigger className="bg-zinc-800/50 border-zinc-700 text-zinc-300 h-9">
+                      <SelectValue placeholder="Tümü" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-zinc-800 border-zinc-700">
+                      <SelectItem value="all">Tümü</SelectItem>
+                      <SelectItem value="available">Bekliyor</SelectItem>
+                      <SelectItem value="sold">Satıldı</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-full sm:w-44 bg-zinc-900/50 border-zinc-800 text-zinc-300">
-            <SelectValue placeholder="Durum Filtresi" />
-          </SelectTrigger>
-          <SelectContent className="bg-zinc-900 border-zinc-800">
-            <SelectItem value="all" className="text-zinc-300 focus:bg-zinc-800">
-              Tümü
-            </SelectItem>
-            <SelectItem
-              value="available"
-              className="text-zinc-300 focus:bg-zinc-800"
-            >
-              Bekliyor
-            </SelectItem>
-            <SelectItem
-              value="sold"
-              className="text-zinc-300 focus:bg-zinc-800"
-            >
-              Satıldı
-            </SelectItem>
-          </SelectContent>
-        </Select>
+                <div className="space-y-2">
+                  <Label className="text-zinc-400 text-xs">Konum</Label>
+                  <Select value={filters.location} onValueChange={(v) => handleFilterChange("location", v)}>
+                    <SelectTrigger className="bg-zinc-800/50 border-zinc-700 text-zinc-300 h-9">
+                      <SelectValue placeholder="Tümü" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-zinc-800 border-zinc-700 max-h-40">
+                      <SelectItem value="all">Tümü</SelectItem>
+                      <SelectItem value="merkez">Merkez</SelectItem>
+                      {uniqueBranches.map(b => <SelectItem key={b} value={b}>{b}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-zinc-400 text-xs">Şasi No</Label>
+                  <Input value={filters.chassis_number} onChange={(e) => handleFilterChange("chassis_number", e.target.value)} className="bg-zinc-800/50 border-zinc-700 text-zinc-300 h-9" />
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-zinc-400 text-xs">Marka</Label>
+                  <Input value={filters.brand} onChange={(e) => handleFilterChange("brand", e.target.value)} className="bg-zinc-800/50 border-zinc-700 text-zinc-300 h-9" />
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-zinc-400 text-xs">Model</Label>
+                  <Input value={filters.model} onChange={(e) => handleFilterChange("model", e.target.value)} className="bg-zinc-800/50 border-zinc-700 text-zinc-300 h-9" />
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-zinc-400 text-xs">Yıl</Label>
+                  <Input type="number" value={filters.year} onChange={(e) => handleFilterChange("year", e.target.value)} className="bg-zinc-800/50 border-zinc-700 text-zinc-300 h-9" />
+                </div>
+
+                <div className="space-y-2 col-span-2">
+                  <Label className="text-zinc-400 text-xs">Renk</Label>
+                  <Input value={filters.color} onChange={(e) => handleFilterChange("color", e.target.value)} className="bg-zinc-800/50 border-zinc-700 text-zinc-300 h-9" />
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-zinc-400 text-xs">Min Alış Fiyatı</Label>
+                  <Input type="number" value={filters.minPurchasePrice} onChange={(e) => handleFilterChange("minPurchasePrice", e.target.value)} className="bg-zinc-800/50 border-zinc-700 text-zinc-300 h-9" />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-zinc-400 text-xs">Max Alış Fiyatı</Label>
+                  <Input type="number" value={filters.maxPurchasePrice} onChange={(e) => handleFilterChange("maxPurchasePrice", e.target.value)} className="bg-zinc-800/50 border-zinc-700 text-zinc-300 h-9" />
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-zinc-400 text-xs">Min Satış Fiyatı</Label>
+                  <Input type="number" value={filters.minSalePrice} onChange={(e) => handleFilterChange("minSalePrice", e.target.value)} className="bg-zinc-800/50 border-zinc-700 text-zinc-300 h-9" />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-zinc-400 text-xs">Max Satış Fiyatı</Label>
+                  <Input type="number" value={filters.maxSalePrice} onChange={(e) => handleFilterChange("maxSalePrice", e.target.value)} className="bg-zinc-800/50 border-zinc-700 text-zinc-300 h-9" />
+                </div>
+              </div>
+            </div>
+          </PopoverContent>
+        </Popover>
+
         <Button
           variant="outline"
           onClick={handlePrint}
