@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import { getMotorcycles, Motorcycle } from "@/services/api";
+import { api, Motorcycle } from "@/lib/api";
 import { toast } from "sonner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tags, Bike, LayoutGrid, AlertCircle, Loader2 } from "lucide-react";
@@ -14,7 +14,7 @@ export default function BrandsPage() {
   useEffect(() => {
     const fetchMotorcycles = async () => {
       try {
-        const data = await getMotorcycles();
+        const data = await api.getMotorcycles();
         setMotorcycles(data);
       } catch (error) {
         toast.error("Veriler alınırken bir hata oluştu");
