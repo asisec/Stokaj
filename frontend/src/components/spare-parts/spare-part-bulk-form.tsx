@@ -95,9 +95,16 @@ export function SparePartBulkForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const validRows = rows.filter(r => r.name && r.name.trim() !== "");
+    const preparedRows = rows.map(r => {
+      if (r.category !== "Diğer") {
+        return { ...r, name: r.category?.toLocaleUpperCase("tr-TR") };
+      }
+      return r;
+    });
+    
+    const validRows = preparedRows.filter(r => r.name && r.name.trim() !== "");
     if (validRows.length === 0) {
-      toast.error("Lütfen en az bir geçerli parça adı girin");
+      toast.error("Lütfen geçerli parça bilgileri girin");
       return;
     }
 
@@ -154,13 +161,19 @@ export function SparePartBulkForm({
                       </SelectContent>
                     </Select>
 
-                    <Input
-                      required
-                      placeholder="Parça adı"
-                      value={row.name}
-                      onChange={(e) => updateRow(index, "name", e.target.value)}
-                      className="bg-zinc-900/50 border-zinc-800 h-9"
-                    />
+                    {row.category === "Diğer" ? (
+                      <Input
+                        required
+                        placeholder="Parça adı"
+                        value={row.name}
+                        onChange={(e) => updateRow(index, "name", e.target.value)}
+                        className="bg-zinc-900/50 border-zinc-800 h-9"
+                      />
+                    ) : (
+                      <div className="bg-zinc-900/30 border border-zinc-800/50 h-9 rounded-md flex items-center px-3 text-sm text-zinc-500 italic">
+                        Otomatik
+                      </div>
+                    )}
 
                     <div className="relative flex items-center">
                       <Input

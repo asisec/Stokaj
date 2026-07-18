@@ -107,11 +107,16 @@ export function SparePartForm({
     e.preventDefault();
     setSubmitting(true);
     try {
+      const dataToSubmit = { ...formData };
+      if (dataToSubmit.category !== "Diğer") {
+        dataToSubmit.name = dataToSubmit.category.toLocaleUpperCase("tr-TR");
+      }
+      
       if (sparePart) {
-        await api.updateSparePart(sparePart.id, formData);
+        await api.updateSparePart(sparePart.id, dataToSubmit);
         toast.success("Parça başarıyla güncellendi");
       } else {
-        await api.createSparePart(formData);
+        await api.createSparePart(dataToSubmit);
         toast.success("Parça başarıyla eklendi");
       }
       setFormData(initialFormState);
@@ -165,18 +170,20 @@ export function SparePartForm({
                 </Select>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="name" className="text-zinc-400 text-sm">
-                  Parça Adı
-                </Label>
-                <Input
-                  id="name"
-                  required
-                  value={formData.name}
-                  onChange={(e) => handleChange("name", e.target.value)}
-                  className="bg-zinc-900/50 border-zinc-800 text-zinc-100 focus:border-blue-500/50 focus:ring-blue-500/20"
-                />
-              </div>
+              {formData.category === "Diğer" && (
+                <div className="space-y-2">
+                  <Label htmlFor="name" className="text-zinc-400 text-sm">
+                    Parça Adı
+                  </Label>
+                  <Input
+                    id="name"
+                    required
+                    value={formData.name}
+                    onChange={(e) => handleChange("name", e.target.value)}
+                    className="bg-zinc-900/50 border-zinc-800 text-zinc-100 focus:border-blue-500/50 focus:ring-blue-500/20"
+                  />
+                </div>
+              )}
 
               <div className="space-y-2">
                 <Label htmlFor="quantity" className="text-zinc-400 text-sm">
