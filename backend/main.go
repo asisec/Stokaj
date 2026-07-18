@@ -29,6 +29,7 @@ func main() {
 	})
 
 	api := r.Group("/api")
+	api.POST("/login", handlers.Login)
 
 	api.GET("/motorcycles", handlers.GetMotorcycles)
 	api.GET("/motorcycles/:id", handlers.GetMotorcycle)
