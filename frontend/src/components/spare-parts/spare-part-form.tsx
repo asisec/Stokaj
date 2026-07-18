@@ -61,6 +61,15 @@ export function SparePartForm({
   const [uniqueBrands, setUniqueBrands] = useState<string[]>([]);
   const [uniqueModels, setUniqueModels] = useState<string[]>([]);
 
+  const getSuggestion = (input: string, list: string[]) => {
+    if (!input) return "";
+    const match = list.find((item) => item.toUpperCase().startsWith(input.toUpperCase()));
+    return match || "";
+  };
+
+  const suggestedBrand = getSuggestion(formData.compatible_brand, uniqueBrands);
+  const suggestedModel = getSuggestion(formData.compatible_model, uniqueModels);
+
   const wasEditing = useRef(false);
 
   useEffect(() => {
@@ -192,32 +201,52 @@ export function SparePartForm({
                 <Label htmlFor="compatible_brand" className="text-zinc-400 text-sm">
                   Uyumlu Marka
                 </Label>
-                <Input
-                  id="compatible_brand"
-                  list="brand-suggestions-single"
-                  value={formData.compatible_brand}
-                  onChange={(e) => handleChange("compatible_brand", e.target.value)}
-                  className="bg-zinc-900/50 border-zinc-800 text-zinc-100 focus:border-blue-500/50 focus:ring-blue-500/20"
-                />
-                <datalist id="brand-suggestions-single">
-                  {uniqueBrands.map(b => <option key={b} value={b} />)}
-                </datalist>
+                <div className="relative flex items-center">
+                  <Input
+                    id="compatible_brand"
+                    value={formData.compatible_brand}
+                    onChange={(e) => handleChange("compatible_brand", e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Tab" && suggestedBrand) {
+                        e.preventDefault();
+                        handleChange("compatible_brand", suggestedBrand);
+                      }
+                    }}
+                    className="bg-zinc-900/50 border-zinc-800 text-zinc-100 focus:border-blue-500/50 focus:ring-blue-500/20"
+                  />
+                  {suggestedBrand && (
+                    <div className="absolute inset-0 pointer-events-none flex items-center px-3 text-sm border border-transparent">
+                      <span className="text-transparent">{formData.compatible_brand}</span>
+                      <span className="text-zinc-500/50">{suggestedBrand.slice(formData.compatible_brand.length)}</span>
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="compatible_model" className="text-zinc-400 text-sm">
                   Uyumlu Model
                 </Label>
-                <Input
-                  id="compatible_model"
-                  list="model-suggestions-single"
-                  value={formData.compatible_model}
-                  onChange={(e) => handleChange("compatible_model", e.target.value)}
-                  className="bg-zinc-900/50 border-zinc-800 text-zinc-100 focus:border-blue-500/50 focus:ring-blue-500/20"
-                />
-                <datalist id="model-suggestions-single">
-                  {uniqueModels.map(m => <option key={m} value={m} />)}
-                </datalist>
+                <div className="relative flex items-center">
+                  <Input
+                    id="compatible_model"
+                    value={formData.compatible_model}
+                    onChange={(e) => handleChange("compatible_model", e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Tab" && suggestedModel) {
+                        e.preventDefault();
+                        handleChange("compatible_model", suggestedModel);
+                      }
+                    }}
+                    className="bg-zinc-900/50 border-zinc-800 text-zinc-100 focus:border-blue-500/50 focus:ring-blue-500/20"
+                  />
+                  {suggestedModel && (
+                    <div className="absolute inset-0 pointer-events-none flex items-center px-3 text-sm border border-transparent">
+                      <span className="text-transparent">{formData.compatible_model}</span>
+                      <span className="text-zinc-500/50">{suggestedModel.slice(formData.compatible_model.length)}</span>
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="space-y-2">

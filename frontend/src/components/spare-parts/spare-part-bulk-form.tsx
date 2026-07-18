@@ -59,6 +59,12 @@ export function SparePartBulkForm({
   const [uniqueBrands, setUniqueBrands] = useState<string[]>([]);
   const [uniqueModels, setUniqueModels] = useState<string[]>([]);
 
+  const getSuggestion = (input: string, list: string[]) => {
+    if (!input) return "";
+    const match = list.find((item) => item.toUpperCase().startsWith(input.toUpperCase()));
+    return match || "";
+  };
+
   useEffect(() => {
     if (open) {
       api.getMotorcycles().then((motos) => {
@@ -156,30 +162,52 @@ export function SparePartBulkForm({
                       className="bg-zinc-900/50 border-zinc-800 h-9"
                     />
 
-                    <div>
+                    <div className="relative flex items-center">
                       <Input
-                        list="brand-suggestions"
                         placeholder="Marka"
                         value={row.compatible_brand}
                         onChange={(e) => updateRow(index, "compatible_brand", e.target.value)}
+                        onKeyDown={(e) => {
+                          const suggestion = getSuggestion(row.compatible_brand || "", uniqueBrands);
+                          if (e.key === "Tab" && suggestion) {
+                            e.preventDefault();
+                            updateRow(index, "compatible_brand", suggestion);
+                          }
+                        }}
                         className="bg-zinc-900/50 border-zinc-800 h-9"
                       />
-                      <datalist id="brand-suggestions">
-                        {uniqueBrands.map(b => <option key={b} value={b} />)}
-                      </datalist>
+                      {getSuggestion(row.compatible_brand || "", uniqueBrands) && (
+                        <div className="absolute inset-0 pointer-events-none flex items-center px-3 text-sm border border-transparent">
+                          <span className="text-transparent">{row.compatible_brand}</span>
+                          <span className="text-zinc-500/50">
+                            {getSuggestion(row.compatible_brand || "", uniqueBrands).slice((row.compatible_brand || "").length)}
+                          </span>
+                        </div>
+                      )}
                     </div>
 
-                    <div>
+                    <div className="relative flex items-center">
                       <Input
-                        list="model-suggestions"
                         placeholder="Model"
                         value={row.compatible_model}
                         onChange={(e) => updateRow(index, "compatible_model", e.target.value)}
+                        onKeyDown={(e) => {
+                          const suggestion = getSuggestion(row.compatible_model || "", uniqueModels);
+                          if (e.key === "Tab" && suggestion) {
+                            e.preventDefault();
+                            updateRow(index, "compatible_model", suggestion);
+                          }
+                        }}
                         className="bg-zinc-900/50 border-zinc-800 h-9"
                       />
-                      <datalist id="model-suggestions">
-                        {uniqueModels.map(m => <option key={m} value={m} />)}
-                      </datalist>
+                      {getSuggestion(row.compatible_model || "", uniqueModels) && (
+                        <div className="absolute inset-0 pointer-events-none flex items-center px-3 text-sm border border-transparent">
+                          <span className="text-transparent">{row.compatible_model}</span>
+                          <span className="text-zinc-500/50">
+                            {getSuggestion(row.compatible_model || "", uniqueModels).slice((row.compatible_model || "").length)}
+                          </span>
+                        </div>
+                      )}
                     </div>
 
                     <Input
