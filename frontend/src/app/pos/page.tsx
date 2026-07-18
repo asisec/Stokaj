@@ -466,7 +466,11 @@ export default function POSPage() {
                 </div>
                 Ürün Seçimi
               </CardTitle>
-              <div className="flex flex-col gap-3 mt-4">
+            </CardHeader>
+
+            <CardContent className="flex-1 p-0 min-h-0 flex flex-col">
+              {/* Sekmeler ve Arama - sabit üst alan */}
+              <div className="px-5 pt-4 pb-3 border-b border-zinc-800/40 shrink-0 flex flex-col gap-3">
                 <TabsList className="bg-zinc-900/80 border border-zinc-800/50 p-1 rounded-xl h-11 w-full grid grid-cols-2">
                   <TabsTrigger value="motorcycles" className="rounded-lg gap-2 data-[state=active]:bg-zinc-800 data-[state=active]:text-zinc-100 text-zinc-400">
                     <Bike className="h-4 w-4" />
@@ -487,10 +491,8 @@ export default function POSPage() {
                   />
                 </div>
               </div>
-            </CardHeader>
 
-            <CardContent className="flex-1 p-0 min-h-0">
-              <TabsContent value="motorcycles" className="h-full m-0 data-[state=inactive]:hidden">
+              <TabsContent value="motorcycles" className="flex-1 m-0 data-[state=inactive]:hidden min-h-0">
                 <ScrollArea className="h-full px-5 pb-5">
                   <div className="flex flex-col gap-2 pt-2 pb-4">
                     {availableMotorcycles.map((motorcycle) => {
@@ -576,7 +578,7 @@ export default function POSPage() {
                 </ScrollArea>
               </TabsContent>
 
-              <TabsContent value="spare_parts" className="h-full m-0 data-[state=inactive]:hidden">
+              <TabsContent value="spare_parts" className="flex-1 m-0 data-[state=inactive]:hidden min-h-0">
                 <ScrollArea className="h-full px-5 pb-5">
                   <div className="flex flex-col gap-2 pt-2 pb-4">
                     {availableSpareParts.map((sp) => {
