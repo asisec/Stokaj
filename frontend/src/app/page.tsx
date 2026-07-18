@@ -25,7 +25,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Bike, Wrench, Users, ShoppingCart, Trash2, ShieldAlert } from "lucide-react";
+import { Bike, Wrench, Users, ShoppingCart, Trash2, ShieldAlert, Eye, EyeOff } from "lucide-react";
 import { customToast as toast } from "@/lib/toast";
 import {
   AlertDialog,
@@ -58,6 +58,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
 
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [isCensored, setIsCensored] = useState(false);
 
   const loadStats = () => {
     api
@@ -148,6 +149,17 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-8 p-2">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold tracking-tight text-zinc-100">Gösterge Paneli</h1>
+        <button
+          onClick={() => setIsCensored(!isCensored)}
+          className="p-2 rounded-lg bg-zinc-900/50 border border-zinc-800 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors"
+          title={isCensored ? "Verileri Göster" : "Verileri Gizle"}
+        >
+          {isCensored ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+        </button>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {statCards.map((card) => {
           const Icon = card.icon;
@@ -170,8 +182,8 @@ export default function DashboardPage() {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-zinc-100 tracking-tight">
-                  {card.value}
+                <div className="text-2xl font-bold text-zinc-100 tracking-tight transition-all">
+                  {isCensored ? "****" : card.value}
                 </div>
                 <p className="text-xs text-zinc-500 mt-1">{card.subtitle}</p>
                 {card.badge && (
@@ -237,8 +249,8 @@ export default function DashboardPage() {
                           ? sale.items.map((item) => item.item_name).join(", ")
                           : "-"}
                       </TableCell>
-                      <TableCell className="text-zinc-200 font-semibold">
-                        {formatCurrency(sale.total_amount)}
+                      <TableCell className="text-zinc-200 font-semibold transition-all">
+                        {isCensored ? "****" : formatCurrency(sale.total_amount)}
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-col gap-1">
@@ -249,7 +261,7 @@ export default function DashboardPage() {
                                 variant="secondary"
                                 className="bg-zinc-800 text-zinc-300 border-zinc-700 w-max"
                               >
-                                {paymentMethodLabels[p.method] || p.method} ({formatCurrency(p.amount)})
+                                {paymentMethodLabels[p.method] || p.method} ({isCensored ? "****" : formatCurrency(p.amount)})
                               </Badge>
                             ))
                           ) : (
@@ -292,8 +304,7 @@ export default function DashboardPage() {
             <CardTitle className="text-lg font-semibold text-zinc-100">
               Son 6 Aylık Satış Trendi
             </CardTitle>
-          </CardHeader>
-          <CardContent>
+          <CardContent className={isCensored ? "filter blur-md select-none pointer-events-none transition-all duration-300 opacity-50" : "transition-all duration-300"}>
             <div className="h-[300px] w-full">
               {stats.sales_trend && stats.sales_trend.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
@@ -345,7 +356,7 @@ export default function DashboardPage() {
               Popüler Markalar
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className={isCensored ? "filter blur-md select-none pointer-events-none transition-all duration-300 opacity-50" : "transition-all duration-300"}>
             <div className="h-[300px] w-full">
               {stats.top_brands && stats.top_brands.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
