@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/backend/(.*)",
-      "destination": "/api/index.go"
+      "destination": "/api/index.go?path=$1"
     }
   ]
 }
