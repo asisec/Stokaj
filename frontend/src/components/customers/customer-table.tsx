@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { type Customer } from "@/lib/api";
+import { useCensorStore } from "@/store/censor";
 import {
   useReactTable,
   getCoreRowModel,
@@ -58,6 +59,7 @@ export function CustomerTable({
 }: CustomerTableProps) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const { isCensored } = useCensorStore();
 
   const filteredData = useMemo(() => {
     if (!searchQuery) return customers;
@@ -79,7 +81,7 @@ export function CustomerTable({
         header: () => <span className="text-zinc-400">T.C. Kimlik No</span>,
         cell: ({ row }) => (
           <span className="text-zinc-300 font-mono text-sm">
-            {row.getValue("identity_number") || "-"}
+            {isCensored ? "***********" : (row.getValue("identity_number") || "-")}
           </span>
         ),
       },
@@ -124,7 +126,7 @@ export function CustomerTable({
         header: () => <span className="text-zinc-400">Telefon</span>,
         cell: ({ row }) => (
           <span className="text-zinc-300 font-mono text-sm">
-            {row.getValue("phone")}
+            {isCensored ? "***********" : row.getValue("phone")}
           </span>
         ),
       },

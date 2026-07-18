@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useMemo, useCallback } from "react";
 import { api, type Customer, type Motorcycle } from "@/lib/api";
+import { useCensorStore } from "@/store/censor";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -80,6 +81,7 @@ export default function POSPage() {
   const [submitting, setSubmitting] = useState(false);
   const [customPrices, setCustomPrices] = useState<Record<number, string>>({});
   const [nextId, setNextId] = useState(2);
+  const { isCensored } = useCensorStore();
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -285,7 +287,7 @@ export default function POSPage() {
                     </div>
                     <div className="flex items-center gap-1.5 text-xs text-zinc-500 mt-1">
                       <Phone className="h-3 w-3" />
-                      {customer.phone}
+                      {isCensored ? "***********" : customer.phone}
                     </div>
                   </button>
                 ))}
@@ -346,11 +348,11 @@ export default function POSPage() {
                             <span className="text-xs text-zinc-500">{motorcycle.color}</span>
                             <span className="text-xs text-zinc-600">•</span>
                             <span className="text-[10px] font-mono text-zinc-600">
-                              {motorcycle.chassis_number}
+                              {isCensored ? "*****************" : motorcycle.chassis_number}
                             </span>
                             <span className="text-xs text-zinc-600">•</span>
                             <span className="text-xs text-emerald-500 font-medium">
-                              Alış: {formatCurrency(motorcycle.purchase_price)}
+                              Alış: {isCensored ? "****" : formatCurrency(motorcycle.purchase_price)}
                             </span>
                           </div>
                           {!inCart && (
@@ -441,7 +443,7 @@ export default function POSPage() {
                             {item.item_name}
                           </div>
                           <div className="text-xs text-zinc-500 mt-0.5">
-                            {formatCurrency(item.unit_price)}
+                            {isCensored ? "****" : formatCurrency(item.unit_price)}
                           </div>
                         </div>
                         <button
@@ -468,7 +470,7 @@ export default function POSPage() {
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-zinc-400">Toplam Tutar</span>
                     <span className="text-lg font-bold text-zinc-100 tabular-nums">
-                      {formatCurrency(cartTotal)}
+                      {isCensored ? "****" : formatCurrency(cartTotal)}
                     </span>
                   </div>
 

@@ -37,6 +37,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { useCensorStore } from "@/store/censor";
 
 const formatCurrency = (value: number) =>
   new Intl.NumberFormat("tr-TR", { style: "currency", currency: "TRY" }).format(
@@ -58,7 +59,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
 
   const [deletingId, setDeletingId] = useState<number | null>(null);
-  const [isCensored, setIsCensored] = useState(false);
+  const { isCensored } = useCensorStore();
 
   const loadStats = () => {
     api
@@ -153,14 +154,6 @@ export default function DashboardPage() {
         <h1 className="text-2xl font-bold tracking-tight text-zinc-100">
           Gösterge Paneli
         </h1>
-        <button
-          type="button"
-          onClick={() => setIsCensored(!isCensored)}
-          className="p-2 rounded-lg bg-zinc-900/50 border border-zinc-800 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors"
-          title={isCensored ? "Verileri Göster" : "Verileri Gizle"}
-        >
-          {isCensored ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-        </button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

@@ -2,9 +2,10 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Bike, LayoutDashboard, Wrench, Users, ShoppingCart, LogOut, Tags } from "lucide-react"
+import { Bike, LayoutDashboard, Wrench, Users, ShoppingCart, LogOut, Tags, Eye, EyeOff } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { removeToken } from "@/lib/auth"
+import { useCensorStore } from "@/store/censor"
 
 const navigationItems = [
   { label: "Gösterge Paneli", href: "/", icon: LayoutDashboard },
@@ -17,6 +18,7 @@ const navigationItems = [
 
 export function Sidebar() {
   const pathname = usePathname()
+  const { isCensored, toggleCensor } = useCensorStore()
 
   const navLink = (href: string, label: string, Icon: React.ElementType) => {
     const isActive = pathname === href || (href !== "/" && pathname.startsWith(href))
@@ -50,7 +52,19 @@ export function Sidebar() {
         {navigationItems.map((item) => navLink(item.href, item.label, item.icon))}
       </nav>
 
-      <div className="p-3 border-t border-sidebar-border">
+      <div className="p-3 border-t border-sidebar-border space-y-1">
+        <button
+          onClick={toggleCensor}
+          className={cn(
+            "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200",
+            isCensored
+              ? "bg-amber-500/10 text-amber-500 hover:bg-amber-500/20"
+              : "text-sidebar-foreground hover:bg-sidebar-accent"
+          )}
+        >
+          {isCensored ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+          Gizlilik Modu
+        </button>
         <button
           onClick={() => {
             removeToken()

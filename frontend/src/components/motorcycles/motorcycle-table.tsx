@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { type Motorcycle } from "@/lib/api";
+import { useCensorStore } from "@/store/censor";
 import {
   useReactTable,
   getCoreRowModel,
@@ -74,6 +75,7 @@ export function MotorcycleTable({
   loading,
 }: MotorcycleTableProps) {
   const [sorting, setSorting] = useState<SortingState>([]);
+  const { isCensored } = useCensorStore();
   const [filters, setFilters] = useState({
     global: "",
     chassis_number: "",
@@ -185,8 +187,8 @@ export function MotorcycleTable({
           </Button>
         ),
         cell: ({ row }) => (
-          <span className="font-mono text-sm text-zinc-300">
-            {row.getValue("chassis_number")}
+          <span className="font-mono text-xs text-zinc-400">
+            {isCensored ? "*****************" : row.getValue("chassis_number")}
           </span>
         ),
       },
@@ -261,7 +263,7 @@ export function MotorcycleTable({
         ),
         cell: ({ row }) => (
           <span className="text-zinc-400 tabular-nums">
-            {formatCurrency(row.getValue("purchase_price"))}
+            {isCensored ? "****" : formatCurrency(row.getValue("purchase_price"))}
           </span>
         ),
       },
@@ -279,7 +281,7 @@ export function MotorcycleTable({
         ),
         cell: ({ row }) => (
           <span className="text-zinc-200 font-semibold tabular-nums">
-            {row.getValue("status") === "sold" ? formatCurrency(row.getValue("sale_price")) : "-"}
+            {row.getValue("status") === "sold" ? (isCensored ? "****" : formatCurrency(row.getValue("sale_price"))) : "-"}
           </span>
         ),
       },
