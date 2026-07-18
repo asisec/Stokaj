@@ -527,40 +527,37 @@ export default function POSPage() {
                             </div>
 
                             {/* Sağ kısım: İşlemler */}
-                            <div className="flex items-center gap-2 shrink-0">
+                            <div className="flex items-center shrink-0 ml-2">
                               {inCart ? (
                                 <Badge className="bg-blue-500/20 text-blue-300 border-none px-3 h-9 rounded-lg text-xs">
                                   <Check className="h-3.5 w-3.5 mr-1.5" />
                                   Sepette
                                 </Badge>
                               ) : (
-                                <>
-                                  <div className="relative w-[100px] sm:w-[120px] shrink-0">
-                                    <Tag className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-500" />
-                                    <Input
-                                      type="number"
-                                      step="0.01"
-                                      min="0"
-                                      disabled={inCart}
-                                      placeholder="Fiyat"
-                                      value={customPrices[priceKey] || ""}
-                                      onChange={(e) =>
-                                        setCustomPrices((prev) => ({
-                                          ...prev,
-                                          [priceKey]: e.target.value,
-                                        }))
-                                      }
-                                      className="pl-8 h-9 rounded-lg bg-zinc-950/50 border-zinc-800 text-zinc-200 focus:border-blue-500/50 text-[13px] font-medium w-full"
-                                    />
-                                  </div>
+                                <div className="flex items-center border border-zinc-800 rounded-lg overflow-hidden bg-zinc-950/50 focus-within:border-blue-500/50 focus-within:ring-1 focus-within:ring-blue-500/20 transition-all">
+                                  <Input
+                                    type="number"
+                                    step="0.01"
+                                    min="0"
+                                    disabled={inCart}
+                                    placeholder="Fiyat (₺)"
+                                    value={customPrices[priceKey] || ""}
+                                    onChange={(e) =>
+                                      setCustomPrices((prev) => ({
+                                        ...prev,
+                                        [priceKey]: e.target.value,
+                                      }))
+                                    }
+                                    className="w-[100px] h-9 border-0 bg-transparent rounded-none text-zinc-200 text-sm font-medium placeholder:text-zinc-600 focus-visible:ring-0 px-3"
+                                  />
                                   <Button
                                     disabled={inCart}
                                     onClick={() => addMotorcycleToCart(motorcycle)}
-                                    className="h-9 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-medium px-3 sm:px-4 shadow-sm shadow-blue-600/20 transition-all shrink-0 text-xs sm:text-sm"
+                                    className="h-9 rounded-none bg-blue-600 hover:bg-blue-500 text-white font-semibold px-4 transition-colors"
                                   >
                                     Ekle
                                   </Button>
-                                </>
+                                </div>
                               )}
                             </div>
                           </div>
@@ -602,8 +599,8 @@ export default function POSPage() {
                             </div>
 
                             {/* Sağ kısım: İşlemler */}
-                            <div className="flex items-center gap-2 shrink-0">
-                              <div className="w-[50px] sm:w-[60px] shrink-0">
+                            <div className="flex items-center shrink-0 ml-2">
+                              <div className="flex items-center border border-zinc-800 rounded-lg overflow-hidden bg-zinc-950/50 focus-within:border-blue-500/50 focus-within:ring-1 focus-within:ring-blue-500/20 transition-all">
                                 <Input
                                   type="number"
                                   min="1"
@@ -616,16 +613,13 @@ export default function POSPage() {
                                       [sp.id]: parseInt(e.target.value) || 1,
                                     }))
                                   }
-                                  className="h-9 text-center rounded-lg bg-zinc-950/50 border-zinc-800 text-zinc-200 focus:border-blue-500/50 font-medium text-[13px] px-1 w-full"
+                                  className="w-[50px] h-9 border-0 border-r border-zinc-800 bg-transparent rounded-none text-center text-zinc-200 text-[13px] font-medium focus-visible:ring-0 px-1 placeholder:text-zinc-600"
                                 />
-                              </div>
-                              <div className="relative w-[85px] sm:w-[110px] shrink-0">
-                                <Tag className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-500" />
                                 <Input
                                   type="number"
                                   step="0.01"
                                   min="0"
-                                  placeholder="Fiyat"
+                                  placeholder="Fiyat (₺)"
                                   value={customPrices[priceKey] || ""}
                                   onChange={(e) =>
                                     setCustomPrices((prev) => ({
@@ -633,15 +627,15 @@ export default function POSPage() {
                                       [priceKey]: e.target.value,
                                     }))
                                   }
-                                  className="pl-8 h-9 rounded-lg bg-zinc-950/50 border-zinc-800 text-zinc-200 focus:border-blue-500/50 font-medium text-[13px] w-full"
+                                  className="w-[85px] sm:w-[95px] h-9 border-0 bg-transparent rounded-none text-zinc-200 text-[13px] font-medium focus-visible:ring-0 px-2 placeholder:text-zinc-600"
                                 />
+                                <Button
+                                  onClick={() => addSparePartToCart(sp)}
+                                  className="h-9 rounded-none bg-blue-600 hover:bg-blue-500 text-white font-semibold px-3 transition-colors"
+                                >
+                                  <Plus className="h-4 w-4" />
+                                </Button>
                               </div>
-                              <Button
-                                onClick={() => addSparePartToCart(sp)}
-                                className="h-9 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-medium px-3 sm:px-4 shadow-sm shadow-blue-600/20 transition-all shrink-0"
-                              >
-                                <Plus className="h-4 w-4" />
-                              </Button>
                             </div>
                           </div>
                         </div>
