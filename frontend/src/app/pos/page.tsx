@@ -464,24 +464,24 @@ export default function POSPage() {
                 </div>
                 Ürün Seçimi
               </CardTitle>
-              <div className="flex items-center justify-between gap-4">
-                <TabsList className="bg-zinc-900/80 border border-zinc-800/50 p-1 rounded-xl h-12 shrink-0">
-                  <TabsTrigger value="motorcycles" className="rounded-lg px-4 gap-2 data-[state=active]:bg-zinc-800 data-[state=active]:text-zinc-100 text-zinc-400">
+              <div className="flex flex-col gap-3">
+                <TabsList className="bg-zinc-900/80 border border-zinc-800/50 p-1 rounded-xl h-12 w-full grid grid-cols-2">
+                  <TabsTrigger value="motorcycles" className="rounded-lg gap-2 data-[state=active]:bg-zinc-800 data-[state=active]:text-zinc-100 text-zinc-400">
                     <Bike className="h-4 w-4" />
                     Motosikletler
                   </TabsTrigger>
-                  <TabsTrigger value="spare_parts" className="rounded-lg px-4 gap-2 data-[state=active]:bg-zinc-800 data-[state=active]:text-zinc-100 text-zinc-400">
+                  <TabsTrigger value="spare_parts" className="rounded-lg gap-2 data-[state=active]:bg-zinc-800 data-[state=active]:text-zinc-100 text-zinc-400">
                     <Wrench className="h-4 w-4" />
                     Yedek Parçalar
                   </TabsTrigger>
                 </TabsList>
-                <div className="relative flex-1 max-w-sm">
-                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
+                <div className="relative w-full">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
                   <Input
-                    placeholder="Ara..."
+                    placeholder="Ürün ara..."
                     value={productSearch}
                     onChange={(e) => setProductSearch(e.target.value)}
-                    className="pl-10 h-11 rounded-xl bg-zinc-900/50 border-zinc-800/50 text-zinc-200 placeholder:text-zinc-500 focus:border-blue-500/50 focus:ring-blue-500/20 transition-all shadow-inner"
+                    className="pl-9 h-11 bg-zinc-900/50 border-zinc-800/50 text-zinc-200 focus:border-blue-500/50 rounded-xl"
                   />
                 </div>
               </div>
@@ -506,19 +506,19 @@ export default function POSPage() {
                               : "border-zinc-800/50 bg-zinc-900/40 hover:bg-zinc-800/40 hover:border-blue-500/30 shadow-sm hover:shadow-lg"
                           )}
                         >
-                          <div className="p-3 flex items-center justify-between gap-4">
-                            {/* Sol kısım: Bilgiler */}
+                          <div className="p-3 flex flex-col gap-3">
+                            {/* Üst kısım: Bilgiler */}
                             <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2">
-                                <h3 className="font-bold text-zinc-100 text-[13px] group-hover:text-blue-400 transition-colors leading-tight truncate">
+                              <div className="flex items-center gap-2 mb-1.5">
+                                <h3 className="font-bold text-zinc-100 text-[14px] group-hover:text-blue-400 transition-colors leading-tight truncate">
                                   {motorcycle.brand} {motorcycle.model}
                                 </h3>
-                                <span className="text-[10px] text-emerald-500/80 font-medium whitespace-nowrap hidden sm:inline-block">
+                                <span className="text-[11px] text-emerald-500/80 font-medium whitespace-nowrap hidden sm:inline-block">
                                   (Maliyet: {isCensored ? "****" : formatCurrency(motorcycle.purchase_price)})
                                 </span>
                               </div>
-                              <div className="text-[11px] text-zinc-500 mt-1 flex items-center gap-2 truncate">
-                                <span className="font-medium text-zinc-400 bg-zinc-800/50 px-1.5 py-0.5 rounded">
+                              <div className="text-xs text-zinc-500 flex items-center gap-2 truncate">
+                                <span className="font-medium text-zinc-400 bg-zinc-800/50 px-2 py-0.5 rounded">
                                   {motorcycle.year}
                                 </span>
                                 <span>•</span>
@@ -526,21 +526,21 @@ export default function POSPage() {
                               </div>
                             </div>
 
-                            {/* Sağ kısım: İşlemler */}
-                            <div className="flex items-center shrink-0 ml-2">
+                            {/* Alt kısım: İşlemler */}
+                            <div className="flex items-center w-full">
                               {inCart ? (
-                                <Badge className="bg-blue-500/20 text-blue-300 border-none px-3 h-9 rounded-lg text-xs">
-                                  <Check className="h-3.5 w-3.5 mr-1.5" />
+                                <Badge className="bg-blue-500/20 text-blue-300 border-none px-3 h-10 rounded-xl w-full flex justify-center text-sm">
+                                  <Check className="h-4 w-4 mr-2" />
                                   Sepette
                                 </Badge>
                               ) : (
-                                <div className="flex items-center border border-zinc-800 rounded-lg overflow-hidden bg-zinc-950/50 focus-within:border-blue-500/50 focus-within:ring-1 focus-within:ring-blue-500/20 transition-all">
+                                <div className="flex items-center border border-zinc-800 rounded-xl overflow-hidden bg-zinc-950/50 focus-within:border-blue-500/50 focus-within:ring-1 focus-within:ring-blue-500/20 transition-all w-full">
                                   <Input
                                     type="number"
                                     step="0.01"
                                     min="0"
                                     disabled={inCart}
-                                    placeholder="Fiyat (₺)"
+                                    placeholder="Satış Fiyatı (₺)"
                                     value={customPrices[priceKey] || ""}
                                     onChange={(e) =>
                                       setCustomPrices((prev) => ({
@@ -548,12 +548,12 @@ export default function POSPage() {
                                         [priceKey]: e.target.value,
                                       }))
                                     }
-                                    className="w-[100px] h-9 border-0 bg-transparent rounded-none text-zinc-200 text-sm font-medium placeholder:text-zinc-600 focus-visible:ring-0 px-3"
+                                    className="flex-1 h-10 border-0 bg-transparent rounded-none text-zinc-200 font-medium placeholder:text-zinc-600 focus-visible:ring-0 px-4"
                                   />
                                   <Button
                                     disabled={inCart}
                                     onClick={() => addMotorcycleToCart(motorcycle)}
-                                    className="h-9 rounded-none bg-blue-600 hover:bg-blue-500 text-white font-semibold px-4 transition-colors"
+                                    className="h-10 rounded-none bg-blue-600 hover:bg-blue-500 text-white font-semibold px-6 transition-colors shrink-0"
                                   >
                                     Ekle
                                   </Button>
@@ -584,23 +584,23 @@ export default function POSPage() {
                           key={sp.id}
                           className="group relative overflow-hidden rounded-xl border border-zinc-800/50 bg-zinc-900/40 hover:bg-zinc-800/40 hover:border-blue-500/30 transition-all duration-300 shadow-sm hover:shadow-lg"
                         >
-                          <div className="p-3 flex items-center justify-between gap-4">
-                            {/* Sol kısım: Bilgiler */}
+                          <div className="p-3 flex flex-col gap-3">
+                            {/* Üst kısım: Bilgiler */}
                             <div className="flex-1 min-w-0">
-                              <h3 className="font-bold text-zinc-100 text-[13px] group-hover:text-blue-400 transition-colors truncate">
+                              <h3 className="font-bold text-zinc-100 text-[14px] group-hover:text-blue-400 transition-colors truncate mb-1.5">
                                 {sp.name}
                               </h3>
-                              <div className="text-[11px] text-zinc-500 mt-1 flex items-center gap-2 truncate">
-                                <span className="font-medium text-amber-400/80 bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 rounded shrink-0">
+                              <div className="text-xs text-zinc-500 flex items-center gap-2 truncate">
+                                <span className="font-medium text-amber-400/80 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded shrink-0">
                                   {sp.quantity} adet
                                 </span>
                                 <span className="truncate">{sp.category} • {sp.compatible_brand} {sp.compatible_model}</span>
                               </div>
                             </div>
 
-                            {/* Sağ kısım: İşlemler */}
-                            <div className="flex items-center shrink-0 ml-2">
-                              <div className="flex items-center border border-zinc-800 rounded-lg overflow-hidden bg-zinc-950/50 focus-within:border-blue-500/50 focus-within:ring-1 focus-within:ring-blue-500/20 transition-all">
+                            {/* Alt kısım: İşlemler */}
+                            <div className="flex items-center w-full">
+                              <div className="flex items-center border border-zinc-800 rounded-xl overflow-hidden bg-zinc-950/50 focus-within:border-blue-500/50 focus-within:ring-1 focus-within:ring-blue-500/20 transition-all w-full">
                                 <Input
                                   type="number"
                                   min="1"
@@ -613,13 +613,13 @@ export default function POSPage() {
                                       [sp.id]: parseInt(e.target.value) || 1,
                                     }))
                                   }
-                                  className="w-[50px] h-9 border-0 border-r border-zinc-800 bg-transparent rounded-none text-center text-zinc-200 text-[13px] font-medium focus-visible:ring-0 px-1 placeholder:text-zinc-600"
+                                  className="w-[70px] h-10 border-0 border-r border-zinc-800 bg-transparent rounded-none text-center text-zinc-200 font-medium focus-visible:ring-0 px-1 placeholder:text-zinc-600"
                                 />
                                 <Input
                                   type="number"
                                   step="0.01"
                                   min="0"
-                                  placeholder="Fiyat (₺)"
+                                  placeholder="Satış Fiyatı (₺)"
                                   value={customPrices[priceKey] || ""}
                                   onChange={(e) =>
                                     setCustomPrices((prev) => ({
@@ -627,13 +627,13 @@ export default function POSPage() {
                                       [priceKey]: e.target.value,
                                     }))
                                   }
-                                  className="w-[85px] sm:w-[95px] h-9 border-0 bg-transparent rounded-none text-zinc-200 text-[13px] font-medium focus-visible:ring-0 px-2 placeholder:text-zinc-600"
+                                  className="flex-1 h-10 border-0 bg-transparent rounded-none text-zinc-200 font-medium focus-visible:ring-0 px-3 placeholder:text-zinc-600"
                                 />
                                 <Button
                                   onClick={() => addSparePartToCart(sp)}
-                                  className="h-9 rounded-none bg-blue-600 hover:bg-blue-500 text-white font-semibold px-3 transition-colors"
+                                  className="h-10 rounded-none bg-blue-600 hover:bg-blue-500 text-white font-semibold px-6 transition-colors shrink-0"
                                 >
-                                  <Plus className="h-4 w-4" />
+                                  Ekle
                                 </Button>
                               </div>
                             </div>
