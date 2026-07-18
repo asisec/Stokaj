@@ -13,7 +13,6 @@ const navigationItems = [
   { label: "Yedek Parçalar", href: "/spare-parts", icon: Wrench },
   { label: "Müşteriler", href: "/customers", icon: Users },
   { label: "Satış / POS", href: "/pos", icon: ShoppingCart },
-  { label: "Ayarlar", href: "/settings", icon: Settings },
 ]
 
 export function Sidebar() {
@@ -51,7 +50,8 @@ export function Sidebar() {
         {navigationItems.map((item) => navLink(item.href, item.label, item.icon))}
       </nav>
 
-      <div className="p-3 border-t border-sidebar-border">
+      <div className="p-3 border-t border-sidebar-border space-y-1">
+        {navLink("/settings", "Ayarlar", Settings)}
         <button
           onClick={() => {
             removeToken()
