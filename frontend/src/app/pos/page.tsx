@@ -242,9 +242,39 @@ export default function POSPage() {
   if (loading) {
     return (
       <div className="flex gap-6 h-[calc(100vh-8rem)] p-2">
-        <Skeleton className="w-80 h-full bg-zinc-800/50 rounded-2xl" />
-        <Skeleton className="flex-1 h-full bg-zinc-800/50 rounded-2xl" />
-        <Skeleton className="w-96 h-full bg-zinc-800/50 rounded-2xl" />
+        {/* Customers Skeleton */}
+        <div className="w-80 flex flex-col">
+          <Skeleton className="h-14 mb-4 rounded-xl bg-zinc-800/50" />
+          <div className="space-y-2 flex-1">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <Skeleton key={i} className="h-16 w-full rounded-xl bg-zinc-800/50" />
+            ))}
+          </div>
+        </div>
+
+        {/* Products Skeleton */}
+        <div className="flex-1 flex flex-col">
+          <Skeleton className="h-12 w-48 mb-4 rounded-xl bg-zinc-800/50" />
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+            {Array.from({ length: 9 }).map((_, i) => (
+              <Skeleton key={i} className="h-32 w-full rounded-2xl bg-zinc-800/50" />
+            ))}
+          </div>
+        </div>
+
+        {/* Cart Skeleton */}
+        <div className="w-96 flex flex-col">
+          <Skeleton className="h-14 mb-4 rounded-xl bg-zinc-800/50" />
+          <div className="flex-1 bg-zinc-900/50 border border-zinc-800/50 rounded-2xl p-4 space-y-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Skeleton key={i} className="h-16 w-full rounded-xl bg-zinc-800/50" />
+            ))}
+            <div className="mt-auto space-y-4 pt-4 border-t border-zinc-800/50">
+              <Skeleton className="h-10 w-full rounded-xl bg-zinc-800/50" />
+              <Skeleton className="h-12 w-full rounded-xl bg-zinc-800/50" />
+            </div>
+          </div>
+        </div>
       </div>
     );
   }

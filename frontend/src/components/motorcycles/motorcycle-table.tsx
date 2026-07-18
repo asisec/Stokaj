@@ -24,7 +24,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
+import { TableSkeleton } from "@/components/ui/table-skeleton";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -360,7 +360,7 @@ export function MotorcycleTable({
         ),
       },
     ],
-    [onEdit, onDelete]
+    [onEdit, onDelete, isCensored]
   );
 
   const table = useReactTable({
@@ -437,20 +437,6 @@ export function MotorcycleTable({
       printWindow.document.close();
     }
   };
-
-  if (loading) {
-    return (
-      <div className="space-y-4">
-        <div className="flex gap-4">
-          <Skeleton className="h-10 flex-1 bg-zinc-800/50" />
-          <Skeleton className="h-10 w-40 bg-zinc-800/50" />
-        </div>
-        {Array.from({ length: 5 }).map((_, i) => (
-          <Skeleton key={i} className="h-14 bg-zinc-800/50" />
-        ))}
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-4">
@@ -609,34 +595,38 @@ export function MotorcycleTable({
               </TableRow>
             ))}
           </TableHeader>
-          <TableBody>
-            {table.getRowModel().rows.length > 0 ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  className="border-zinc-800/50 transition-colors duration-150 hover:bg-zinc-800/30"
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
-                  ))}
+          {loading ? (
+            <TableSkeleton columnsCount={columns.length} rowCount={5} />
+          ) : (
+            <TableBody>
+              {table.getRowModel().rows.length > 0 ? (
+                table.getRowModel().rows.map((row) => (
+                  <TableRow
+                    key={row.id}
+                    className="border-zinc-800/50 transition-colors duration-150 hover:bg-zinc-800/30"
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id}>
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell
+                    colSpan={columns.length}
+                    className="h-32 text-center text-zinc-500"
+                  >
+                    Kayıt bulunamadı
+                  </TableCell>
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-32 text-center text-zinc-500"
-                >
-                  Kayıt bulunamadı
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
+              )}
+            </TableBody>
+          )}
         </Table>
       </div>
 

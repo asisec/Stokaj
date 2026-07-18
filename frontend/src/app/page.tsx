@@ -89,9 +89,10 @@ export default function DashboardPage() {
   if (loading) {
     return (
       <div className="space-y-8 p-2">
+        <Skeleton className="h-8 w-48 mb-6 bg-zinc-800/50" />
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="h-36 rounded-2xl bg-zinc-800/50" />
+            <Skeleton key={i} className="h-32 rounded-2xl bg-zinc-800/50" />
           ))}
         </div>
         <Skeleton className="h-[400px] rounded-2xl bg-zinc-800/50" />
