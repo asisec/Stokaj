@@ -775,7 +775,8 @@ export default function POSPage() {
             </ScrollArea>
 
             {cart.length > 0 && (
-              <div className="bg-zinc-900/80 border-t border-zinc-800/50 p-6 space-y-5 backdrop-blur-md">
+              <div className="bg-zinc-900/80 border-t border-zinc-800/50 px-5 pt-4 pb-4 shrink-0 backdrop-blur-md flex flex-col gap-3">
+                {/* Genel Toplam */}
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium text-zinc-400">Genel Toplam</span>
                   <span className="text-2xl font-bold text-emerald-400 tabular-nums">
@@ -783,128 +784,130 @@ export default function POSPage() {
                   </span>
                 </div>
 
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <Label className="text-xs font-semibold text-zinc-300 uppercase tracking-wider">Tahsilat</Label>
-                    <button
-                      onClick={addPaymentLine}
-                      className="flex items-center gap-1.5 text-xs text-blue-400 hover:text-blue-300 transition-colors font-medium bg-blue-500/10 px-2 py-1 rounded-md"
-                    >
-                      <Plus className="h-3.5 w-3.5" />
-                      Yöntem Ekle
-                    </button>
-                  </div>
+                {/* Tahsilat başlığı */}
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs font-semibold text-zinc-300 uppercase tracking-wider">Tahsilat</Label>
+                  <button
+                    onClick={addPaymentLine}
+                    className="flex items-center gap-1.5 text-xs text-blue-400 hover:text-blue-300 transition-colors font-medium bg-blue-500/10 px-2 py-1 rounded-md"
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                    Yöntem Ekle
+                  </button>
+                </div>
 
-                  <div className="space-y-2.5 max-h-[160px] overflow-y-auto pr-1">
-                    {paymentLines.map((line) => (
-                      <div key={line.id} className="flex items-center gap-2">
+                {/* Ödeme yöntemleri listesi — max yükseklik + scroll */}
+                <div className="flex flex-col gap-2 max-h-[168px] overflow-y-auto pr-0.5">
+                  {paymentLines.map((line) => (
+                    <div key={line.id} className="flex items-center gap-2">
+                      <Select
+                        value={line.method}
+                        onValueChange={(val) => updatePaymentLine(line.id, "method", val)}
+                      >
+                        <SelectTrigger className="h-10 flex-1 bg-zinc-950/50 border-zinc-800 rounded-xl text-zinc-200 text-xs focus:ring-0 focus:ring-offset-0 focus:border-blue-500/50">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="bg-zinc-900 border-zinc-800 rounded-xl">
+                          {paymentMethods.map((m) => {
+                            const Icon = m.icon;
+                            return (
+                              <SelectItem
+                                key={m.value}
+                                value={m.value}
+                                className="text-zinc-300 focus:bg-zinc-800 text-xs rounded-lg my-0.5"
+                              >
+                                <span className="flex items-center gap-2">
+                                  <Icon className="h-3.5 w-3.5 opacity-70" />
+                                  {m.label}
+                                </span>
+                              </SelectItem>
+                            );
+                          })}
+                        </SelectContent>
+                      </Select>
+
+                      {line.method === "credit_card" && (
                         <Select
-                          value={line.method}
-                          onValueChange={(val) => updatePaymentLine(line.id, "method", val)}
+                          value={line.installments?.toString() || "0"}
+                          onValueChange={(val) => updatePaymentLine(line.id, "installments", parseInt(val))}
                         >
-                          <SelectTrigger className="h-10 flex-1 bg-zinc-950/50 border-zinc-800 rounded-xl text-zinc-200 text-xs focus:ring-0 focus:ring-offset-0 focus:border-blue-500/50">
-                            <SelectValue />
+                          <SelectTrigger className="h-10 w-[90px] bg-zinc-950/50 border-zinc-800 rounded-xl text-zinc-200 text-xs focus:ring-0 focus:ring-offset-0 focus:border-blue-500/50">
+                            <SelectValue placeholder="Taksit" />
                           </SelectTrigger>
                           <SelectContent className="bg-zinc-900 border-zinc-800 rounded-xl">
-                            {paymentMethods.map((m) => {
-                              const Icon = m.icon;
-                              return (
-                                <SelectItem
-                                  key={m.value}
-                                  value={m.value}
-                                  className="text-zinc-300 focus:bg-zinc-800 text-xs rounded-lg my-0.5"
-                                >
-                                  <span className="flex items-center gap-2">
-                                    <Icon className="h-3.5 w-3.5 opacity-70" />
-                                    {m.label}
-                                  </span>
-                                </SelectItem>
-                              );
-                            })}
+                            {installmentOptions.map((opt) => (
+                              <SelectItem
+                                key={opt}
+                                value={opt.toString()}
+                                className="text-zinc-300 focus:bg-zinc-800 text-xs rounded-lg"
+                              >
+                                {opt === 0 ? "Tek Çekim" : `${opt} Taksit`}
+                              </SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
-
-                        {line.method === "credit_card" && (
-                          <Select
-                            value={line.installments?.toString() || "0"}
-                            onValueChange={(val) => updatePaymentLine(line.id, "installments", parseInt(val))}
-                          >
-                            <SelectTrigger className="h-10 w-[95px] bg-zinc-950/50 border-zinc-800 rounded-xl text-zinc-200 text-xs focus:ring-0 focus:ring-offset-0 focus:border-blue-500/50">
-                              <SelectValue placeholder="Taksit" />
-                            </SelectTrigger>
-                            <SelectContent className="bg-zinc-900 border-zinc-800 rounded-xl">
-                              {installmentOptions.map((opt) => (
-                                <SelectItem
-                                  key={opt}
-                                  value={opt.toString()}
-                                  className="text-zinc-300 focus:bg-zinc-800 text-xs rounded-lg"
-                                >
-                                  {opt === 0 ? "Tek Çekim" : `${opt} Taksit`}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        )}
-
-                        <div className="relative w-[120px] shrink-0">
-                          <Input
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            placeholder="Tutar"
-                            value={line.amount || ""}
-                            onChange={(e) => updatePaymentLine(line.id, "amount", parseFloat(e.target.value))}
-                            className="h-10 pr-10 pl-2 rounded-xl bg-zinc-950/50 border-zinc-800 text-zinc-100 font-medium text-sm focus:border-blue-500/50 text-right placeholder:text-left [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                          />
-                          <button
-                            onClick={() => fillRemaining(line.id)}
-                            title="Kalan tutarı doldur"
-                            className="absolute right-1.5 top-1/2 -translate-y-1/2 bg-zinc-800 hover:bg-blue-600 text-zinc-300 hover:text-white transition-colors text-[9px] font-bold px-1.5 py-1 rounded"
-                          >
-                            TÜMÜ
-                          </button>
-                        </div>
-
-                        {paymentLines.length > 1 && (
-                          <button
-                            onClick={() => removePaymentLine(line.id)}
-                            className="p-2 rounded-xl text-zinc-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-
-                  <div
-                    className={cn(
-                      "flex items-center justify-between p-3 rounded-xl text-xs font-semibold transition-all duration-300",
-                      Math.abs(remaining) < 0.01
-                        ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-400"
-                        : remaining > 0
-                        ? "bg-amber-500/10 border border-amber-500/20 text-amber-400"
-                        : "bg-red-500/10 border border-red-500/20 text-red-400"
-                    )}
-                  >
-                    <span className="flex items-center gap-2">
-                      {Math.abs(remaining) < 0.01 ? (
-                        <Check className="h-4 w-4" />
-                      ) : (
-                        <AlertCircle className="h-4 w-4" />
                       )}
-                      {Math.abs(remaining) < 0.01
-                        ? "Ödeme Tamam"
-                        : remaining > 0
-                        ? "Kalan Tutar"
-                        : "Fazla Ödeme"}
-                    </span>
-                    {Math.abs(remaining) >= 0.01 && (
-                      <span className="tabular-nums text-sm">
-                        {formatCurrency(Math.abs(remaining))}
-                      </span>
+
+                      {/* Tutar input + TÜMÜ butonu yan yana */}
+                      <div className="flex items-center gap-1 shrink-0">
+                        <Input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          placeholder="Tutar"
+                          value={line.amount || ""}
+                          onChange={(e) => updatePaymentLine(line.id, "amount", parseFloat(e.target.value))}
+                          className="w-[75px] h-10 px-2 rounded-xl bg-zinc-950/50 border-zinc-800 text-zinc-100 font-medium text-sm focus:border-blue-500/50 text-right [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        />
+                        <button
+                          onClick={() => fillRemaining(line.id)}
+                          title="Kalan tutarı doldur"
+                          className="h-10 px-2 bg-zinc-800 hover:bg-blue-600 text-zinc-300 hover:text-white transition-colors text-[9px] font-bold rounded-xl whitespace-nowrap"
+                        >
+                          TÜMÜ
+                        </button>
+                      </div>
+
+                      {paymentLines.length > 1 && (
+                        <button
+                          onClick={() => removePaymentLine(line.id)}
+                          className="p-2 rounded-xl text-zinc-500 hover:text-red-400 hover:bg-red-500/10 transition-colors shrink-0"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Kalan Tutar */}
+                <div
+                  className={cn(
+                    "flex items-center justify-between p-3 rounded-xl text-xs font-semibold transition-all duration-300",
+                    Math.abs(remaining) < 0.01
+                      ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-400"
+                      : remaining > 0
+                      ? "bg-amber-500/10 border border-amber-500/20 text-amber-400"
+                      : "bg-red-500/10 border border-red-500/20 text-red-400"
+                  )}
+                >
+                  <span className="flex items-center gap-2">
+                    {Math.abs(remaining) < 0.01 ? (
+                      <Check className="h-4 w-4" />
+                    ) : (
+                      <AlertCircle className="h-4 w-4" />
                     )}
-                  </div>
+                    {Math.abs(remaining) < 0.01
+                      ? "Ödeme Tamam"
+                      : remaining > 0
+                      ? "Kalan Tutar"
+                      : "Fazla Ödeme"}
+                  </span>
+                  {Math.abs(remaining) >= 0.01 && (
+                    <span className="tabular-nums text-sm">
+                      {formatCurrency(Math.abs(remaining))}
+                    </span>
+                  )}
                 </div>
 
                 {!selectedCustomer && (
