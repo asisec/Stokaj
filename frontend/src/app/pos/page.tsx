@@ -429,8 +429,8 @@ export default function POSPage() {
                             {isCensored ? "**** ****" : `${customer.first_name} ${customer.last_name}`}
                           </div>
                           <div className="flex items-center gap-1.5 text-xs text-zinc-500 mt-1">
-                            <Phone className="h-3 w-3" />
-                            {isCensored ? "***********" : customer.phone}
+                            <User className="h-3 w-3" />
+                            {isCensored ? "***********" : customer.identity_number}
                           </div>
                         </div>
                       </div>
@@ -483,7 +483,7 @@ export default function POSPage() {
             <CardContent className="flex-1 p-0 min-h-0">
               <TabsContent value="motorcycles" className="h-full m-0 data-[state=inactive]:hidden">
                 <ScrollArea className="h-full px-5 pb-5">
-                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 pt-2 pb-4">
+                  <div className="flex flex-col gap-2 pt-2 pb-4">
                     {availableMotorcycles.map((motorcycle) => {
                       const inCart = cart.some(
                         (item) => item.item_type === "motorcycle" && item.item_id === motorcycle.id
@@ -493,71 +493,75 @@ export default function POSPage() {
                         <div
                           key={motorcycle.id}
                           className={cn(
-                            "group relative overflow-hidden rounded-2xl border transition-all duration-300",
+                            "group relative overflow-hidden rounded-xl border transition-all duration-300",
                             inCart
                               ? "border-zinc-800/30 bg-zinc-900/20 opacity-50 grayscale-[0.5]"
                               : "border-zinc-800/50 bg-zinc-900/40 hover:bg-zinc-800/40 hover:border-blue-500/30 shadow-sm hover:shadow-lg"
                           )}
                         >
-                          <div className="p-4 flex flex-col h-full">
-                            <div className="flex justify-between items-start mb-4">
-                              <div className="pr-4">
-                                <h3 className="font-bold text-zinc-100 text-[15px] group-hover:text-blue-400 transition-colors leading-tight">
+                          <div className="p-3 flex items-center justify-between gap-4">
+                            {/* Sol kısım: Bilgiler */}
+                            <div className="flex-1 min-w-0 flex items-center gap-4">
+                              <div className="flex-1 min-w-0">
+                                <h3 className="font-bold text-zinc-100 text-sm group-hover:text-blue-400 transition-colors leading-tight truncate">
                                   {motorcycle.brand} {motorcycle.model}
                                 </h3>
-                                <div className="text-xs text-zinc-500 mt-1.5 flex items-center gap-2">
-                                  <span className="flex items-center gap-1 font-medium text-zinc-400 bg-zinc-800/50 px-2 py-0.5 rounded-md">
+                                <div className="text-[11px] text-zinc-500 mt-1 flex items-center gap-2 truncate">
+                                  <span className="font-medium text-zinc-400 bg-zinc-800/50 px-1.5 py-0.5 rounded">
                                     {motorcycle.year}
                                   </span>
                                   <span>•</span>
                                   <span className="capitalize">{motorcycle.color}</span>
                                   <span>•</span>
-                                  <span className="font-mono text-[10px] opacity-70">
-                                    {isCensored ? "********" : motorcycle.chassis_number.slice(-8)}
+                                  <span className="font-mono opacity-70">
+                                    SN: {isCensored ? "********" : motorcycle.chassis_number.slice(-8)}
                                   </span>
                                 </div>
                               </div>
-                              {inCart && (
-                                <Badge className="bg-blue-500/20 text-blue-300 border-none px-2 rounded-lg text-[10px] shrink-0">
-                                  <Check className="h-3 w-3 mr-1" />
-                                  Sepette
-                                </Badge>
-                              )}
+                              <div className="text-right shrink-0 px-4 border-l border-zinc-800/50 hidden md:block">
+                                <div className="text-[10px] text-zinc-500 uppercase tracking-wider mb-0.5">Maliyet</div>
+                                <div className="text-xs text-emerald-500/80 font-medium">
+                                  {isCensored ? "****" : formatCurrency(motorcycle.purchase_price)}
+                                </div>
+                              </div>
                             </div>
 
-                            <div className="mt-auto pt-3 border-t border-zinc-800/50 flex flex-col gap-3">
-                              <div className="flex items-center justify-between">
-                                <span className="text-[11px] text-emerald-500/80 font-medium">
-                                  Maliyet: {isCensored ? "****" : formatCurrency(motorcycle.purchase_price)}
-                                </span>
-                              </div>
-                              <div className="flex items-center gap-3">
-                                <div className="relative flex-1">
-                                  <Tag className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-500" />
-                                  <Input
-                                    type="number"
-                                    step="0.01"
-                                    min="0"
+                            {/* Sağ kısım: İşlemler */}
+                            <div className="flex items-center gap-3 shrink-0">
+                              {inCart ? (
+                                <Badge className="bg-blue-500/20 text-blue-300 border-none px-3 h-9 rounded-lg text-xs">
+                                  <Check className="h-3.5 w-3.5 mr-1.5" />
+                                  Sepette
+                                </Badge>
+                              ) : (
+                                <>
+                                  <div className="relative w-32">
+                                    <Tag className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-500" />
+                                    <Input
+                                      type="number"
+                                      step="0.01"
+                                      min="0"
+                                      disabled={inCart}
+                                      placeholder="Satış Fiyatı"
+                                      value={customPrices[priceKey] || ""}
+                                      onChange={(e) =>
+                                        setCustomPrices((prev) => ({
+                                          ...prev,
+                                          [priceKey]: e.target.value,
+                                        }))
+                                      }
+                                      className="pl-8 h-9 rounded-lg bg-zinc-950/50 border-zinc-800 text-zinc-200 focus:border-blue-500/50 text-sm font-medium"
+                                    />
+                                  </div>
+                                  <Button
                                     disabled={inCart}
-                                    placeholder="Satış Fiyatı"
-                                    value={customPrices[priceKey] || ""}
-                                    onChange={(e) =>
-                                      setCustomPrices((prev) => ({
-                                        ...prev,
-                                        [priceKey]: e.target.value,
-                                      }))
-                                    }
-                                    className="pl-9 h-10 rounded-xl bg-zinc-950/50 border-zinc-800 text-zinc-200 focus:border-blue-500/50 disabled:opacity-50 font-medium text-sm"
-                                  />
-                                </div>
-                                <Button
-                                  disabled={inCart}
-                                  onClick={() => addMotorcycleToCart(motorcycle)}
-                                  className="h-10 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-medium px-5 shadow-lg shadow-blue-600/20 transition-all disabled:opacity-50 shrink-0"
-                                >
-                                  Ekle
-                                </Button>
-                              </div>
+                                    onClick={() => addMotorcycleToCart(motorcycle)}
+                                    className="h-9 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-medium px-4 shadow-sm shadow-blue-600/20 transition-all"
+                                  >
+                                    Ekle
+                                  </Button>
+                                </>
+                              )}
                             </div>
                           </div>
                         </div>
@@ -575,30 +579,32 @@ export default function POSPage() {
 
               <TabsContent value="spare_parts" className="h-full m-0 data-[state=inactive]:hidden">
                 <ScrollArea className="h-full px-5 pb-5">
-                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 pt-2 pb-4">
+                  <div className="flex flex-col gap-2 pt-2 pb-4">
                     {availableSpareParts.map((sp) => {
                       const priceKey = getCustomPriceKey("spare_part", sp.id);
                       return (
                         <div
                           key={sp.id}
-                          className="group relative overflow-hidden rounded-2xl border border-zinc-800/50 bg-zinc-900/40 hover:bg-zinc-800/40 hover:border-blue-500/30 transition-all duration-300 shadow-sm hover:shadow-lg"
+                          className="group relative overflow-hidden rounded-xl border border-zinc-800/50 bg-zinc-900/40 hover:bg-zinc-800/40 hover:border-blue-500/30 transition-all duration-300 shadow-sm hover:shadow-lg"
                         >
-                          <div className="p-4 flex flex-col h-full">
-                            <div className="flex justify-between items-start mb-3">
-                              <div className="flex-1 min-w-0 pr-4">
-                                <h3 className="font-semibold text-zinc-100 text-base group-hover:text-blue-200 transition-colors truncate">
+                          <div className="p-3 flex items-center justify-between gap-4">
+                            {/* Sol kısım: Bilgiler */}
+                            <div className="flex-1 min-w-0 flex items-center gap-4">
+                              <div className="flex-1 min-w-0">
+                                <h3 className="font-bold text-zinc-100 text-sm group-hover:text-blue-400 transition-colors truncate">
                                   {sp.name}
                                 </h3>
-                                <div className="text-xs text-zinc-500 mt-0.5 truncate">
+                                <div className="text-[11px] text-zinc-500 mt-1 truncate">
+                                  <span className="font-medium text-amber-400/80 bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 rounded mr-2">
+                                    {sp.quantity} adet stok
+                                  </span>
                                   {sp.category} • {sp.compatible_brand} {sp.compatible_model}
                                 </div>
                               </div>
-                              <Badge className="bg-amber-500/10 text-amber-400 border-amber-500/20 px-2 rounded-lg text-xs shrink-0">
-                                {sp.quantity} adet
-                              </Badge>
                             </div>
 
-                            <div className="mt-auto pt-3 border-t border-zinc-800/50 flex items-center gap-2">
+                            {/* Sağ kısım: İşlemler */}
+                            <div className="flex items-center gap-3 shrink-0">
                               <div className="w-20 shrink-0">
                                 <Input
                                   type="number"
@@ -612,11 +618,11 @@ export default function POSPage() {
                                       [sp.id]: parseInt(e.target.value) || 1,
                                     }))
                                   }
-                                  className="h-10 text-center rounded-xl bg-zinc-950/50 border-zinc-800 text-zinc-200 focus:border-blue-500/50 font-medium"
+                                  className="h-9 text-center rounded-lg bg-zinc-950/50 border-zinc-800 text-zinc-200 focus:border-blue-500/50 font-medium text-sm"
                                 />
                               </div>
-                              <div className="relative flex-1">
-                                <Tag className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-500" />
+                              <div className="relative w-32 shrink-0">
+                                <Tag className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-500" />
                                 <Input
                                   type="number"
                                   step="0.01"
@@ -629,12 +635,12 @@ export default function POSPage() {
                                       [priceKey]: e.target.value,
                                     }))
                                   }
-                                  className="pl-9 h-10 rounded-xl bg-zinc-950/50 border-zinc-800 text-zinc-200 focus:border-blue-500/50 font-medium"
+                                  className="pl-8 h-9 rounded-lg bg-zinc-950/50 border-zinc-800 text-zinc-200 focus:border-blue-500/50 font-medium text-sm"
                                 />
                               </div>
                               <Button
                                 onClick={() => addSparePartToCart(sp)}
-                                className="h-10 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-medium px-4 shadow-lg shadow-blue-600/20 transition-all"
+                                className="h-9 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-medium px-4 shadow-sm shadow-blue-600/20 transition-all shrink-0"
                               >
                                 <Plus className="h-4 w-4" />
                               </Button>
@@ -690,7 +696,10 @@ export default function POSPage() {
                     <div className="text-sm font-semibold text-blue-100">
                       {isCensored ? "**** ****" : `${selectedCustomer.first_name} ${selectedCustomer.last_name}`}
                     </div>
-                    <div className="text-xs text-blue-300/60 mt-0.5">{isCensored ? "***********" : selectedCustomer.phone}</div>
+                    <div className="text-xs text-blue-300/60 mt-0.5 flex items-center gap-1">
+                      <User className="h-3 w-3" />
+                      {isCensored ? "***********" : selectedCustomer.identity_number}
+                    </div>
                   </div>
                 </motion.div>
               )}
