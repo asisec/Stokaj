@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Bike, LayoutDashboard, Wrench, Users, ShoppingCart, LogOut, Tags } from "lucide-react"
+import { Bike, LayoutDashboard, Wrench, Users, ShoppingCart, LogOut, Tags, Settings } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { removeToken } from "@/lib/auth"
 
@@ -13,6 +13,7 @@ const navigationItems = [
   { label: "Yedek Parçalar", href: "/spare-parts", icon: Wrench },
   { label: "Müşteriler", href: "/customers", icon: Users },
   { label: "Satış / POS", href: "/pos", icon: ShoppingCart },
+  { label: "Ayarlar", href: "/settings", icon: Settings },
 ]
 
 export function Sidebar() {
