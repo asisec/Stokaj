@@ -151,11 +151,11 @@ func DeleteSale(c *gin.Context) {
 		// Revert motorcycles status back to available
 		for _, item := range sale.Items {
 			if item.ItemType == "motorcycle" {
-				var motorcycle models.Motorcycle
-				if err := tx.First(&motorcycle, item.ItemID).Error; err == nil {
-					motorcycle.Status = "available"
-					motorcycle.SalePrice = 0
-					tx.Save(&motorcycle)
+				if err := tx.Model(&models.Motorcycle{}).Where("id = ?", item.ItemID).Updates(map[string]interface{}{
+					"status":     "available",
+					"sale_price": 0,
+				}).Error; err != nil {
+					return err
 				}
 			}
 			// (If we had spare parts deducting stock, we would add them back here)

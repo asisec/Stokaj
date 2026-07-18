@@ -279,7 +279,7 @@ export function MotorcycleTable({
         ),
         cell: ({ row }) => (
           <span className="text-zinc-200 font-semibold tabular-nums">
-            {formatCurrency(row.getValue("sale_price"))}
+            {row.getValue("status") === "sold" ? formatCurrency(row.getValue("sale_price")) : "-"}
           </span>
         ),
       },
