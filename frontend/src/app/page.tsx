@@ -38,6 +38,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useCensorStore } from "@/store/censor";
+import { PaymentModal } from "@/components/customers/payment-modal";
+import { type Customer } from "@/lib/api";
 
 const formatCurrency = (value: number) =>
   new Intl.NumberFormat("tr-TR", { style: "currency", currency: "TRY" }).format(
@@ -60,6 +62,19 @@ export default function DashboardPage() {
 
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const { isCensored, toggleCensor } = useCensorStore();
+
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+
+  const handlePaymentClick = (customer: Customer) => {
+    setSelectedCustomer(customer);
+    setPaymentModalOpen(true);
+  };
+
+  const handlePaymentModalChange = (open: boolean) => {
+    setPaymentModalOpen(open);
+    if (!open) setSelectedCustomer(null);
+  };
 
   const loadStats = () => {
     api
@@ -302,26 +317,60 @@ export default function DashboardPage() {
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <Card className="border-zinc-800/50 bg-zinc-900/50 backdrop-blur-sm border-l-4 border-l-rose-500 hover:scale-[1.02] transition-transform cursor-default md:col-span-1">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-lg font-semibold text-zinc-100 flex items-center gap-2">
-              <Wallet className="h-5 w-5 text-rose-400" />
-              Toplam Alacaklar
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-rose-400 tracking-tight">
-              {isCensored ? "****" : formatCurrency(stats.total_receivables || 0)}
+      <Card className="border-zinc-800/50 bg-zinc-900/50 backdrop-blur-sm mb-8 border-t-4 border-t-rose-500">
+        <CardHeader className="flex flex-row items-center justify-between pb-4">
+          <CardTitle className="text-lg font-semibold text-zinc-100 flex items-center gap-2">
+            <Wallet className="h-5 w-5 text-rose-400" />
+            Toplam Alacaklar (Açık Hesaplar)
+          </CardTitle>
+          <div className="text-2xl font-bold text-rose-400">
+            {isCensored ? "****" : formatCurrency(stats.total_receivables || 0)}
+          </div>
+        </CardHeader>
+        <CardContent>
+          {stats.customers_with_balance && stats.customers_with_balance.length > 0 ? (
+            <div className="rounded-xl border border-zinc-800/50 overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow className="border-zinc-800/50 hover:bg-transparent">
+                    <TableHead className="text-zinc-400 font-medium">Müşteri</TableHead>
+                    <TableHead className="text-zinc-400 font-medium">Telefon</TableHead>
+                    <TableHead className="text-right text-zinc-400 font-medium">Bakiye (Borç)</TableHead>
+                    <TableHead className="text-right text-zinc-400 font-medium w-[120px]">İşlem</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {stats.customers_with_balance.map((customer) => (
+                    <TableRow key={customer.id} className="border-zinc-800/50 hover:bg-zinc-800/30">
+                      <TableCell className="font-medium text-zinc-200">
+                        {isCensored ? "**** ****" : `${customer.first_name} ${customer.last_name}`}
+                      </TableCell>
+                      <TableCell className="text-zinc-400">
+                        {isCensored ? "***********" : customer.phone || "-"}
+                      </TableCell>
+                      <TableCell className="text-right font-bold text-rose-400">
+                        {isCensored ? "****" : formatCurrency(customer.balance)}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <button
+                          onClick={() => handlePaymentClick(customer)}
+                          className="px-3 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 text-sm font-medium transition-colors"
+                        >
+                          Tahsilat Al
+                        </button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </div>
-            <p className="text-sm text-zinc-500 mt-2">
-              Müşterilerdeki açık hesap (veresiye) toplamı
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-
+          ) : (
+            <div className="text-center py-8 text-zinc-500">
+              Tahsil edilecek açık hesap bulunmuyor.
+            </div>
+          )}
+        </CardContent>
+      </Card>
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7 mb-8">
         {/* Sales Trend Line Chart */}
         <Card className="border-zinc-800/50 bg-zinc-900/50 backdrop-blur-sm xl:col-span-4">
@@ -455,6 +504,13 @@ export default function DashboardPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <PaymentModal
+        open={paymentModalOpen}
+        onOpenChange={handlePaymentModalChange}
+        customer={selectedCustomer}
+        onSuccess={loadStats}
+      />
     </div>
   );
 }

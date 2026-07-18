@@ -79,19 +79,23 @@ func GetDashboardStats(c *gin.Context) {
 		LIMIT 5
 	`).Scan(&topBrands)
 
+	var customersWithBalance []models.Customer
+	database.DB.Where("balance > 0").Order("balance desc").Find(&customersWithBalance)
+
 	c.JSON(http.StatusOK, gin.H{
-		"total_motorcycles":        totalMotorcycles,
-		"available_motorcycles":    availableMotorcycles,
-		"sold_motorcycles":         soldMotorcycles,
-		"total_spare_parts":        totalSpareParts,
+		"total_motorcycles":          totalMotorcycles,
+		"available_motorcycles":      availableMotorcycles,
+		"sold_motorcycles":           soldMotorcycles,
+		"total_spare_parts":          totalSpareParts,
 		"total_spare_parts_quantity": totalSparePartsQuantity,
-		"low_stock_parts":          lowStockParts,
-		"total_customers":          totalCustomers,
-		"total_sales":              totalSales,
-		"total_revenue":            totalRevenue,
-		"total_receivables":        totalReceivables,
-		"recent_sales":             recentSales,
-		"sales_trend":              salesTrend,
-		"top_brands":               topBrands,
+		"low_stock_parts":            lowStockParts,
+		"total_customers":            totalCustomers,
+		"total_sales":                totalSales,
+		"total_revenue":              totalRevenue,
+		"total_receivables":          totalReceivables,
+		"recent_sales":               recentSales,
+		"sales_trend":                salesTrend,
+		"top_brands":                 topBrands,
+		"customers_with_balance":     customersWithBalance,
 	})
 }

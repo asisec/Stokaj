@@ -142,6 +142,7 @@ export interface DashboardStats {
   recent_sales: Sale[];
   sales_trend: SalesTrend[];
   top_brands: BrandStat[];
+  customers_with_balance: Customer[];
 }
 
 export const api = {
