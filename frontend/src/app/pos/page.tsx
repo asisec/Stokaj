@@ -305,7 +305,7 @@ export default function POSPage() {
       await api.createSale({
         customer_id: selectedCustomer!.id,
         payments: paymentLines.map((l) => ({
-          method: l.method === "credit_card" && l.installments && l.installments > 0 ? `Kredi Kartı (${l.installments} Taksit)` : methodLabel(l.method),
+          method: l.method === "credit_card" && l.installments && l.installments > 0 ? `credit_card_${l.installments}` : l.method,
           amount: parseFloat(l.amount),
         })),
         items: cart.map((item) => ({

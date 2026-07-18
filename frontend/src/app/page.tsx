@@ -54,6 +54,7 @@ const paymentMethodLabels: Record<string, string> = {
   credit_card: "Kredi Kartı",
   bank_transfer: "Havale/EFT",
   installment: "Taksit",
+  open_account: "Açık Hesap",
 };
 
 export default function DashboardPage() {
@@ -275,15 +276,22 @@ export default function DashboardPage() {
                       <TableCell>
                         <div className="flex flex-col gap-1">
                           {sale.payments && sale.payments.length > 0 ? (
-                            sale.payments.map((p) => (
-                              <Badge
-                                key={p.id}
-                                variant="secondary"
-                                className="bg-zinc-800 text-zinc-300 border-zinc-700 w-max"
-                              >
-                                {paymentMethodLabels[p.method] || p.method} ({isCensored ? "****" : formatCurrency(p.amount)})
-                              </Badge>
-                            ))
+                            sale.payments.map((p) => {
+                              let label = paymentMethodLabels[p.method] || p.method;
+                              if (p.method.startsWith("credit_card_")) {
+                                const installments = p.method.split("_")[2];
+                                label = `Kredi Kartı (${installments} Taksit)`;
+                              }
+                              return (
+                                <Badge
+                                  key={p.id}
+                                  variant="secondary"
+                                  className="bg-zinc-800 text-zinc-300 border-zinc-700 w-max"
+                                >
+                                  {label} ({isCensored ? "****" : formatCurrency(p.amount)})
+                                </Badge>
+                              );
+                            })
                           ) : (
                             <Badge variant="secondary" className="bg-zinc-800 text-zinc-500 border-zinc-700">
                               Belirtilmemiş
