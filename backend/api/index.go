@@ -43,10 +43,6 @@ func init() {
 	setupRoutes := func(g *gin.RouterGroup) {
 		g.POST("/login", handlers.Login)
 		
-		// Public routes
-		public := g.Group("/public")
-		public.GET("/motorcycles/:chassis", handlers.GetPublicMotorcycleByChassis)
-
 		protected := g.Group("/")
 		protected.Use(middleware.RequireAuth())
 
