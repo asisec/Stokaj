@@ -375,26 +375,28 @@ export default function POSPage() {
       {/* 1. SOL PANEL: Müşteri Seçimi */}
       <div className="w-80 flex flex-col gap-4 shrink-0">
         <Card className="border-zinc-800/60 bg-zinc-950/40 backdrop-blur-xl flex flex-col h-full rounded-3xl shadow-2xl">
-          <CardHeader className="p-5 pb-4 border-b border-zinc-800/60 shrink-0">
+          <CardHeader className="p-5 pb-5 border-b border-zinc-800/60 shrink-0">
             <CardTitle className="text-xl font-semibold text-zinc-100 flex items-center gap-2.5">
               <div className="p-2.5 bg-blue-500/10 rounded-xl text-blue-400">
                 <User className="h-5 w-5" />
               </div>
               Müşteri Seçimi
             </CardTitle>
-            <div className="relative mt-4">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
-              <Input
-                placeholder="Müşteri ara..."
-                value={customerSearch}
-                onChange={(e) => setCustomerSearch(e.target.value)}
-                className="pl-10 h-11 rounded-xl bg-zinc-900/50 border-zinc-800/50 text-zinc-200 placeholder:text-zinc-500 focus:border-blue-500/50 focus:ring-blue-500/20 transition-all shadow-inner"
-              />
-            </div>
           </CardHeader>
-          <CardContent className="flex-1 p-0 min-h-0 px-3 pb-3">
-            <ScrollArea className="h-full px-2">
-              <div className="space-y-2 pb-4">
+          <CardContent className="flex-1 p-0 min-h-0 flex flex-col">
+            <div className="px-4 pt-4 pb-2">
+              <div className="relative">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
+                <Input
+                  placeholder="Müşteri ara..."
+                  value={customerSearch}
+                  onChange={(e) => setCustomerSearch(e.target.value)}
+                  className="pl-10 h-11 rounded-xl bg-zinc-900/50 border-zinc-800/50 text-zinc-200 placeholder:text-zinc-500 focus:border-blue-500/50 focus:ring-blue-500/20 transition-all"
+                />
+              </div>
+            </div>
+            <ScrollArea className="flex-1 px-3 pb-3">
+              <div className="space-y-2 pb-4 pt-1">
                 {filteredCustomers.map((customer) => {
                   const isSelected = selectedCustomer?.id === customer.id;
                   return (
@@ -457,7 +459,7 @@ export default function POSPage() {
             onValueChange={(v) => setActiveTab(v as "motorcycles" | "spare_parts")}
             className="flex flex-col h-full"
           >
-            <CardHeader className="p-5 pb-4 border-b border-zinc-800/60 shrink-0">
+            <CardHeader className="p-5 pb-5 border-b border-zinc-800/60 shrink-0">
               <CardTitle className="text-xl font-semibold text-zinc-100 flex items-center gap-2.5">
                 <div className="p-2.5 bg-emerald-500/10 rounded-xl text-emerald-400">
                   <Package className="h-5 w-5" />
@@ -481,7 +483,7 @@ export default function POSPage() {
                     placeholder="Ürün ara..."
                     value={productSearch}
                     onChange={(e) => setProductSearch(e.target.value)}
-                    className="pl-9 h-11 bg-zinc-900/50 border-zinc-800/50 text-zinc-200 focus:border-blue-500/50 rounded-xl shadow-inner placeholder:text-zinc-500"
+                    className="pl-9 h-11 bg-zinc-900/50 border-zinc-800/50 text-zinc-200 focus:border-blue-500/50 rounded-xl placeholder:text-zinc-500"
                   />
                 </div>
               </div>
@@ -661,45 +663,44 @@ export default function POSPage() {
           {/* Subtle glow in background */}
           <div className="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl pointer-events-none" />
 
-          <CardHeader className="pb-4 px-6 pt-6 relative z-10 border-b border-zinc-800/60 shrink-0">
-            <CardTitle className="text-xl font-bold text-zinc-100 flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <div className="p-2 bg-amber-500/10 rounded-xl text-amber-400">
+          <CardHeader className="px-5 pt-5 pb-4 relative z-10 border-b border-zinc-800/60 shrink-0">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-xl font-bold text-zinc-100 flex items-center gap-2.5">
+                <div className="p-2.5 bg-amber-500/10 rounded-xl text-amber-500">
                   <ShoppingBag className="h-5 w-5" />
                 </div>
                 Sepet
-              </div>
+              </CardTitle>
               {cart.length > 0 && (
                 <Badge className="bg-zinc-800 text-zinc-300 border-zinc-700/50 px-2.5 py-1 rounded-lg">
                   {cart.length} Ürün
                 </Badge>
               )}
-            </CardTitle>
-
-            <AnimatePresence>
-              {selectedCustomer && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0, marginTop: 0 }}
-                  animate={{ opacity: 1, height: "auto", marginTop: 16 }}
-                  exit={{ opacity: 0, height: 0, marginTop: 0 }}
-                  className="overflow-hidden"
-                >
-                  <div className="p-3.5 rounded-xl bg-gradient-to-r from-blue-500/10 to-transparent border-l-2 border-blue-500">
-                    <div className="text-sm font-semibold text-blue-100">
-                      {isCensored ? "**** ****" : `${selectedCustomer.first_name} ${selectedCustomer.last_name}`}
-                    </div>
-                    <div className="text-xs text-blue-300/60 mt-0.5 flex items-center gap-1">
-                      <User className="h-3 w-3" />
-                      {isCensored ? "***********" : selectedCustomer.identity_number}
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+            </div>
           </CardHeader>
 
           <CardContent className="flex-1 flex flex-col p-0 min-h-0 overflow-hidden relative z-10">
-            <ScrollArea className="flex-1 px-6">
+            <ScrollArea className="flex-1 px-5">
+              <AnimatePresence>
+                {selectedCustomer && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    className="pt-4"
+                  >
+                    <div className="p-3.5 rounded-xl bg-gradient-to-r from-blue-500/10 to-transparent border-l-2 border-blue-500 mb-3">
+                      <div className="text-sm font-semibold text-blue-100">
+                        {isCensored ? "**** ****" : `${selectedCustomer.first_name} ${selectedCustomer.last_name}`}
+                      </div>
+                      <div className="text-xs text-blue-300/60 mt-0.5 flex items-center gap-1">
+                        <User className="h-3 w-3" />
+                        {isCensored ? "***********" : selectedCustomer.identity_number}
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
               <AnimatePresence mode="popLayout">
                 {cart.length > 0 ? (
                   <div className="space-y-3 pb-4">
