@@ -375,10 +375,10 @@ export default function POSPage() {
       {/* 1. SOL PANEL: Müşteri Seçimi */}
       <div className="w-80 flex flex-col gap-4 shrink-0">
         <Card className="border-zinc-800/60 bg-zinc-950/40 backdrop-blur-xl flex flex-col h-full rounded-3xl shadow-2xl">
-          <CardHeader className="pb-4 px-5 pt-5">
-            <CardTitle className="text-lg font-semibold text-zinc-100 flex items-center gap-2.5">
-              <div className="p-2 bg-blue-500/10 rounded-xl text-blue-400">
-                <User className="h-4 w-4" />
+          <CardHeader className="p-5 pb-4 border-b border-zinc-800/60 shrink-0">
+            <CardTitle className="text-xl font-semibold text-zinc-100 flex items-center gap-2.5">
+              <div className="p-2.5 bg-blue-500/10 rounded-xl text-blue-400">
+                <User className="h-5 w-5" />
               </div>
               Müşteri Seçimi
             </CardTitle>
@@ -457,10 +457,10 @@ export default function POSPage() {
             onValueChange={(v) => setActiveTab(v as "motorcycles" | "spare_parts")}
             className="flex flex-col h-full"
           >
-            <CardHeader className="p-5 pb-3">
-              <CardTitle className="text-lg font-semibold text-zinc-100 flex items-center gap-2.5">
-                <div className="p-2 bg-emerald-500/10 rounded-xl text-emerald-400">
-                  <Package className="h-4 w-4" />
+            <CardHeader className="p-5 pb-4 border-b border-zinc-800/60 shrink-0">
+              <CardTitle className="text-xl font-semibold text-zinc-100 flex items-center gap-2.5">
+                <div className="p-2.5 bg-emerald-500/10 rounded-xl text-emerald-400">
+                  <Package className="h-5 w-5" />
                 </div>
                 Ürün Seçimi
               </CardTitle>
@@ -661,7 +661,7 @@ export default function POSPage() {
           {/* Subtle glow in background */}
           <div className="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl pointer-events-none" />
 
-          <CardHeader className="pb-4 px-6 pt-6 relative z-10">
+          <CardHeader className="pb-4 px-6 pt-6 relative z-10 border-b border-zinc-800/60 shrink-0">
             <CardTitle className="text-xl font-bold text-zinc-100 flex items-center justify-between">
               <div className="flex items-center gap-2.5">
                 <div className="p-2 bg-amber-500/10 rounded-xl text-amber-400">
@@ -792,7 +792,7 @@ export default function POSPage() {
                     </button>
                   </div>
 
-                  <div className="space-y-2.5">
+                  <div className="space-y-2.5 max-h-[160px] overflow-y-auto pr-1">
                     {paymentLines.map((line) => (
                       <div key={line.id} className="flex items-center gap-2">
                         <Select
