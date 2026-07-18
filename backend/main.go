@@ -39,6 +39,7 @@ func main() {
 
 	api.GET("/spare-parts", handlers.GetSpareParts)
 	api.GET("/spare-parts/:id", handlers.GetSparePart)
+	api.POST("/spare-parts/bulk", handlers.CreateBulkSpareParts)
 	api.POST("/spare-parts", handlers.CreateSparePart)
 	api.PUT("/spare-parts/:id", handlers.UpdateSparePart)
 	api.DELETE("/spare-parts/:id", handlers.DeleteSparePart)

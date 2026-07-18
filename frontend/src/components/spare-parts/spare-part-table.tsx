@@ -79,6 +79,9 @@ export function SparePartTable({
       data = data.filter(
         (sp) =>
           sp.name.toLowerCase().includes(query) ||
+          (sp.category && sp.category.toLowerCase().includes(query)) ||
+          (sp.compatible_brand && sp.compatible_brand.toLowerCase().includes(query)) ||
+          (sp.compatible_model && sp.compatible_model.toLowerCase().includes(query)) ||
           (sp.description && sp.description.toLowerCase().includes(query))
       );
     }
@@ -88,6 +91,15 @@ export function SparePartTable({
 
   const columns: ColumnDef<SparePart>[] = useMemo(
     () => [
+      {
+        accessorKey: "category",
+        header: () => <span className="text-zinc-400">Kategori</span>,
+        cell: ({ row }) => (
+          <span className="text-zinc-300 font-medium bg-zinc-800/50 px-2 py-1 rounded-md text-xs">
+            {row.getValue("category") || "-"}
+          </span>
+        ),
+      },
       {
         accessorKey: "name",
         header: ({ column }) => (
@@ -153,6 +165,21 @@ export function SparePartTable({
               {quantity < 5 && (
                 <AlertTriangle className="h-3.5 w-3.5 text-red-400 animate-pulse" />
               )}
+            </div>
+          );
+        },
+      },
+      {
+        id: "compatibility",
+        header: () => <span className="text-zinc-400">Uyumlu Araç</span>,
+        cell: ({ row }) => {
+          const brand = row.original.compatible_brand;
+          const model = row.original.compatible_model;
+          if (!brand && !model) return <span className="text-zinc-500 text-xs">-</span>;
+          return (
+            <div className="flex flex-col gap-0.5">
+              <span className="text-zinc-300 text-sm font-medium">{brand || "-"}</span>
+              <span className="text-zinc-500 text-xs">{model || "-"}</span>
             </div>
           );
         },

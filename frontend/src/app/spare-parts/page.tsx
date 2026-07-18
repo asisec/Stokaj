@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { SparePartTable } from "@/components/spare-parts/spare-part-table";
 import { SparePartForm } from "@/components/spare-parts/spare-part-form";
+import { SparePartBulkForm } from "@/components/spare-parts/spare-part-bulk-form";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { customToast as toast } from "@/lib/toast";
 
@@ -13,6 +14,7 @@ export default function SparePartsPage() {
   const [spareParts, setSpareParts] = useState<SparePart[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
   const [editingSparePart, setEditingSparePart] = useState<SparePart | null>(
     null
   );
@@ -73,13 +75,23 @@ export default function SparePartsPage() {
             Yedek parça envanterini yönetin
           </p>
         </div>
-        <Button
-          onClick={() => setDialogOpen(true)}
-          className="bg-emerald-600 hover:bg-emerald-700 text-white gap-2 transition-all duration-200 hover:shadow-lg hover:shadow-emerald-600/20"
-        >
-          <Plus className="h-4 w-4" />
-          Yeni Parça Ekle
-        </Button>
+        <div className="flex gap-3">
+          <Button
+            onClick={() => setBulkDialogOpen(true)}
+            variant="outline"
+            className="gap-2 border-dashed border-zinc-700 text-zinc-300 hover:text-zinc-100 hover:bg-zinc-800 transition-all duration-200"
+          >
+            <Plus className="h-4 w-4" />
+            Toplu Ekle
+          </Button>
+          <Button
+            onClick={() => setDialogOpen(true)}
+            className="bg-emerald-600 hover:bg-emerald-700 text-white gap-2 transition-all duration-200 hover:shadow-lg hover:shadow-emerald-600/20"
+          >
+            <Plus className="h-4 w-4" />
+            Yeni Parça Ekle
+          </Button>
+        </div>
       </div>
 
       <SparePartTable
@@ -93,6 +105,12 @@ export default function SparePartsPage() {
         open={dialogOpen}
         onOpenChange={handleDialogChange}
         sparePart={editingSparePart}
+        onSuccess={fetchSpareParts}
+      />
+
+      <SparePartBulkForm
+        open={bulkDialogOpen}
+        onOpenChange={setBulkDialogOpen}
         onSuccess={fetchSpareParts}
       />
 

@@ -15,7 +15,7 @@ func GetSpareParts(c *gin.Context) {
 
 	if search := c.Query("search"); search != "" {
 		like := "%" + search + "%"
-		query = query.Where("name ILIKE ? OR description ILIKE ?", like, like)
+		query = query.Where("name ILIKE ? OR description ILIKE ? OR category ILIKE ? OR compatible_brand ILIKE ? OR compatible_model ILIKE ?", like, like, like, like, like)
 	}
 
 	if err := query.Find(&parts).Error; err != nil {
@@ -48,6 +48,26 @@ func CreateSparePart(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, part)
+}
+
+func CreateBulkSpareParts(c *gin.Context) {
+	var parts []models.SparePart
+	if err := c.ShouldBindJSON(&parts); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Geçersiz veri formatı"})
+		return
+	}
+
+	if len(parts) == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Eklenecek parça bulunamadı"})
+		return
+	}
+
+	if err := database.DB.Create(&parts).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Yedek parçalar kaydedilirken bir hata oluştu"})
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{"message": "Toplu ekleme başarılı", "count": len(parts)})
 }
 
 func UpdateSparePart(c *gin.Context) {

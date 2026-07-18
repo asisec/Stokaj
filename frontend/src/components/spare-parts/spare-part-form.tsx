@@ -28,8 +28,23 @@ interface SparePartFormProps {
   onSuccess: () => void;
 }
 
+const CATEGORIES = [
+  "Akü",
+  "Far",
+  "Tablet",
+  "Silecek",
+  "Şarj Makinesi",
+  "Motor Kabini",
+  "Fren Balatası",
+  "Lastik",
+  "Diğer",
+];
+
 const initialFormState = {
+  category: "Diğer",
   name: "",
+  compatible_brand: "",
+  compatible_model: "",
   quantity: 0,
   description: "",
   is_defective: false,
@@ -43,13 +58,29 @@ export function SparePartForm({
 }: SparePartFormProps) {
   const [formData, setFormData] = useState(initialFormState);
   const [submitting, setSubmitting] = useState(false);
+  const [uniqueBrands, setUniqueBrands] = useState<string[]>([]);
+  const [uniqueModels, setUniqueModels] = useState<string[]>([]);
 
   const wasEditing = useRef(false);
 
   useEffect(() => {
+    if (open) {
+      api.getMotorcycles().then((motos) => {
+        const brands = Array.from(new Set(motos.map((m) => m.brand))).filter(Boolean);
+        const models = Array.from(new Set(motos.map((m) => m.model))).filter(Boolean);
+        setUniqueBrands(brands);
+        setUniqueModels(models);
+      }).catch(() => {});
+    }
+  }, [open]);
+
+  useEffect(() => {
     if (sparePart) {
       setFormData({
+        category: sparePart.category || "Diğer",
         name: sparePart.name,
+        compatible_brand: sparePart.compatible_brand || "",
+        compatible_model: sparePart.compatible_model || "",
         quantity: sparePart.quantity,
         description: sparePart.description || "",
         is_defective: sparePart.is_defective || false,
@@ -89,7 +120,7 @@ export function SparePartForm({
   };
 
   const handleChange = (field: string, value: string | number | boolean) => {
-    if (field === "name" && typeof value === "string") {
+    if ((field === "name" || field === "compatible_brand" || field === "compatible_model") && typeof value === "string") {
       value = value.toLocaleUpperCase("tr-TR");
     }
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -104,55 +135,120 @@ export function SparePartForm({
           </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-5 mt-2">
-          <div className="grid grid-cols-3 gap-4">
-            <div className="col-span-2 space-y-2">
-              <Label htmlFor="name" className="text-zinc-400 text-sm">
-                Parça Adı
-              </Label>
-              <Input
-                id="name"
-                value={formData.name}
-                onChange={(e) => handleChange("name", e.target.value.toLocaleUpperCase("tr-TR"))}
-                className="bg-zinc-900/50 border-zinc-800 text-zinc-200 focus:border-emerald-500/50 transition-colors uppercase"
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="quantity" className="text-zinc-400 text-sm">
-                Stok Adedi
-              </Label>
-              <Input
-                id="quantity"
-                type="number"
-                min="0"
-                value={formData.quantity === 0 ? "" : formData.quantity}
-                onChange={(e) =>
-                  handleChange("quantity", e.target.value === "" ? 0 : parseInt(e.target.value))
-                }
-                className="bg-zinc-900/50 border-zinc-800 text-zinc-200 focus:border-emerald-500/50 transition-colors"
-                required
-              />
-            </div>
-          </div>
+          <div className="grid grid-cols-2 gap-6">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label className="text-zinc-400 text-sm">Kategori</Label>
+                <Select
+                  value={formData.category}
+                  onValueChange={(val) => handleChange("category", val)}
+                >
+                  <SelectTrigger className="bg-zinc-900/50 border-zinc-800 focus:ring-blue-500/20">
+                    <SelectValue placeholder="Kategori seçin" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-zinc-900 border-zinc-800 text-zinc-300">
+                    {CATEGORIES.map((cat) => (
+                      <SelectItem key={cat} value={cat} className="focus:bg-zinc-800 focus:text-zinc-100 cursor-pointer">
+                        {cat}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="is_defective" className="text-zinc-400 text-sm">
-              Durum
-            </Label>
-            <Select
-              value={formData.is_defective ? "defective" : "good"}
-              onValueChange={(val) =>
-                handleChange("is_defective", val === "defective")
-              }
-            >
-              <SelectTrigger className="bg-zinc-900/50 border-zinc-800 text-zinc-200 focus:border-emerald-500/50">
-                <SelectValue placeholder="Parça Durumu" />
-              </SelectTrigger>
-              <SelectContent className="bg-zinc-950 border-zinc-800 text-zinc-200">
-                <SelectItem value="good">Sağlam / Çalışıyor</SelectItem>
-                <SelectItem value="defective">Bozuk / Hasarlı</SelectItem>
-              </SelectContent>
-            </Select>
+              <div className="space-y-2">
+                <Label htmlFor="name" className="text-zinc-400 text-sm">
+                  Parça Adı
+                </Label>
+                <Input
+                  id="name"
+                  required
+                  value={formData.name}
+                  onChange={(e) => handleChange("name", e.target.value)}
+                  className="bg-zinc-900/50 border-zinc-800 text-zinc-100 focus:border-blue-500/50 focus:ring-blue-500/20"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="quantity" className="text-zinc-400 text-sm">
+                  Stok Adedi
+                </Label>
+                <Input
+                  id="quantity"
+                  type="number"
+                  required
+                  min="0"
+                  value={formData.quantity}
+                  onChange={(e) =>
+                    handleChange("quantity", parseInt(e.target.value) || 0)
+                  }
+                  className="bg-zinc-900/50 border-zinc-800 text-zinc-100 focus:border-blue-500/50 focus:ring-blue-500/20"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="compatible_brand" className="text-zinc-400 text-sm">
+                  Uyumlu Marka
+                </Label>
+                <Input
+                  id="compatible_brand"
+                  list="brand-suggestions-single"
+                  value={formData.compatible_brand}
+                  onChange={(e) => handleChange("compatible_brand", e.target.value)}
+                  className="bg-zinc-900/50 border-zinc-800 text-zinc-100 focus:border-blue-500/50 focus:ring-blue-500/20"
+                />
+                <datalist id="brand-suggestions-single">
+                  {uniqueBrands.map(b => <option key={b} value={b} />)}
+                </datalist>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="compatible_model" className="text-zinc-400 text-sm">
+                  Uyumlu Model
+                </Label>
+                <Input
+                  id="compatible_model"
+                  list="model-suggestions-single"
+                  value={formData.compatible_model}
+                  onChange={(e) => handleChange("compatible_model", e.target.value)}
+                  className="bg-zinc-900/50 border-zinc-800 text-zinc-100 focus:border-blue-500/50 focus:ring-blue-500/20"
+                />
+                <datalist id="model-suggestions-single">
+                  {uniqueModels.map(m => <option key={m} value={m} />)}
+                </datalist>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-zinc-400 text-sm">Durum</Label>
+                <div className="flex items-center gap-3 bg-zinc-900/50 border border-zinc-800 rounded-lg p-3">
+                  <div
+                    className={`h-2.5 w-2.5 rounded-full ${
+                      formData.is_defective ? "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]" : "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"
+                    }`}
+                  />
+                  <Select
+                    value={formData.is_defective ? "true" : "false"}
+                    onValueChange={(val) =>
+                      handleChange("is_defective", val === "true")
+                    }
+                  >
+                    <SelectTrigger className="border-0 bg-transparent p-0 h-auto focus:ring-0 focus:ring-offset-0 text-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-zinc-900 border-zinc-800 text-zinc-300">
+                      <SelectItem value="false" className="focus:bg-zinc-800 focus:text-zinc-100 cursor-pointer">
+                        Sağlam
+                      </SelectItem>
+                      <SelectItem value="true" className="focus:bg-zinc-800 focus:text-zinc-100 cursor-pointer text-red-400 focus:text-red-300">
+                        Bozuk
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
           </div>
 
           <div className="space-y-2">

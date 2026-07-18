@@ -54,7 +54,10 @@ export interface Motorcycle {
 
 export interface SparePart {
   id: number
+  category: string
   name: string
+  compatible_brand: string
+  compatible_model: string
   quantity: number
   description: string
   is_defective: boolean
@@ -150,6 +153,7 @@ export const api = {
   },
   getSparePart: (id: number) => request<SparePart>(`/api/spare-parts/${id}`),
   createSparePart: (data: Partial<SparePart>) => request<SparePart>("/api/spare-parts", { method: "POST", body: JSON.stringify(data) }),
+  bulkCreateSpareParts: (data: Partial<SparePart>[]) => request<{ message: string; count: number }>("/api/spare-parts/bulk", { method: "POST", body: JSON.stringify(data) }),
   updateSparePart: (id: number, data: Partial<SparePart>) => request<SparePart>(`/api/spare-parts/${id}`, { method: "PUT", body: JSON.stringify(data) }),
   deleteSparePart: (id: number) => request<void>(`/api/spare-parts/${id}`, { method: "DELETE" }),
 
