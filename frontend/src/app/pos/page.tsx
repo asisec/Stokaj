@@ -457,24 +457,15 @@ export default function POSPage() {
             onValueChange={(v) => setActiveTab(v as "motorcycles" | "spare_parts")}
             className="flex flex-col h-full"
           >
-            <CardHeader className="pb-2 px-5 pt-5">
-              <CardTitle className="text-lg font-semibold text-zinc-100 flex items-center gap-2.5 mb-4">
+            <CardHeader className="p-5 pb-3">
+              <CardTitle className="text-lg font-semibold text-zinc-100 flex items-center gap-2.5">
                 <div className="p-2 bg-emerald-500/10 rounded-xl text-emerald-400">
                   <Package className="h-4 w-4" />
                 </div>
                 Ürün Seçimi
               </CardTitle>
-              <div className="flex flex-col gap-3">
-                <div className="relative w-full">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
-                  <Input
-                    placeholder="Ürün ara..."
-                    value={productSearch}
-                    onChange={(e) => setProductSearch(e.target.value)}
-                    className="pl-9 h-11 bg-zinc-900/50 border-zinc-800/50 text-zinc-200 focus:border-blue-500/50 rounded-xl"
-                  />
-                </div>
-                <TabsList className="bg-zinc-900/80 border border-zinc-800/50 p-1 rounded-xl h-12 w-full grid grid-cols-2">
+              <div className="flex flex-col gap-3 mt-4">
+                <TabsList className="bg-zinc-900/80 border border-zinc-800/50 p-1 rounded-xl h-11 w-full grid grid-cols-2">
                   <TabsTrigger value="motorcycles" className="rounded-lg gap-2 data-[state=active]:bg-zinc-800 data-[state=active]:text-zinc-100 text-zinc-400">
                     <Bike className="h-4 w-4" />
                     Motosikletler
@@ -484,6 +475,15 @@ export default function POSPage() {
                     Yedek Parçalar
                   </TabsTrigger>
                 </TabsList>
+                <div className="relative w-full">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
+                  <Input
+                    placeholder="Ürün ara..."
+                    value={productSearch}
+                    onChange={(e) => setProductSearch(e.target.value)}
+                    className="pl-9 h-11 bg-zinc-900/50 border-zinc-800/50 text-zinc-200 focus:border-blue-500/50 rounded-xl shadow-inner placeholder:text-zinc-500"
+                  />
+                </div>
               </div>
             </CardHeader>
 
@@ -843,7 +843,7 @@ export default function POSPage() {
                           </Select>
                         )}
 
-                        <div className="relative w-28 shrink-0">
+                        <div className="relative w-[120px] shrink-0">
                           <Input
                             type="number"
                             step="0.01"
@@ -851,14 +851,14 @@ export default function POSPage() {
                             placeholder="Tutar"
                             value={line.amount || ""}
                             onChange={(e) => updatePaymentLine(line.id, "amount", parseFloat(e.target.value))}
-                            className="h-10 pr-7 rounded-xl bg-zinc-950/50 border-zinc-800 text-zinc-100 font-medium text-sm focus:border-blue-500/50 text-right [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            className="h-10 pr-10 pl-2 rounded-xl bg-zinc-950/50 border-zinc-800 text-zinc-100 font-medium text-sm focus:border-blue-500/50 text-right placeholder:text-left [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                           />
                           <button
                             onClick={() => fillRemaining(line.id)}
                             title="Kalan tutarı doldur"
-                            className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-blue-400 transition-colors"
+                            className="absolute right-1.5 top-1/2 -translate-y-1/2 bg-zinc-800 hover:bg-blue-600 text-zinc-300 hover:text-white transition-colors text-[9px] font-bold px-1.5 py-1 rounded"
                           >
-                            <svg width="12" height="12" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M7.5 2C7.77614 2 8 2.22386 8 2.5L8 11.2929L11.1464 8.14645C11.3417 7.95118 11.6583 7.95118 11.8536 8.14645C12.0488 8.34171 12.0488 8.65829 11.8536 8.85355L7.85355 12.8536C7.75979 12.9473 7.63261 13 7.5 13C7.36739 13 7.24021 12.9473 7.14645 12.8536L3.14645 8.85355C2.95118 8.65829 2.95118 8.34171 3.14645 8.14645C3.34171 7.95118 3.65829 7.95118 3.85355 8.14645L7 11.2929L7 2.5C7 2.22386 7.22386 2 7.5 2Z" fill="currentColor" fillRule="evenodd" clipRule="evenodd"></path></svg>
+                            TÜMÜ
                           </button>
                         </div>
 
