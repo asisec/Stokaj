@@ -465,6 +465,15 @@ export default function POSPage() {
                 Ürün Seçimi
               </CardTitle>
               <div className="flex flex-col gap-3">
+                <div className="relative w-full">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
+                  <Input
+                    placeholder="Ürün ara..."
+                    value={productSearch}
+                    onChange={(e) => setProductSearch(e.target.value)}
+                    className="pl-9 h-11 bg-zinc-900/50 border-zinc-800/50 text-zinc-200 focus:border-blue-500/50 rounded-xl"
+                  />
+                </div>
                 <TabsList className="bg-zinc-900/80 border border-zinc-800/50 p-1 rounded-xl h-12 w-full grid grid-cols-2">
                   <TabsTrigger value="motorcycles" className="rounded-lg gap-2 data-[state=active]:bg-zinc-800 data-[state=active]:text-zinc-100 text-zinc-400">
                     <Bike className="h-4 w-4" />
@@ -475,15 +484,6 @@ export default function POSPage() {
                     Yedek Parçalar
                   </TabsTrigger>
                 </TabsList>
-                <div className="relative w-full">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
-                  <Input
-                    placeholder="Ürün ara..."
-                    value={productSearch}
-                    onChange={(e) => setProductSearch(e.target.value)}
-                    className="pl-9 h-11 bg-zinc-900/50 border-zinc-800/50 text-zinc-200 focus:border-blue-500/50 rounded-xl"
-                  />
-                </div>
               </div>
             </CardHeader>
 
@@ -849,9 +849,9 @@ export default function POSPage() {
                             step="0.01"
                             min="0"
                             placeholder="Tutar"
-                            value={line.amount}
-                            onChange={(e) => updatePaymentLine(line.id, "amount", e.target.value)}
-                            className="h-10 pr-7 rounded-xl bg-zinc-950/50 border-zinc-800 text-zinc-100 font-medium text-sm focus:border-blue-500/50 text-right"
+                            value={line.amount || ""}
+                            onChange={(e) => updatePaymentLine(line.id, "amount", parseFloat(e.target.value))}
+                            className="h-10 pr-7 rounded-xl bg-zinc-950/50 border-zinc-800 text-zinc-100 font-medium text-sm focus:border-blue-500/50 text-right [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                           />
                           <button
                             onClick={() => fillRemaining(line.id)}
