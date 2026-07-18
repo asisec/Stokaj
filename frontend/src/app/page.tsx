@@ -150,8 +150,11 @@ export default function DashboardPage() {
   return (
     <div className="space-y-8 p-2">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold tracking-tight text-zinc-100">Gösterge Paneli</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-zinc-100">
+          Gösterge Paneli
+        </h1>
         <button
+          type="button"
           onClick={() => setIsCensored(!isCensored)}
           className="p-2 rounded-lg bg-zinc-900/50 border border-zinc-800 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors"
           title={isCensored ? "Verileri Göster" : "Verileri Gizle"}
@@ -304,7 +307,8 @@ export default function DashboardPage() {
             <CardTitle className="text-lg font-semibold text-zinc-100">
               Son 6 Aylık Satış Trendi
             </CardTitle>
-          <CardContent className={isCensored ? "filter blur-md select-none pointer-events-none transition-all duration-300 opacity-50" : "transition-all duration-300"}>
+          </CardHeader>
+          <CardContent>
             <div className="h-[300px] w-full">
               {stats.sales_trend && stats.sales_trend.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
@@ -322,12 +326,12 @@ export default function DashboardPage() {
                       fontSize={12}
                       tickLine={false}
                       axisLine={false}
-                      tickFormatter={(value) => `₺${value}`}
+                      tickFormatter={(value) => isCensored ? "****" : `₺${value}`}
                     />
                     <RechartsTooltip
                       contentStyle={{ backgroundColor: "#18181b", borderColor: "#27272a", borderRadius: "8px" }}
                       itemStyle={{ color: "#e4e4e7" }}
-                      formatter={(value: number) => [formatCurrency(value), "Ciro"]}
+                      formatter={(value: number) => [isCensored ? "****" : formatCurrency(value), "Ciro"]}
                       labelStyle={{ color: "#a1a1aa", marginBottom: "4px" }}
                     />
                     <Line
@@ -356,7 +360,7 @@ export default function DashboardPage() {
               Popüler Markalar
             </CardTitle>
           </CardHeader>
-          <CardContent className={isCensored ? "filter blur-md select-none pointer-events-none transition-all duration-300 opacity-50" : "transition-all duration-300"}>
+          <CardContent>
             <div className="h-[300px] w-full">
               {stats.top_brands && stats.top_brands.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
@@ -379,6 +383,7 @@ export default function DashboardPage() {
                     <RechartsTooltip
                       contentStyle={{ backgroundColor: "#18181b", borderColor: "#27272a", borderRadius: "8px" }}
                       itemStyle={{ color: "#e4e4e7" }}
+                      formatter={(value: number) => [isCensored ? "****" : value, "Adet"]}
                     />
                   </PieChart>
                 </ResponsiveContainer>
