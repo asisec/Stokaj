@@ -94,77 +94,68 @@ export function NotificationButton() {
             currentList.map((notification) => (
               <div
                 key={notification.id}
-                className={`relative group/item flex gap-3 items-start p-4 border-b border-zinc-800/30 transition-all cursor-default ${
+                className={`relative group/item flex gap-3 items-center p-4 border-b border-zinc-800/30 transition-all cursor-default ${
                   notification.read ? "opacity-70 hover:opacity-100 hover:bg-zinc-900/40" : "bg-zinc-900/20 hover:bg-zinc-900/60"
                 }`}
                 onClick={() => {
                   if (!notification.read) markAsRead(notification.id);
                 }}
               >
-                <div className="mt-0.5 shrink-0">
+                <div className="shrink-0">
                   {typeIcons[notification.type]}
                 </div>
-                
-                <div className="flex-1 space-y-1.5 pr-12">
-                  <p className="text-sm font-medium leading-relaxed text-zinc-200">
+
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium leading-snug text-zinc-200 truncate">
                     {notification.title}
                   </p>
                   {notification.description && (
-                    <p className="text-xs text-zinc-400 line-clamp-2 leading-relaxed">
+                    <p className="text-xs text-zinc-400 line-clamp-2 leading-relaxed mt-0.5">
                       {notification.description}
                     </p>
                   )}
                 </div>
-                
-                <div className="absolute right-4 top-4 flex items-center gap-2">
-                  <span className="text-[11px] text-zinc-500 font-medium whitespace-nowrap group-hover/item:hidden">
-                    {!notification.read && <span className="inline-block w-2 h-2 rounded-full bg-blue-500 mr-2" />}
-                    {formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true, locale: tr }).replace('yaklaşık ', '').replace(' önce', '')}
-                  </span>
-                  
-                  <div className="hidden group-hover/item:flex items-center gap-1 bg-zinc-950/50 backdrop-blur-sm p-1 rounded-md border border-zinc-800/50">
-                    {activeTab === "inbox" ? (
-                      <>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            archiveNotification(notification.id);
-                          }}
-                          title="Arşive Gönder"
-                        >
-                          <Archive className="h-3.5 w-3.5" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7 text-zinc-400 hover:text-red-400 hover:bg-red-500/10"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            removeNotification(notification.id);
-                          }}
-                          title="Tamamen Sil"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
-                      </>
-                    ) : (
+
+                {/* Zaman etiketi - hover olmadığında */}
+                <span className="text-[11px] text-zinc-500 font-medium whitespace-nowrap shrink-0 group-hover/item:hidden flex items-center gap-1.5">
+                  {!notification.read && <span className="inline-block w-1.5 h-1.5 rounded-full bg-blue-500" />}
+                  {formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true, locale: tr }).replace('yaklaşık ', '').replace(' önce', '')}
+                </span>
+
+                {/* Aksiyon butonları - hover olduğunda */}
+                <div className="hidden group-hover/item:flex items-center gap-1 shrink-0 bg-zinc-950/60 backdrop-blur-sm p-1 rounded-lg border border-zinc-800/50">
+                  {activeTab === "inbox" ? (
+                    <>
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-7 w-7 text-zinc-400 hover:text-red-400 hover:bg-red-500/10"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          removeNotification(notification.id);
-                        }}
-                        title="Tamamen Sil"
+                        className="h-7 w-7 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 rounded-md"
+                        onClick={(e) => { e.stopPropagation(); archiveNotification(notification.id); }}
+                        title="Arşive Gönder"
+                      >
+                        <Archive className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 text-zinc-400 hover:text-red-400 hover:bg-red-500/10 rounded-md"
+                        onClick={(e) => { e.stopPropagation(); removeNotification(notification.id); }}
+                        title="Sil"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>
-                    )}
-                  </div>
+                    </>
+                  ) : (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 text-zinc-400 hover:text-red-400 hover:bg-red-500/10 rounded-md"
+                      onClick={(e) => { e.stopPropagation(); removeNotification(notification.id); }}
+                      title="Sil"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  )}
                 </div>
               </div>
             ))
