@@ -138,16 +138,6 @@ export default function DashboardPage() {
       bgGlow: "bg-purple-500/10",
     },
     {
-      title: "Toplam Alacaklar",
-      value: formatCurrency(stats.total_receivables),
-      subtitle: "Açık Hesap (Veresiye)",
-      icon: Wallet,
-      gradient: "from-rose-500/20 to-rose-600/5",
-      border: "border-l-rose-500",
-      iconColor: "text-rose-400",
-      bgGlow: "bg-rose-500/10",
-    },
-    {
       title: "Net Ciro",
       value: formatCurrency(stats.total_revenue),
       subtitle: "Toplam Net Kâr",
@@ -175,7 +165,7 @@ export default function DashboardPage() {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {statCards.map((card) => {
           const Icon = card.icon;
           return (
@@ -311,6 +301,26 @@ export default function DashboardPage() {
           )}
         </CardContent>
       </Card>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <Card className="border-zinc-800/50 bg-zinc-900/50 backdrop-blur-sm border-l-4 border-l-rose-500 hover:scale-[1.02] transition-transform cursor-default md:col-span-1">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-lg font-semibold text-zinc-100 flex items-center gap-2">
+              <Wallet className="h-5 w-5 text-rose-400" />
+              Toplam Alacaklar
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-rose-400 tracking-tight">
+              {isCensored ? "****" : formatCurrency(stats.total_receivables || 0)}
+            </div>
+            <p className="text-sm text-zinc-500 mt-2">
+              Müşterilerdeki açık hesap (veresiye) toplamı
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7 mb-8">
         {/* Sales Trend Line Chart */}
