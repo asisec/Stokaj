@@ -81,5 +81,10 @@ func init() {
 
 // Handler is the entrypoint for Vercel Serverless Function
 func Handler(w http.ResponseWriter, r *http.Request) {
+	if path := r.URL.Query().Get("path"); path != "" {
+		// Vercel drops the /api prefix when matching (.*), so path is just "dashboard/stats"
+		// But our Gin router uses app.Group("/api"), so we must reconstruct the full path
+		r.URL.Path = "/api/" + path
+	}
 	app.ServeHTTP(w, r)
 }
