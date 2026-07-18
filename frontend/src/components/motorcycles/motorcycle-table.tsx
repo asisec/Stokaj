@@ -44,6 +44,7 @@ import {
   Trash2,
   ArrowUpDown,
   Printer,
+  Filter,
 } from "lucide-react";
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
 
@@ -68,6 +69,13 @@ export function MotorcycleTable({
   const [sorting, setSorting] = useState<SortingState>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [locationFilter, setLocationFilter] = useState("all");
+
+  const uniqueBranches = useMemo(() => {
+    return Array.from(
+      new Set(motorcycles.filter(m => m.is_other_branch && m.branch_name).map(m => m.branch_name))
+    ).sort();
+  }, [motorcycles]);
 
   const filteredData = useMemo(() => {
     let data = motorcycles;
@@ -76,18 +84,36 @@ export function MotorcycleTable({
       data = data.filter((m) => m.status === statusFilter);
     }
 
+    if (locationFilter !== "all") {
+      if (locationFilter === "merkez") {
+        data = data.filter((m) => !m.is_other_branch);
+      } else {
+        data = data.filter((m) => m.is_other_branch && m.branch_name === locationFilter);
+      }
+    }
+
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      data = data.filter(
-        (m) =>
+      data = data.filter((m) => {
+        const statusText = m.status === "available" ? "bekliyor" : "satıldı";
+        const locationText = (m.is_other_branch && m.branch_name) ? m.branch_name.toLowerCase() : "merkez";
+        
+        return (
           m.chassis_number.toLowerCase().includes(query) ||
           m.brand.toLowerCase().includes(query) ||
-          m.model.toLowerCase().includes(query)
-      );
+          m.model.toLowerCase().includes(query) ||
+          m.year.toString().includes(query) ||
+          m.color.toLowerCase().includes(query) ||
+          m.purchase_price.toString().includes(query) ||
+          m.sale_price.toString().includes(query) ||
+          statusText.includes(query) ||
+          locationText.includes(query)
+        );
+      });
     }
 
     return data;
-  }, [motorcycles, searchQuery, statusFilter]);
+  }, [motorcycles, searchQuery, statusFilter, locationFilter]);
 
   const columns: ColumnDef<Motorcycle>[] = useMemo(
     () => [
@@ -375,12 +401,27 @@ export function MotorcycleTable({
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
           <Input
-            placeholder="Şasi no, marka veya model ara..."
+            placeholder="Tüm tablodaki verilerde ara (Şasi, Marka, Model, Yıl, Renk, Fiyat, Durum, Konum)..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10 bg-zinc-900/50 border-zinc-800 text-zinc-200 placeholder:text-zinc-600 focus:border-zinc-600 transition-colors"
           />
         </div>
+        
+        <Select value={locationFilter} onValueChange={setLocationFilter}>
+          <SelectTrigger className="w-full sm:w-44 bg-zinc-900/50 border-zinc-800 text-zinc-300">
+            <Filter className="w-4 h-4 mr-2 opacity-50" />
+            <SelectValue placeholder="Konum" />
+          </SelectTrigger>
+          <SelectContent className="bg-zinc-900 border-zinc-800 max-h-60">
+            <SelectItem value="all" className="text-zinc-300 focus:bg-zinc-800">Tüm Konumlar</SelectItem>
+            <SelectItem value="merkez" className="text-zinc-300 focus:bg-zinc-800">Merkez</SelectItem>
+            {uniqueBranches.map(branch => (
+              <SelectItem key={branch} value={branch} className="text-zinc-300 focus:bg-zinc-800">{branch}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger className="w-full sm:w-44 bg-zinc-900/50 border-zinc-800 text-zinc-300">
             <SelectValue placeholder="Durum Filtresi" />
