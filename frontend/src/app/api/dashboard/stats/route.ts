@@ -45,7 +45,7 @@ export async function GET(req: NextRequest) {
       `,
       sql`SELECT to_char(created_at, 'YYYY-MM') as month, SUM(total_amount) as revenue FROM sales WHERE created_at >= NOW() - INTERVAL '6 months' GROUP BY month ORDER BY month`,
       sql`SELECT m.brand, COUNT(si.id) as count FROM sale_items si JOIN motorcycles m ON si.item_id = m.id WHERE si.item_type = 'motorcycle' GROUP BY m.brand ORDER BY count DESC LIMIT 5`,
-      sql`SELECT * FROM customers WHERE balance > 0 ORDER BY balance DESC`,
+      sql`SELECT * FROM customers WHERE balance != 0 ORDER BY balance DESC`,
     ]);
 
     return NextResponse.json({
