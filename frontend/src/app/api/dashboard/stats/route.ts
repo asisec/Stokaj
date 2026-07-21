@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
   
   try {
     const sql = getDb();
-    const [mc, sp, spq, ls, cust, sc, rev, cost, rec, recent, trend, brands, cwb] = await Promise.all([
+    const [mc, sp, spq, ls, cust, sc, rev, cost, rec, recent, trend, brands, cwb, spay, cpay] = await Promise.all([
       sql`SELECT COUNT(*) as total, COUNT(*) FILTER (WHERE status='available') as available, COUNT(*) FILTER (WHERE status='sold') as sold FROM motorcycles`,
       sql`SELECT COUNT(*) as total FROM spare_parts`,
       sql`SELECT COALESCE(SUM(quantity), 0) as total FROM spare_parts`,
@@ -32,7 +32,7 @@ export async function GET(req: NextRequest) {
       sql`SELECT COUNT(*) as total FROM sales`,
       sql`SELECT COALESCE(SUM(total_amount), 0) as total FROM sales`,
       sql`SELECT COALESCE(SUM(purchase_price * quantity), 0) as total FROM sale_items`,
-      sql`SELECT COALESCE(SUM(balance), 0) as total FROM customers`,
+      sql`SELECT COALESCE(SUM(balance), 0) as total FROM customers WHERE balance > 0`,
       sql`
         SELECT s.*, row_to_json(c.*) as customer,
           COALESCE(json_agg(DISTINCT si.*) FILTER (WHERE si.id IS NOT NULL), '[]') as items,
@@ -46,7 +46,11 @@ export async function GET(req: NextRequest) {
       sql`SELECT to_char(created_at, 'YYYY-MM') as month, SUM(total_amount) as revenue FROM sales WHERE created_at >= NOW() - INTERVAL '6 months' GROUP BY month ORDER BY month`,
       sql`SELECT m.brand, COUNT(si.id) as count FROM sale_items si JOIN motorcycles m ON si.item_id = m.id WHERE si.item_type = 'motorcycle' GROUP BY m.brand ORDER BY count DESC LIMIT 5`,
       sql`SELECT * FROM customers WHERE balance != 0 ORDER BY balance DESC`,
+      sql`SELECT COALESCE(SUM(amount), 0) as total FROM sale_payments`,
+      sql`SELECT COALESCE(SUM(amount), 0) as total FROM customer_transactions WHERE type = 'credit' AND reference_type = 'payment'`,
     ]);
+
+    const totalCollected = Number(spay[0].total) + Number(cpay[0].total);
 
     return NextResponse.json({
       total_motorcycles: Number(mc[0].total),
@@ -57,7 +61,7 @@ export async function GET(req: NextRequest) {
       low_stock_count: Number(ls[0].total),
       total_customers: Number(cust[0].total),
       total_sales: Number(sc[0].total),
-      total_revenue: Number(rev[0].total) - Number(cost[0].total),
+      total_revenue: totalCollected, // We overwrite total_revenue with totalCollected as requested by user
       total_receivables: Number(rec[0].total),
       recent_sales: recent,
       sales_trend: trend,

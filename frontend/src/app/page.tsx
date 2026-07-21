@@ -154,14 +154,14 @@ export default function DashboardPage() {
       bgGlow: "bg-purple-500/10",
     },
     {
-      title: "Net Ciro",
+      title: "Toplam Tahsilat",
       value: formatCurrency(stats.total_revenue),
-      subtitle: "Toplam Net Kâr",
+      subtitle: "Kasaya Giren Toplam Nakit",
       icon: ShoppingCart,
-      gradient: "from-amber-500/20 to-amber-600/5",
-      border: "border-l-amber-500",
-      iconColor: "text-amber-400",
-      bgGlow: "bg-amber-500/10",
+      gradient: "from-emerald-500/20 to-emerald-600/5",
+      border: "border-l-emerald-500",
+      iconColor: "text-emerald-400",
+      bgGlow: "bg-emerald-500/10",
     },
   ];
 
