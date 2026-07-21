@@ -40,11 +40,9 @@ export async function DELETE(req: NextRequest, { params }: P) {
       }
     }
 
-    const transactions = await sql`SELECT * FROM customer_transactions WHERE reference_type='sale' AND reference_id=${params.id}`;
-    for (const t of transactions) {
-      if (t.type === "debt") await sql`UPDATE customers SET balance=balance-${t.amount}, updated_at=NOW() WHERE id=${sale.customer_id}`;
-      await sql`DELETE FROM customer_transactions WHERE id=${t.id}`;
-    }
+    // User requested Option 2: Delete all customer transactions and reset balance to 0 when a sale is deleted
+    await sql`DELETE FROM customer_transactions WHERE customer_id=${sale.customer_id}`;
+    await sql`UPDATE customers SET balance=0, updated_at=NOW() WHERE id=${sale.customer_id}`;
 
     await sql`DELETE FROM sale_items WHERE sale_id=${params.id}`;
     await sql`DELETE FROM sale_payments WHERE sale_id=${params.id}`;
