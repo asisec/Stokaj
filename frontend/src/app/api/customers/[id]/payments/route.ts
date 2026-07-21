@@ -7,10 +7,13 @@ export async function POST(req: NextRequest, { params }: P) {
   if (!await verifyAuth(req)) return err("Yetkisiz", 401);
   const sql = getDb();
   const body = await req.json().catch(() => null);
-  if (!body?.amount || body.amount <= 0 || !body.method) return err("Geçersiz ödeme bilgileri");
+  if (!body) return err("Geçersiz veri formatı");
+  if (!body.amount || isNaN(Number(body.amount)) || !body.method) return err("Geçerli bir tutar ve ödeme yöntemi girin");
+
   try {
     const customers = await sql`SELECT * FROM customers WHERE id = ${params.id}`;
     if (!customers[0]) return err("Müşteri bulunamadı", 404);
+
     const newBalance = Number(customers[0].balance) - Number(body.amount);
     await sql`UPDATE customers SET balance = ${newBalance}, updated_at = NOW() WHERE id = ${params.id}`;
     const desc = body.description || "Tahsilat - " + body.method;
