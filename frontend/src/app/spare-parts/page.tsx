@@ -106,6 +106,7 @@ export default function SparePartsPage() {
         onOpenChange={handleDialogChange}
         sparePart={editingSparePart}
         onSuccess={fetchSpareParts}
+        existingSpareParts={spareParts}
       />
 
       <SparePartBulkForm

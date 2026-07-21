@@ -26,18 +26,18 @@ interface SparePartFormProps {
   onOpenChange: (open: boolean) => void;
   sparePart: SparePart | null;
   onSuccess: () => void;
+  existingSpareParts?: SparePart[];
 }
 
-const CATEGORIES = [
-  "Akü",
-  "Far",
-  "Tablet",
-  "Silecek",
-  "Şarj Makinesi",
-  "Motor Kabini",
-  "Fren Balatası",
-  "Lastik",
-  "Diğer",
+const DEFAULT_CATEGORIES = [
+  "AKÜ",
+  "FAR",
+  "TABLET",
+  "SİLECEK",
+  "ŞARJ MAKİNESİ",
+  "MOTOR KABİNİ",
+  "FREN BALATASI",
+  "LASTİK"
 ];
 
 const initialFormState = {
@@ -55,11 +55,20 @@ export function SparePartForm({
   onOpenChange,
   sparePart,
   onSuccess,
+  existingSpareParts = [],
 }: SparePartFormProps) {
   const [formData, setFormData] = useState(initialFormState);
   const [submitting, setSubmitting] = useState(false);
   const [uniqueBrands, setUniqueBrands] = useState<string[]>([]);
   const [uniqueModels, setUniqueModels] = useState<string[]>([]);
+
+  const categoriesSet = new Set(DEFAULT_CATEGORIES);
+  existingSpareParts.forEach(p => {
+    if (p.category && p.category.toLocaleUpperCase("tr-TR") !== "DİĞER") {
+      categoriesSet.add(p.category.toLocaleUpperCase("tr-TR"));
+    }
+  });
+  const uniqueCategories = Array.from(categoriesSet).sort((a, b) => a.localeCompare(b, 'tr'));
 
   const getSuggestion = (input: string, list: string[]) => {
     if (!input) return "";
@@ -108,7 +117,9 @@ export function SparePartForm({
     setSubmitting(true);
     try {
       const dataToSubmit = { ...formData };
-      if (dataToSubmit.category !== "Diğer") {
+      if (dataToSubmit.category === "Diğer") {
+        dataToSubmit.category = dataToSubmit.name.toLocaleUpperCase("tr-TR");
+      } else {
         dataToSubmit.name = dataToSubmit.category.toLocaleUpperCase("tr-TR");
       }
       
@@ -161,7 +172,7 @@ export function SparePartForm({
                     <SelectValue placeholder="Kategori seçin" />
                   </SelectTrigger>
                   <SelectContent className="bg-zinc-900 border-zinc-800 text-zinc-300">
-                    {CATEGORIES.map((cat) => (
+                    {[...uniqueCategories, "Diğer"].map((cat) => (
                       <SelectItem key={cat} value={cat} className="focus:bg-zinc-800 focus:text-zinc-100 cursor-pointer">
                         {cat}
                       </SelectItem>

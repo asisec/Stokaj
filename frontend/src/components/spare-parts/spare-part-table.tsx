@@ -93,15 +93,6 @@ export function SparePartTable({
   const columns: ColumnDef<SparePart>[] = useMemo(
     () => [
       {
-        accessorKey: "category",
-        header: () => <span className="text-zinc-400">Kategori</span>,
-        cell: ({ row }) => (
-          <span className="text-zinc-300 font-medium bg-zinc-800/50 px-2 py-1 rounded-md text-xs">
-            {row.getValue("category") || "-"}
-          </span>
-        ),
-      },
-      {
         accessorKey: "name",
         header: ({ column }) => (
           <Button
