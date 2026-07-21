@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { api, type DashboardStats } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -68,6 +68,7 @@ export default function DashboardPage() {
 
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const [timeRange, setTimeRange] = useState<"1w" | "1m" | "6m" | "1y">("6m");
 
   const handlePaymentClick = (customer: Customer) => {
     setSelectedCustomer(customer);
@@ -104,7 +105,39 @@ export default function DashboardPage() {
     }
   };
 
-  if (loading) {
+  const filteredTrend = useMemo(() => {
+    if (!stats?.sales_trend) return [];
+    const now = new Date();
+    let startDate = new Date();
+
+    if (timeRange === "1w") startDate.setDate(now.getDate() - 7);
+    else if (timeRange === "1m") startDate.setMonth(now.getMonth() - 1);
+    else if (timeRange === "6m") startDate.setMonth(now.getMonth() - 6);
+    else if (timeRange === "1y") startDate.setFullYear(now.getFullYear() - 1);
+
+    const filtered = stats.sales_trend.filter(t => new Date(t.date) >= startDate);
+
+    // Grouping
+    if (timeRange === "1w" || timeRange === "1m") {
+      // Return as is (daily), but maybe format the date to DD.MM
+      return filtered.map(t => {
+        const d = new Date(t.date);
+        return { ...t, displayDate: `${d.getDate()}.${d.getMonth() + 1}` };
+      });
+    } else {
+      // Group by month
+      const monthlyData: Record<string, number> = {};
+      filtered.forEach(t => {
+        const month = t.date.substring(0, 7); // YYYY-MM
+        monthlyData[month] = (monthlyData[month] || 0) + Number(t.revenue);
+      });
+      return Object.entries(monthlyData)
+        .map(([month, revenue]) => ({ date: month, displayDate: month, revenue }))
+        .sort((a, b) => a.date.localeCompare(b.date));
+    }
+  }, [stats?.sales_trend, timeRange]);
+
+  if (loading || !stats) {
     return (
       <div className="space-y-8 p-2">
         <Skeleton className="h-8 w-48 mb-6 bg-zinc-800/50" />
@@ -387,19 +420,39 @@ export default function DashboardPage() {
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7 mb-8">
         {/* Sales Trend Line Chart */}
         <Card className="border-zinc-800/50 bg-zinc-900/50 backdrop-blur-sm xl:col-span-4">
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-lg font-semibold text-zinc-100">
-              Son 6 Aylık Satış Trendi
+              Satış Trendi
             </CardTitle>
+            <div className="flex bg-zinc-800/50 rounded-lg p-1">
+              {[
+                { id: "1w", label: "1H" },
+                { id: "1m", label: "1A" },
+                { id: "6m", label: "6A" },
+                { id: "1y", label: "1Y" },
+              ].map((range) => (
+                <button
+                  key={range.id}
+                  onClick={() => setTimeRange(range.id as any)}
+                  className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${
+                    timeRange === range.id
+                      ? "bg-zinc-700 text-zinc-100"
+                      : "text-zinc-400 hover:text-zinc-200"
+                  }`}
+                >
+                  {range.label}
+                </button>
+              ))}
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="h-[300px] w-full">
-              {stats.sales_trend && stats.sales_trend.length > 0 ? (
+            <div className="h-[300px] w-full mt-4">
+              {filteredTrend.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={stats.sales_trend}>
+                  <LineChart data={filteredTrend}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#3f3f46" vertical={false} />
                     <XAxis
-                      dataKey="month"
+                      dataKey="displayDate"
                       stroke="#a1a1aa"
                       fontSize={12}
                       tickLine={false}

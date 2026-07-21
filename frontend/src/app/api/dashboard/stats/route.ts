@@ -43,8 +43,8 @@ export async function GET(req: NextRequest) {
         LEFT JOIN sale_payments sp ON sp.sale_id = s.id
         GROUP BY s.id, c.id ORDER BY s.created_at DESC LIMIT 5
       `,
-      sql`SELECT to_char(created_at, 'YYYY-MM') as month, SUM(total_amount) as revenue FROM sales WHERE created_at >= NOW() - INTERVAL '6 months' GROUP BY month ORDER BY month`,
-      sql`SELECT m.brand, COUNT(si.id) as count FROM sale_items si JOIN motorcycles m ON si.item_id = m.id WHERE si.item_type = 'motorcycle' GROUP BY m.brand ORDER BY count DESC LIMIT 5`,
+      sql`SELECT to_char(created_at, 'YYYY-MM-DD') as date, SUM(total_amount) as revenue FROM sales WHERE created_at >= NOW() - INTERVAL '1 year' GROUP BY date ORDER BY date`,
+      sql`SELECT m.brand, COUNT(si.id)::int as count FROM sale_items si JOIN motorcycles m ON si.item_id = m.id WHERE si.item_type = 'motorcycle' GROUP BY m.brand ORDER BY count DESC LIMIT 5`,
       sql`SELECT * FROM customers WHERE balance != 0 ORDER BY balance DESC`,
       sql`SELECT COALESCE(SUM(amount), 0) as total FROM sale_payments`,
       sql`SELECT COALESCE(SUM(amount), 0) as total FROM customer_transactions WHERE type = 'credit' AND reference_type = 'payment'`,

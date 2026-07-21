@@ -116,7 +116,7 @@ export interface Sale {
 }
 
 export interface SalesTrend {
-  month: string
+  date: string
   revenue: number
 }
 
