@@ -1,14 +1,15 @@
 import { neon } from "@neondatabase/serverless";
 
-function createDb() {
-  // Neon requires the full connection string
-  const url = process.env.DATABASE_URL
-    || `postgresql://${process.env.DB_USER}:${encodeURIComponent(process.env.DB_PASSWORD || "")}@${process.env.DB_HOST}/${process.env.DB_NAME}?sslmode=${process.env.DB_SSLMODE || "require"}`;
-  return neon(url);
-}
+export function getDb() {
+  // Trim all env vars to remove accidental newlines/spaces
+  const user = (process.env.DB_USER || "").trim();
+  const pass = (process.env.DB_PASSWORD || "").trim();
+  const host = (process.env.DB_HOST || "").trim();
+  const name = (process.env.DB_NAME || "").trim();
+  const ssl  = (process.env.DB_SSLMODE || "require").trim();
 
-// Create a tagged template literal function for SQL queries
-export default function db(strings: TemplateStringsArray, ...values: unknown[]) {
-  const sql = createDb();
-  return sql(strings, ...values);
+  const url = (process.env.DATABASE_URL || "").trim()
+    || `postgresql://${user}:${encodeURIComponent(pass)}@${host}/${name}?sslmode=${ssl}`;
+
+  return neon(url);
 }
