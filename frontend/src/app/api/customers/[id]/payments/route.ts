@@ -14,7 +14,7 @@ export async function POST(req: NextRequest, { params }: P) {
     const newBalance = Number(customers[0].balance) - Number(body.amount);
     await sql`UPDATE customers SET balance = ${newBalance}, updated_at = NOW() WHERE id = ${params.id}`;
     const desc = body.description || "Tahsilat - " + body.method;
-    await sql`INSERT INTO customer_transactions (customer_id, type, amount, description, reference_type, created_at, updated_at) VALUES (${params.id}, 'credit', ${body.amount}, ${desc}, 'payment', NOW(), NOW())`;
+    await sql`INSERT INTO customer_transactions (customer_id, type, amount, description, reference_type, created_at) VALUES (${params.id}, 'credit', ${body.amount}, ${desc}, 'payment', NOW())`;
     return ok({ message: "Tahsilat başarıyla kaydedildi", balance: newBalance });
   } catch (e) { return err(String(e), 500); }
 }

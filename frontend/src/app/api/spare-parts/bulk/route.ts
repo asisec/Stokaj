@@ -9,7 +9,7 @@ export async function POST(req: NextRequest) {
   try {
     const inserted = [];
     for (const p of parts) {
-      const rows = await sql`INSERT INTO spare_parts (name, description, category, compatible_brand, compatible_model, quantity, purchase_price, sale_price, created_at, updated_at) VALUES (${p.name}, ${p.description||""}, ${p.category||""}, ${p.compatible_brand||""}, ${p.compatible_model||""}, ${p.quantity||0}, ${p.purchase_price||0}, ${p.sale_price||0}, NOW(), NOW()) RETURNING *`;
+      const rows = await sql`INSERT INTO spare_parts (name, description, category, compatible_brand, compatible_model, quantity, is_defective, created_at, updated_at) VALUES (${p.name}, ${p.description||""}, ${p.category||""}, ${p.compatible_brand||""}, ${p.compatible_model||""}, ${p.quantity||0}, ${p.is_defective||false}, NOW(), NOW()) RETURNING *`;
       inserted.push(rows[0]);
     }
     return ok({ message: "Toplu ekleme başarılı", count: inserted.length }, 201);

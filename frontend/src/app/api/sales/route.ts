@@ -47,20 +47,20 @@ export async function POST(req: NextRequest) {
     for (const p of body.payments) { paidTotal += p.amount; if (p.method === "open_account") openAccountAmount += p.amount; }
     if (paidTotal < totalAmount) return err("Ödeme tutarı toplam tutardan az olamaz");
 
-    const sales = await sql`INSERT INTO sales (customer_id, total_amount, created_at, updated_at) VALUES (${body.customer_id}, ${totalAmount}, NOW(), NOW()) RETURNING *`;
+    const sales = await sql`INSERT INTO sales (customer_id, total_amount, created_at) VALUES (${body.customer_id}, ${totalAmount}, NOW()) RETURNING *`;
     const sale = sales[0];
 
     for (const si of saleItemsData) {
-      await sql`INSERT INTO sale_items (sale_id, item_type, item_id, item_name, quantity, unit_price, purchase_price, total_price, created_at, updated_at) VALUES (${sale.id}, ${si.item_type}, ${si.item_id}, ${si.item_name}, ${si.quantity}, ${si.unit_price}, ${si.purchase_price}, ${si.total_price}, NOW(), NOW())`;
+      await sql`INSERT INTO sale_items (sale_id, item_type, item_id, item_name, quantity, unit_price, purchase_price, total_price) VALUES (${sale.id}, ${si.item_type}, ${si.item_id}, ${si.item_name}, ${si.quantity}, ${si.unit_price}, ${si.purchase_price}, ${si.total_price})`;
       await sql`UPDATE motorcycles SET status='sold', sale_price=${si.unit_price}, updated_at=NOW() WHERE id=${si.item_id}`;
     }
     for (const p of body.payments) {
-      await sql`INSERT INTO sale_payments (sale_id, method, amount, created_at, updated_at) VALUES (${sale.id}, ${p.method}, ${p.amount}, NOW(), NOW())`;
+      await sql`INSERT INTO sale_payments (sale_id, method, amount) VALUES (${sale.id}, ${p.method}, ${p.amount})`;
     }
     if (openAccountAmount > 0) {
       const newBalance = Number(customers[0].balance) + openAccountAmount;
       await sql`UPDATE customers SET balance=${newBalance}, updated_at=NOW() WHERE id=${body.customer_id}`;
-      await sql`INSERT INTO customer_transactions (customer_id, type, amount, description, reference_type, reference_id, created_at, updated_at) VALUES (${body.customer_id}, 'debt', ${openAccountAmount}, 'Satış - Açık Hesap', 'sale', ${sale.id}, NOW(), NOW())`;
+      await sql`INSERT INTO customer_transactions (customer_id, type, amount, description, reference_type, reference_id, created_at) VALUES (${body.customer_id}, 'debt', ${openAccountAmount}, 'Satış - Açık Hesap', 'sale', ${sale.id}, NOW())`;
     }
 
     const result = await sql`

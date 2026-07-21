@@ -21,7 +21,7 @@ export async function PUT(req: NextRequest, { params }: P) {
   try {
     const ex = await sql`SELECT * FROM spare_parts WHERE id = ${params.id}`;
     if (!ex[0]) return err("Yedek parça bulunamadı", 404);
-    const rows = await sql`UPDATE spare_parts SET name=${body.name??ex[0].name}, description=${body.description??ex[0].description}, category=${body.category??ex[0].category}, compatible_brand=${body.compatible_brand??ex[0].compatible_brand}, compatible_model=${body.compatible_model??ex[0].compatible_model}, quantity=${body.quantity??ex[0].quantity}, purchase_price=${body.purchase_price??ex[0].purchase_price}, sale_price=${body.sale_price??ex[0].sale_price}, updated_at=NOW() WHERE id=${params.id} RETURNING *`;
+    const rows = await sql`UPDATE spare_parts SET name=${body.name??ex[0].name}, description=${body.description??ex[0].description}, category=${body.category??ex[0].category}, compatible_brand=${body.compatible_brand??ex[0].compatible_brand}, compatible_model=${body.compatible_model??ex[0].compatible_model}, quantity=${body.quantity??ex[0].quantity}, is_defective=${body.is_defective??ex[0].is_defective}, updated_at=NOW() WHERE id=${params.id} RETURNING *`;
     return ok(rows[0]);
   } catch (e) { return err(String(e), 500); }
 }
