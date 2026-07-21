@@ -15,7 +15,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Printer, Search, Calendar, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Printer, Search, Calendar, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
 
 const formatCurrency = (value: number) =>
   new Intl.NumberFormat("tr-TR", { style: "currency", currency: "TRY" }).format(value);
@@ -39,6 +46,7 @@ export default function SalesPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [dateFilter, setDateFilter] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   useEffect(() => {
     api.getSales()
@@ -64,10 +72,10 @@ export default function SalesPage() {
     });
   }, [sales, searchTerm, dateFilter]);
 
-  const totalPages = Math.ceil(filteredSales.length / ITEMS_PER_PAGE);
+  const totalPages = Math.ceil(filteredSales.length / itemsPerPage);
   const paginatedSales = filteredSales.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
   );
 
   const handlePrint = () => {
@@ -76,41 +84,44 @@ export default function SalesPage() {
 
   return (
     <div className="space-y-6 p-2 print:p-0">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 print:hidden">
+      <div className="flex items-center justify-between print:hidden">
         <div>
           <h1 className="text-2xl font-bold text-zinc-100 tracking-tight">Satış Geçmişi</h1>
           <p className="text-sm text-zinc-500 mt-1">Tüm satış işlemlerinizi detaylı olarak inceleyin</p>
         </div>
-        <Button onClick={handlePrint} variant="outline" className="gap-2">
-          <Printer className="h-4 w-4" />
-          Yazdır
-        </Button>
       </div>
 
       <div className="flex flex-col sm:flex-row gap-4 print:hidden">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
           <Input 
-            placeholder="Müşteri adına göre ara..." 
+            placeholder="Tüm tablodaki verilerde ara (Müşteri adına göre)..." 
             value={searchTerm}
             onChange={(e) => {
               setSearchTerm(e.target.value);
               setCurrentPage(1);
             }}
-            className="pl-10 bg-zinc-900/50 border-zinc-800"
+            className="pl-10 bg-zinc-900/50 border-zinc-800 text-zinc-200 placeholder:text-zinc-600 focus:border-zinc-600 transition-colors"
           />
         </div>
-        <div className="relative w-full sm:w-64">
-          <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
-          <Input 
-            type="date"
-            value={dateFilter}
-            onChange={(e) => {
-              setDateFilter(e.target.value);
-              setCurrentPage(1);
-            }}
-            className="pl-10 bg-zinc-900/50 border-zinc-800"
-          />
+        
+        <div className="relative w-full sm:w-auto flex gap-2">
+          <div className="relative flex-1 sm:flex-none">
+            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
+            <Input 
+              type="date"
+              value={dateFilter}
+              onChange={(e) => {
+                setDateFilter(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="pl-10 w-full sm:w-48 bg-zinc-900/50 border-zinc-800 text-zinc-300 hover:border-zinc-700 transition-colors"
+            />
+          </div>
+          <Button onClick={handlePrint} variant="outline" className="border-zinc-800 bg-zinc-900/50 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100">
+            <Printer className="mr-2 h-4 w-4" />
+            Yazdır
+          </Button>
         </div>
       </div>
 
@@ -199,34 +210,75 @@ export default function SalesPage() {
         </Table>
       </div>
 
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between print:hidden">
-          <p className="text-sm text-zinc-500">
-            Toplam {filteredSales.length} kayıttan {(currentPage - 1) * ITEMS_PER_PAGE + 1} - {Math.min(currentPage * ITEMS_PER_PAGE, filteredSales.length)} arası gösteriliyor
-          </p>
-          <div className="flex gap-2">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+      <div className="flex items-center justify-between px-2 print:hidden">
+        <div className="flex-1 text-sm text-zinc-400">
+          Toplam <span className="font-medium text-zinc-200">{filteredSales.length}</span> kayıt bulunuyor.
+        </div>
+        <div className="flex items-center space-x-6 lg:space-x-8">
+          <div className="flex items-center space-x-2">
+            <p className="text-sm font-medium text-zinc-300">Sayfa başı</p>
+            <Select
+              value={`${itemsPerPage}`}
+              onValueChange={(value) => {
+                setItemsPerPage(Number(value));
+                setCurrentPage(1);
+              }}
+            >
+              <SelectTrigger className="h-8 w-[70px] bg-zinc-900/50 border-zinc-800 text-zinc-300">
+                <SelectValue placeholder={`${itemsPerPage}`} />
+              </SelectTrigger>
+              <SelectContent side="top" className="bg-zinc-950 border-zinc-800">
+                {[10, 20, 50, 100].map((pageSize) => (
+                  <SelectItem key={pageSize} value={`${pageSize}`} className="text-zinc-300 focus:bg-zinc-800">
+                    {pageSize}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex w-[100px] items-center justify-center text-sm font-medium text-zinc-300">
+            Sayfa {currentPage} / {totalPages || 1}
+          </div>
+          <div className="flex items-center space-x-2">
+            <Button
+              variant="outline"
+              className="hidden h-8 w-8 p-0 lg:flex bg-zinc-900/50 border-zinc-800 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100"
+              onClick={() => setCurrentPage(1)}
               disabled={currentPage === 1}
             >
+              <span className="sr-only">İlk sayfaya git</span>
+              <ChevronsLeft className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              className="h-8 w-8 p-0 bg-zinc-900/50 border-zinc-800 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100"
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+            >
+              <span className="sr-only">Önceki sayfa</span>
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            <div className="flex items-center justify-center px-4 text-sm font-medium text-zinc-300 bg-zinc-900/50 rounded-md border border-zinc-800">
-              {currentPage} / {totalPages}
-            </div>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-              disabled={currentPage === totalPages}
+            <Button
+              variant="outline"
+              className="h-8 w-8 p-0 bg-zinc-900/50 border-zinc-800 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100"
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              disabled={currentPage >= totalPages}
             >
+              <span className="sr-only">Sonraki sayfa</span>
               <ChevronRight className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              className="hidden h-8 w-8 p-0 lg:flex bg-zinc-900/50 border-zinc-800 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100"
+              onClick={() => setCurrentPage(totalPages)}
+              disabled={currentPage >= totalPages}
+            >
+              <span className="sr-only">Son sayfaya git</span>
+              <ChevronsRight className="h-4 w-4" />
             </Button>
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }
