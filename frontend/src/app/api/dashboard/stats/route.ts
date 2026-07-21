@@ -50,8 +50,6 @@ export async function GET(req: NextRequest) {
       sql`SELECT COALESCE(SUM(amount), 0) as total FROM customer_transactions WHERE type = 'credit' AND reference_type = 'payment'`,
     ]);
 
-    const totalCollected = Number(spay[0].total) + Number(cpay[0].total);
-
     return NextResponse.json({
       total_motorcycles: Number(mc[0].total),
       available_motorcycles: Number(mc[0].available),
@@ -61,7 +59,7 @@ export async function GET(req: NextRequest) {
       low_stock_count: Number(ls[0].total),
       total_customers: Number(cust[0].total),
       total_sales: Number(sc[0].total),
-      total_revenue: totalCollected, // We overwrite total_revenue with totalCollected as requested by user
+      total_revenue: Number(rev[0].total) - Number(cost[0].total),
       total_receivables: Number(rec[0].total),
       recent_sales: recent,
       sales_trend: trend,
