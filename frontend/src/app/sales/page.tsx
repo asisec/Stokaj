@@ -10,11 +10,11 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -22,7 +22,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Printer, Search, Calendar, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Printer, Search, Calendar, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Filter, SlidersHorizontal } from "lucide-react";
 
 const formatCurrency = (value: number) =>
   new Intl.NumberFormat("tr-TR", { style: "currency", currency: "TRY" }).format(value);
@@ -44,7 +49,13 @@ export default function SalesPage() {
   const { isCensored } = useCensorStore();
 
   const [searchTerm, setSearchTerm] = useState("");
-  const [dateFilter, setDateFilter] = useState("");
+  const [filters, setFilters] = useState({
+    startDate: "",
+    endDate: "",
+    minTotal: "",
+    maxTotal: "",
+    paymentMethod: "all"
+  });
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
@@ -55,6 +66,25 @@ export default function SalesPage() {
       .finally(() => setLoading(false));
   }, []);
 
+  const handleFilterChange = (key: string, value: string) => {
+    setFilters(prev => ({ ...prev, [key]: value }));
+    setCurrentPage(1);
+  };
+
+  const clearFilters = () => {
+    setFilters({
+      startDate: "",
+      endDate: "",
+      minTotal: "",
+      maxTotal: "",
+      paymentMethod: "all"
+    });
+    setSearchTerm("");
+    setCurrentPage(1);
+  };
+
+  const activeFiltersCount = Object.values(filters).filter(v => v !== "" && v !== "all").length;
+
   const filteredSales = useMemo(() => {
     return sales.filter((sale) => {
       const customerName = sale.customer 
@@ -62,15 +92,21 @@ export default function SalesPage() {
         : "";
       const matchesSearch = customerName.includes(searchTerm.toLowerCase());
       
-      let matchesDate = true;
-      if (dateFilter) {
-        const saleDate = new Date(sale.created_at).toISOString().split('T')[0];
-        matchesDate = saleDate === dateFilter;
+      let matchesFilters = true;
+      const saleDate = new Date(sale.created_at).toISOString().split('T')[0];
+      
+      if (filters.startDate && saleDate < filters.startDate) matchesFilters = false;
+      if (filters.endDate && saleDate > filters.endDate) matchesFilters = false;
+      if (filters.minTotal && sale.total_amount < Number(filters.minTotal)) matchesFilters = false;
+      if (filters.maxTotal && sale.total_amount > Number(filters.maxTotal)) matchesFilters = false;
+      if (filters.paymentMethod !== "all") {
+        const hasPaymentMethod = sale.payments?.some(p => p.method.startsWith(filters.paymentMethod));
+        if (!hasPaymentMethod) matchesFilters = false;
       }
 
-      return matchesSearch && matchesDate;
+      return matchesSearch && matchesFilters;
     });
-  }, [sales, searchTerm, dateFilter]);
+  }, [sales, searchTerm, filters]);
 
   const totalPages = Math.ceil(filteredSales.length / itemsPerPage);
   const paginatedSales = filteredSales.slice(
@@ -105,29 +141,90 @@ export default function SalesPage() {
           />
         </div>
         
-        <div className="relative w-full sm:w-auto flex gap-2">
-          <div className="relative flex-1 sm:flex-none">
-            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
-            <Input 
-              type="date"
-              value={dateFilter}
-              onChange={(e) => {
-                setDateFilter(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="pl-10 w-full sm:w-48 bg-zinc-900/50 border-zinc-800 text-zinc-300 hover:border-zinc-700 transition-colors"
-            />
-          </div>
-          <Button onClick={handlePrint} variant="outline" className="border-zinc-800 bg-zinc-900/50 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100">
-            <Printer className="mr-2 h-4 w-4" />
-            Yazdır
-          </Button>
-        </div>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="outline" className="bg-zinc-900/50 border-zinc-800 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100 relative w-full sm:w-auto">
+              <Filter className="w-4 h-4 mr-2" />
+              Gelişmiş Filtreler
+              {activeFiltersCount > 0 && (
+                <span className="absolute -top-2 -right-2 h-5 w-5 rounded-full bg-emerald-600 text-white text-xs flex items-center justify-center font-semibold border-2 border-zinc-950">
+                  {activeFiltersCount}
+                </span>
+              )}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent align="end" className="w-full sm:w-[520px] bg-zinc-950/95 backdrop-blur-xl border-zinc-800/50 shadow-2xl shadow-black p-6 rounded-2xl">
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 bg-emerald-500/10 rounded-lg">
+                    <SlidersHorizontal className="w-5 h-5 text-emerald-400" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-zinc-100">Gelişmiş Filtreleme</h4>
+                    <p className="text-xs text-zinc-500">Detaylı arama kriterlerini belirleyin</p>
+                  </div>
+                </div>
+                {activeFiltersCount > 0 && (
+                  <Button variant="ghost" size="sm" onClick={clearFilters} className="h-8 text-red-400 hover:text-red-300 hover:bg-red-400/10 transition-colors">
+                    Filtreleri Temizle
+                  </Button>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label className="text-xs font-medium text-zinc-400 uppercase tracking-wider">Başlangıç Tarihi</Label>
+                  <Input type="date" value={filters.startDate} onChange={(e) => handleFilterChange("startDate", e.target.value)} className="bg-zinc-900/50 border-zinc-800/80 text-zinc-200 h-10 hover:border-zinc-700 focus:border-emerald-500 transition-all rounded-xl" />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs font-medium text-zinc-400 uppercase tracking-wider">Bitiş Tarihi</Label>
+                  <Input type="date" value={filters.endDate} onChange={(e) => handleFilterChange("endDate", e.target.value)} className="bg-zinc-900/50 border-zinc-800/80 text-zinc-200 h-10 hover:border-zinc-700 focus:border-emerald-500 transition-all rounded-xl" />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label className="text-xs font-medium text-zinc-400 uppercase tracking-wider">Min. Tutar (₺)</Label>
+                  <Input type="number" placeholder="0" value={filters.minTotal} onChange={(e) => handleFilterChange("minTotal", e.target.value)} className="bg-zinc-900/50 border-zinc-800/80 text-zinc-200 h-10 hover:border-zinc-700 focus:border-emerald-500 transition-all rounded-xl" />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs font-medium text-zinc-400 uppercase tracking-wider">Maks. Tutar (₺)</Label>
+                  <Input type="number" placeholder="Sınırsız" value={filters.maxTotal} onChange={(e) => handleFilterChange("maxTotal", e.target.value)} className="bg-zinc-900/50 border-zinc-800/80 text-zinc-200 h-10 hover:border-zinc-700 focus:border-emerald-500 transition-all rounded-xl" />
+                </div>
+
+                <div className="space-y-2 sm:col-span-2">
+                  <Label className="text-xs font-medium text-zinc-400 uppercase tracking-wider">Ödeme Yöntemi</Label>
+                  <Select value={filters.paymentMethod} onValueChange={(v) => handleFilterChange("paymentMethod", v)}>
+                    <SelectTrigger className="bg-zinc-900/50 border-zinc-800/80 text-zinc-200 h-10 hover:border-zinc-700 focus:border-emerald-500 transition-all rounded-xl">
+                      <SelectValue placeholder="Tümü" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-zinc-950 border-zinc-800 text-zinc-200 rounded-xl">
+                      <SelectItem value="all">Tümü</SelectItem>
+                      <SelectItem value="cash">Nakit</SelectItem>
+                      <SelectItem value="credit_card">Kredi Kartı</SelectItem>
+                      <SelectItem value="transfer">Havale / EFT</SelectItem>
+                      <SelectItem value="open_account">Açık Hesap (Veresiye)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+          </PopoverContent>
+        </Popover>
+
+        <Button
+          variant="outline"
+          onClick={handlePrint}
+          className="border-zinc-800 bg-zinc-900/50 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100 relative w-full sm:w-auto"
+        >
+          <Printer className="mr-2 h-4 w-4" />
+          Yazdır
+        </Button>
       </div>
 
       <div className="print:block hidden mb-4">
         <h2 className="text-2xl font-bold text-black">Satış Raporu</h2>
-        {dateFilter && <p className="text-sm text-gray-600">Tarih: {dateFilter}</p>}
+        {filters.startDate && <p className="text-sm text-gray-600">Başlangıç: {filters.startDate}</p>}
+        {filters.endDate && <p className="text-sm text-gray-600">Bitiş: {filters.endDate}</p>}
         {searchTerm && <p className="text-sm text-gray-600">Arama: {searchTerm}</p>}
       </div>
 
