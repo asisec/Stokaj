@@ -5,7 +5,11 @@ import { jwtVerify } from "jose";
 export function getDb() {
   const url = process.env.DATABASE_URL
     || `postgresql://${process.env.DB_USER}:${encodeURIComponent(process.env.DB_PASSWORD || "")}@${process.env.DB_HOST}/${process.env.DB_NAME}?sslmode=${process.env.DB_SSLMODE || "require"}`;
-  return neon(url);
+  const sql = neon(url);
+  return function(strings: TemplateStringsArray, ...values: any[]) {
+    const cleanValues = values.map(v => v === undefined ? null : v);
+    return sql(strings, ...cleanValues);
+  } as typeof sql;
 }
 
 export async function verifyAuth(req: NextRequest): Promise<boolean> {
