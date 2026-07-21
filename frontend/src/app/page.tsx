@@ -468,7 +468,7 @@ export default function DashboardPage() {
                     <RechartsTooltip
                       contentStyle={{ backgroundColor: "#18181b", borderColor: "#27272a", borderRadius: "8px" }}
                       itemStyle={{ color: "#e4e4e7" }}
-                      formatter={(value: number) => [isCensored ? "****" : formatCurrency(value), "Ciro"]}
+                      formatter={(value: number) => [isCensored ? "****" : formatCurrency(value), "Net Kâr"]}
                       labelStyle={{ color: "#a1a1aa", marginBottom: "4px" }}
                     />
                     <Line
