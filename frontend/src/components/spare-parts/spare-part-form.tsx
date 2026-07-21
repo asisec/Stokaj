@@ -29,17 +29,6 @@ interface SparePartFormProps {
   existingSpareParts?: SparePart[];
 }
 
-const DEFAULT_CATEGORIES = [
-  "AKÜ",
-  "FAR",
-  "TABLET",
-  "SİLECEK",
-  "ŞARJ MAKİNESİ",
-  "MOTOR KABİNİ",
-  "FREN BALATASI",
-  "LASTİK"
-];
-
 const initialFormState = {
   category: "Diğer",
   name: "",
@@ -62,25 +51,18 @@ export function SparePartForm({
   const [uniqueBrands, setUniqueBrands] = useState<string[]>([]);
   const [uniqueModels, setUniqueModels] = useState<string[]>([]);
 
-  const categoriesSet = new Set(DEFAULT_CATEGORIES.map(c => c.trim().toLocaleUpperCase("tr-TR")));
+  const categoriesSet = new Set<string>();
   existingSpareParts.forEach(p => {
-    // Parça isimlerini kategori olarak topluyoruz
+    // Sadece veri tabanından gelen isimleri alıp tekilleştiriyoruz
     if (p.name) {
       const name = p.name.trim().toLocaleUpperCase("tr-TR");
       if (name && name !== "DİĞER") {
         categoriesSet.add(name);
       }
     }
-    // Geriye dönük uyumluluk için category'yi de kontrol ediyoruz
-    if (p.category) {
-      const cat = p.category.trim().toLocaleUpperCase("tr-TR");
-      if (cat && cat !== "DİĞER") {
-        categoriesSet.add(cat);
-      }
-    }
   });
   
-  // DİĞER her zaman en sonda manuel ekleniyor, listeden çıkaralım
+  // DİĞER her zaman en sonda manuel ekleniyor
   categoriesSet.delete("DİĞER");
   const uniqueCategories = Array.from(categoriesSet).sort((a, b) => a.localeCompare(b, 'tr'));
 
