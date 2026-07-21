@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Bike, LayoutDashboard, Wrench, Users, ShoppingCart, LogOut, Tags, Eye, EyeOff } from "lucide-react"
+import { Bike, LayoutDashboard, Wrench, Users, ShoppingCart, LogOut, Tags, Eye, EyeOff, FileText } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { removeToken } from "@/lib/auth"
 import { useCensorStore } from "@/store/censor"
@@ -13,6 +13,7 @@ const navigationItems = [
   { label: "Markalar", href: "/brands", icon: Tags },
   { label: "Yedek Parçalar", href: "/spare-parts", icon: Wrench },
   { label: "Müşteriler", href: "/customers", icon: Users },
+  { label: "Satış Geçmişi", href: "/sales", icon: FileText },
   { label: "Satış / POS", href: "/pos", icon: ShoppingCart },
 ]
 

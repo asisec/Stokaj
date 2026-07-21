@@ -40,6 +40,8 @@ import {
 import { useCensorStore } from "@/store/censor";
 import { PaymentModal } from "@/components/customers/payment-modal";
 import { type Customer } from "@/lib/api";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 const formatCurrency = (value: number) =>
   new Intl.NumberFormat("tr-TR", { style: "currency", currency: "TRY" }).format(
@@ -222,11 +224,14 @@ export default function DashboardPage() {
       </div>
 
       <Card className="border-zinc-800/50 bg-zinc-900/50 backdrop-blur-sm mb-8">
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-lg font-semibold text-zinc-100 flex items-center gap-2">
             <ShoppingCart className="h-5 w-5 text-zinc-400" />
             Son Satışlar
           </CardTitle>
+          <Button variant="outline" size="sm" className="h-8" asChild>
+            <Link href="/sales">Tümünü Gör</Link>
+          </Button>
         </CardHeader>
         <CardContent>
           {stats.recent_sales && stats.recent_sales.length > 0 ? (
