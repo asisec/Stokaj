@@ -95,6 +95,7 @@ export interface SaleItem {
   item_name: string
   quantity: number
   unit_price: number
+  purchase_price: number
   total_price: number
 }
 

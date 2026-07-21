@@ -11,6 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -119,24 +120,27 @@ export default function SalesPage() {
         {searchTerm && <p className="text-sm text-gray-600">Arama: {searchTerm}</p>}
       </div>
 
-      <div className="rounded-xl border border-zinc-800/50 overflow-hidden bg-zinc-900/50 backdrop-blur-sm print:border-gray-300 print:bg-white print:text-black">
+      <div className="rounded-xl border border-zinc-800/50 bg-zinc-900/30 overflow-hidden print:border-gray-300 print:bg-white print:text-black">
         <Table>
           <TableHeader>
-            <TableRow className="border-zinc-800/50 hover:bg-transparent print:border-gray-300">
+            <TableRow className="border-zinc-800/50 hover:bg-transparent bg-zinc-900/50 print:bg-transparent print:border-gray-300">
               <TableHead className="text-zinc-400 font-medium print:text-gray-700">Tarih</TableHead>
               <TableHead className="text-zinc-400 font-medium print:text-gray-700">Müşteri</TableHead>
               <TableHead className="text-zinc-400 font-medium print:text-gray-700">Ürünler</TableHead>
               <TableHead className="text-zinc-400 font-medium print:text-gray-700">Toplam</TableHead>
+              <TableHead className="text-emerald-400/80 font-medium print:text-gray-700">Kâr</TableHead>
               <TableHead className="text-zinc-400 font-medium print:text-gray-700">Ödeme</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={5} className="text-center py-8 text-zinc-500">Yükleniyor...</TableCell>
+                <TableCell colSpan={6} className="text-center py-8 text-zinc-500">Yükleniyor...</TableCell>
               </TableRow>
             ) : paginatedSales.length > 0 ? (
-              paginatedSales.map((sale) => (
+              paginatedSales.map((sale) => {
+                const profit = sale.total_amount - (sale.items?.reduce((acc, item) => acc + (item.purchase_price * item.quantity), 0) || 0);
+                return (
                 <TableRow key={sale.id} className="border-zinc-800/50 hover:bg-zinc-800/30 print:border-gray-200 print:hover:bg-transparent">
                   <TableCell className="text-zinc-400 print:text-black">
                     {formatDate(sale.created_at)}
@@ -153,6 +157,9 @@ export default function SalesPage() {
                   </TableCell>
                   <TableCell className="text-zinc-200 font-semibold print:text-black">
                     {isCensored ? "****" : formatCurrency(sale.total_amount)}
+                  </TableCell>
+                  <TableCell className="text-emerald-400 font-semibold print:text-black">
+                    {isCensored ? "****" : formatCurrency(profit)}
                   </TableCell>
                   <TableCell>
                     <div className="flex flex-col gap-1">
@@ -181,10 +188,11 @@ export default function SalesPage() {
                     </div>
                   </TableCell>
                 </TableRow>
-              ))
+                );
+              })
             ) : (
               <TableRow>
-                <TableCell colSpan={5} className="text-center py-8 text-zinc-500 print:text-black">Kayıt bulunamadı.</TableCell>
+                <TableCell colSpan={6} className="text-center py-8 text-zinc-500 print:text-black">Kayıt bulunamadı.</TableCell>
               </TableRow>
             )}
           </TableBody>

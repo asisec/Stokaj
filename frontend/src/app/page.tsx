@@ -281,6 +281,9 @@ export default function DashboardPage() {
                     <TableHead className="text-zinc-400 font-medium">
                       Toplam
                     </TableHead>
+                    <TableHead className="text-emerald-400/80 font-medium">
+                      Kâr
+                    </TableHead>
                     <TableHead className="text-zinc-400 font-medium">
                       Ödeme
                     </TableHead>
@@ -293,7 +296,9 @@ export default function DashboardPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {stats.recent_sales.slice(0, 5).map((sale) => (
+                  {stats.recent_sales.slice(0, 5).map((sale) => {
+                    const profit = sale.total_amount - (sale.items?.reduce((acc, item) => acc + (item.purchase_price * item.quantity), 0) || 0);
+                    return (
                     <TableRow
                       key={sale.id}
                       className="border-zinc-800/50 transition-colors duration-200 hover:bg-zinc-800/30"
@@ -310,6 +315,9 @@ export default function DashboardPage() {
                       </TableCell>
                       <TableCell className="text-zinc-200 font-semibold transition-all">
                         {isCensored ? "****" : formatCurrency(sale.total_amount)}
+                      </TableCell>
+                      <TableCell className="text-emerald-400 font-semibold transition-all">
+                        {isCensored ? "****" : formatCurrency(profit)}
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-col gap-1">
@@ -350,7 +358,8 @@ export default function DashboardPage() {
                         </button>
                       </TableCell>
                     </TableRow>
-                  ))}
+                    );
+                  })}
                 </TableBody>
               </Table>
             </div>
