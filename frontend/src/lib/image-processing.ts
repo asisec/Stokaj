@@ -14,126 +14,153 @@ export interface ProcessImageOptions {
   rotation?: number
 }
 
-export function detectCardBounds(
-  canvas: HTMLCanvasElement
-): CropBox {
-  const ctx = canvas.getContext("2d")
+export const ID_CARD_RATIO = 85.6 / 53.98 // ISO/IEC 7810 ID-1 standard (~1.5858)
+
+export function detectCardBounds(canvas: HTMLCanvasElement): CropBox {
   const w = canvas.width
   const h = canvas.height
 
-  if (!ctx || w < 20 || h < 20) {
+  if (w < 40 || h < 40) {
     return { x: 0, y: 0, width: w, height: h }
   }
 
-  const sampleW = 240
+  const sampleW = 320
   const sampleH = Math.round((sampleW * h) / w)
   const tempCanvas = document.createElement("canvas")
   tempCanvas.width = sampleW
   tempCanvas.height = sampleH
   const tCtx = tempCanvas.getContext("2d")
 
+  const defaultCrop = () => {
+    let rw = Math.round(w * 0.74)
+    let rh = Math.round(rw / ID_CARD_RATIO)
+    if (rh > h * 0.88) {
+      rh = Math.round(h * 0.85)
+      rw = Math.round(rh * ID_CARD_RATIO)
+    }
+    const rx = Math.round((w - rw) / 2)
+    const ry = Math.round((h - rh) / 2)
+    return {
+      x: Math.max(0, rx),
+      y: Math.max(0, ry),
+      width: Math.min(w - rx, rw),
+      height: Math.min(h - ry, rh),
+    }
+  }
+
   if (!tCtx) {
-    return { x: 0, y: 0, width: w, height: h }
+    return defaultCrop()
   }
 
   tCtx.drawImage(canvas, 0, 0, sampleW, sampleH)
   const imgData = tCtx.getImageData(0, 0, sampleW, sampleH)
   const data = imgData.data
 
-  const getGray = (x: number, y: number): number => {
-    const idx = (y * sampleW + x) * 4
+  const getLuminance = (x: number, y: number): number => {
+    const px = Math.max(0, Math.min(sampleW - 1, x))
+    const py = Math.max(0, Math.min(sampleH - 1, y))
+    const idx = (py * sampleW + px) * 4
     return 0.299 * data[idx] + 0.587 * data[idx + 1] + 0.114 * data[idx + 2]
   }
 
-  const cornerSamples = [
-    getGray(5, 5),
-    getGray(sampleW - 6, 5),
-    getGray(5, sampleH - 6),
-    getGray(sampleW - 6, sampleH - 6),
-  ]
-  const bgRef = cornerSamples.reduce((a, b) => a + b, 0) / cornerSamples.length
-
-  const threshold = 28
-
-  let top = 0
-  let bottom = sampleH - 1
-  let left = 0
-  let right = sampleW - 1
-
-  for (let y = 0; y < Math.floor(sampleH * 0.45); y++) {
-    let diffCount = 0
-    for (let x = Math.floor(sampleW * 0.2); x < Math.floor(sampleW * 0.8); x += 2) {
-      if (Math.abs(getGray(x, y) - bgRef) > threshold) {
-        diffCount++
-      }
+  const rowEnergy = new Float32Array(sampleH)
+  const xStart = Math.floor(sampleW * 0.25)
+  const xEnd = Math.floor(sampleW * 0.75)
+  for (let y = 3; y < sampleH - 3; y++) {
+    let sum = 0
+    for (let x = xStart; x < xEnd; x += 2) {
+      const diff1 = Math.abs(getLuminance(x, y + 2) - getLuminance(x, y - 2))
+      const diff2 = Math.abs(getLuminance(x, y + 1) - getLuminance(x, y - 1))
+      sum += diff1 * 0.7 + diff2 * 0.3
     }
-    if (diffCount > sampleW * 0.15) {
-      top = Math.max(0, y - 2)
-      break
+    rowEnergy[y] = sum
+  }
+
+  const colEnergy = new Float32Array(sampleW)
+  const yStart = Math.floor(sampleH * 0.25)
+  const yEnd = Math.floor(sampleH * 0.75)
+  for (let x = 3; x < sampleW - 3; x++) {
+    let sum = 0
+    for (let y = yStart; y < yEnd; y += 2) {
+      const diff1 = Math.abs(getLuminance(x + 2, y) - getLuminance(x - 2, y))
+      const diff2 = Math.abs(getLuminance(x + 1, y) - getLuminance(x - 1, y))
+      sum += diff1 * 0.7 + diff2 * 0.3
+    }
+    colEnergy[x] = sum
+  }
+
+  let maxTopVal = 0
+  let peakTop = -1
+  const topLimit = Math.floor(sampleH * 0.42)
+  for (let y = Math.floor(sampleH * 0.06); y < topLimit; y++) {
+    if (rowEnergy[y] > maxTopVal) {
+      maxTopVal = rowEnergy[y]
+      peakTop = y
     }
   }
 
-  for (let y = sampleH - 1; y > Math.floor(sampleH * 0.55); y--) {
-    let diffCount = 0
-    for (let x = Math.floor(sampleW * 0.2); x < Math.floor(sampleW * 0.8); x += 2) {
-      if (Math.abs(getGray(x, y) - bgRef) > threshold) {
-        diffCount++
-      }
-    }
-    if (diffCount > sampleW * 0.15) {
-      bottom = Math.min(sampleH - 1, y + 2)
-      break
+  let maxBottomVal = 0
+  let peakBottom = -1
+  const bottomStart = Math.floor(sampleH * 0.58)
+  for (let y = bottomStart; y < sampleH - Math.floor(sampleH * 0.05); y++) {
+    if (rowEnergy[y] > maxBottomVal) {
+      maxBottomVal = rowEnergy[y]
+      peakBottom = y
     }
   }
 
-  for (let x = 0; x < Math.floor(sampleW * 0.45); x++) {
-    let diffCount = 0
-    for (let y = Math.floor(sampleH * 0.2); y < Math.floor(sampleH * 0.8); y += 2) {
-      if (Math.abs(getGray(x, y) - bgRef) > threshold) {
-        diffCount++
-      }
-    }
-    if (diffCount > sampleH * 0.15) {
-      left = Math.max(0, x - 2)
-      break
+  let maxLeftVal = 0
+  let peakLeft = -1
+  const leftLimit = Math.floor(sampleW * 0.42)
+  for (let x = Math.floor(sampleW * 0.05); x < leftLimit; x++) {
+    if (colEnergy[x] > maxLeftVal) {
+      maxLeftVal = colEnergy[x]
+      peakLeft = x
     }
   }
 
-  for (let x = sampleW - 1; x > Math.floor(sampleW * 0.55); x--) {
-    let diffCount = 0
-    for (let y = Math.floor(sampleH * 0.2); y < Math.floor(sampleH * 0.8); y += 2) {
-      if (Math.abs(getGray(x, y) - bgRef) > threshold) {
-        diffCount++
-      }
-    }
-    if (diffCount > sampleH * 0.15) {
-      right = Math.min(sampleW - 1, x + 2)
-      break
+  let maxRightVal = 0
+  let peakRight = -1
+  const rightStart = Math.floor(sampleW * 0.58)
+  for (let x = rightStart; x < sampleW - Math.floor(sampleW * 0.05); x++) {
+    if (colEnergy[x] > maxRightVal) {
+      maxRightVal = colEnergy[x]
+      peakRight = x
     }
   }
 
   const scaleX = w / sampleW
   const scaleY = h / sampleH
 
-  let rx = Math.round(left * scaleX)
-  let ry = Math.round(top * scaleY)
-  let rw = Math.round((right - left) * scaleX)
-  let rh = Math.round((bottom - top) * scaleY)
+  let finalTop = peakTop > 0 ? peakTop : Math.floor(sampleH * 0.22)
+  let finalBottom = peakBottom > 0 ? peakBottom : Math.floor(sampleH * 0.78)
+  let finalLeft = peakLeft > 0 ? peakLeft : Math.floor(sampleW * 0.16)
+  let finalRight = peakRight > 0 ? peakRight : Math.floor(sampleW * 0.84)
 
-  if (rw < w * 0.3 || rh < h * 0.3) {
-    const ID_CARD_RATIO = 85.6 / 53.98
-    const currentRatio = w / h
-    if (currentRatio > ID_CARD_RATIO) {
-      rw = Math.round(h * ID_CARD_RATIO * 0.9)
-      rh = Math.round(h * 0.9)
-      rx = Math.round((w - rw) / 2)
-      ry = Math.round((h - rh) / 2)
+  let estWidth = (finalRight - finalLeft) * scaleX
+  let estHeight = (finalBottom - finalTop) * scaleY
+
+  const ratio = estWidth / estHeight
+  if (ratio < 1.3 || ratio > 1.85) {
+    if (estWidth > w * 0.5) {
+      estHeight = estWidth / ID_CARD_RATIO
+      if (peakTop > 0) {
+        finalBottom = Math.round(peakTop + estHeight / scaleY)
+      } else if (peakBottom > 0) {
+        finalTop = Math.round(peakBottom - estHeight / scaleY)
+      }
     } else {
-      rw = Math.round(w * 0.9)
-      rh = Math.round((w * 0.9) / ID_CARD_RATIO)
-      rx = Math.round((w - rw) / 2)
-      ry = Math.round((h - rh) / 2)
+      return defaultCrop()
     }
+  }
+
+  let rx = Math.round(finalLeft * scaleX)
+  let ry = Math.round(finalTop * scaleY)
+  let rw = Math.round((finalRight - finalLeft) * scaleX)
+  let rh = Math.round((finalBottom - finalTop) * scaleY)
+
+  if (rw < w * 0.35 || rh < h * 0.25 || rw > w * 0.96) {
+    return defaultCrop()
   }
 
   return {
@@ -193,11 +220,11 @@ export function applyDocumentEnhance(
 
       const lum = 0.299 * r + 0.587 * g + 0.114 * b
 
-      if (lum > 180) {
-        const whiteLift = Math.min(255, lum + (lum - 180) * 0.85)
-        r = Math.min(255, (r * 0.4) + (whiteLift * 0.6))
-        g = Math.min(255, (g * 0.4) + (whiteLift * 0.6))
-        b = Math.min(255, (b * 0.4) + (whiteLift * 0.6))
+      if (lum > 175) {
+        const whiteLift = Math.min(255, lum + (lum - 175) * 0.9)
+        r = Math.min(255, r * 0.35 + whiteLift * 0.65)
+        g = Math.min(255, g * 0.35 + whiteLift * 0.65)
+        b = Math.min(255, b * 0.35 + whiteLift * 0.65)
       }
 
       d[i] = Math.min(255, Math.max(0, r))
@@ -251,7 +278,6 @@ export function processIdCardImage(
           targetCrop = { x: 0, y: 0, width: sw, height: sh }
         }
 
-        const ID_CARD_RATIO = 85.6 / 53.98
         const OUTPUT_WIDTH = 1200
         const OUTPUT_HEIGHT = Math.round(OUTPUT_WIDTH / ID_CARD_RATIO)
 
