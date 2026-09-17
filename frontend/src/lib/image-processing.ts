@@ -97,77 +97,79 @@ export function detectCardBounds(canvas: HTMLCanvasElement): CropBox {
     colEnergy[x] = sum
   }
 
-  let maxTopVal = 0
+  // Baseline edge noise at outer margins
+  let topMarginEnergy = 0
+  for (let y = 1; y < Math.floor(sampleH * 0.08); y++) {
+    topMarginEnergy += rowEnergy[y]
+  }
+  const baseEnergyTop = topMarginEnergy / Math.max(1, Math.floor(sampleH * 0.08) - 1)
+
+  let bottomMarginEnergy = 0
+  for (let y = Math.floor(sampleH * 0.92); y < sampleH - 1; y++) {
+    bottomMarginEnergy += rowEnergy[y]
+  }
+  const baseEnergyBottom = bottomMarginEnergy / Math.max(1, sampleH - 1 - Math.floor(sampleH * 0.92))
+
+  let leftMarginEnergy = 0
+  for (let x = 1; x < Math.floor(sampleW * 0.08); x++) {
+    leftMarginEnergy += colEnergy[x]
+  }
+  const baseEnergyLeft = leftMarginEnergy / Math.max(1, Math.floor(sampleW * 0.08) - 1)
+
+  let rightMarginEnergy = 0
+  for (let x = Math.floor(sampleW * 0.92); x < sampleW - 1; x++) {
+    rightMarginEnergy += colEnergy[x]
+  }
+  const baseEnergyRight = rightMarginEnergy / Math.max(1, sampleW - 1 - Math.floor(sampleW * 0.92))
+
+  const thresholdFactor = 1.75
+
   let peakTop = -1
-  const topLimit = Math.floor(sampleH * 0.42)
-  for (let y = Math.floor(sampleH * 0.06); y < topLimit; y++) {
-    if (rowEnergy[y] > maxTopVal) {
-      maxTopVal = rowEnergy[y]
-      peakTop = y
+  for (let y = Math.floor(sampleH * 0.06); y < Math.floor(sampleH * 0.45); y++) {
+    if (rowEnergy[y] > baseEnergyTop * thresholdFactor + 12) {
+      peakTop = Math.max(0, y - 2)
+      break
     }
   }
 
-  let maxBottomVal = 0
   let peakBottom = -1
-  const bottomStart = Math.floor(sampleH * 0.58)
-  for (let y = bottomStart; y < sampleH - Math.floor(sampleH * 0.05); y++) {
-    if (rowEnergy[y] > maxBottomVal) {
-      maxBottomVal = rowEnergy[y]
-      peakBottom = y
+  for (let y = sampleH - Math.floor(sampleH * 0.06); y > Math.floor(sampleH * 0.55); y--) {
+    if (rowEnergy[y] > baseEnergyBottom * thresholdFactor + 12) {
+      peakBottom = Math.min(sampleH - 1, y + 2)
+      break
     }
   }
 
-  let maxLeftVal = 0
   let peakLeft = -1
-  const leftLimit = Math.floor(sampleW * 0.42)
-  for (let x = Math.floor(sampleW * 0.05); x < leftLimit; x++) {
-    if (colEnergy[x] > maxLeftVal) {
-      maxLeftVal = colEnergy[x]
-      peakLeft = x
+  for (let x = Math.floor(sampleW * 0.06); x < Math.floor(sampleW * 0.45); x++) {
+    if (colEnergy[x] > baseEnergyLeft * thresholdFactor + 12) {
+      peakLeft = Math.max(0, x - 2)
+      break
     }
   }
 
-  let maxRightVal = 0
   let peakRight = -1
-  const rightStart = Math.floor(sampleW * 0.58)
-  for (let x = rightStart; x < sampleW - Math.floor(sampleW * 0.05); x++) {
-    if (colEnergy[x] > maxRightVal) {
-      maxRightVal = colEnergy[x]
-      peakRight = x
+  for (let x = sampleW - Math.floor(sampleW * 0.06); x > Math.floor(sampleW * 0.55); x--) {
+    if (colEnergy[x] > baseEnergyRight * thresholdFactor + 12) {
+      peakRight = Math.min(sampleW - 1, x + 2)
+      break
     }
   }
 
   const scaleX = w / sampleW
   const scaleY = h / sampleH
 
-  let finalTop = peakTop > 0 ? peakTop : Math.floor(sampleH * 0.22)
-  let finalBottom = peakBottom > 0 ? peakBottom : Math.floor(sampleH * 0.78)
+  let finalTop = peakTop > 0 ? peakTop : Math.floor(sampleH * 0.16)
+  let finalBottom = peakBottom > 0 ? peakBottom : Math.floor(sampleH * 0.84)
   let finalLeft = peakLeft > 0 ? peakLeft : Math.floor(sampleW * 0.16)
   let finalRight = peakRight > 0 ? peakRight : Math.floor(sampleW * 0.84)
-
-  let estWidth = (finalRight - finalLeft) * scaleX
-  let estHeight = (finalBottom - finalTop) * scaleY
-
-  const ratio = estWidth / estHeight
-  if (ratio < 1.3 || ratio > 1.85) {
-    if (estWidth > w * 0.5) {
-      estHeight = estWidth / ID_CARD_RATIO
-      if (peakTop > 0) {
-        finalBottom = Math.round(peakTop + estHeight / scaleY)
-      } else if (peakBottom > 0) {
-        finalTop = Math.round(peakBottom - estHeight / scaleY)
-      }
-    } else {
-      return defaultCrop()
-    }
-  }
 
   let rx = Math.round(finalLeft * scaleX)
   let ry = Math.round(finalTop * scaleY)
   let rw = Math.round((finalRight - finalLeft) * scaleX)
   let rh = Math.round((finalBottom - finalTop) * scaleY)
 
-  if (rw < w * 0.35 || rh < h * 0.25 || rw > w * 0.96) {
+  if (rw < w * 0.35 || rh < h * 0.25 || rw > w * 0.98) {
     return defaultCrop()
   }
 
@@ -197,7 +199,7 @@ export function applyDocumentEnhance(
       totalGray += 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2]
     }
     const avgGray = totalGray / len
-    const threshold = Math.max(115, Math.min(170, avgGray * 0.92))
+    const threshold = Math.max(120, Math.min(175, avgGray * 0.96))
 
     for (let i = 0; i < d.length; i += 4) {
       const g = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2]
@@ -209,30 +211,34 @@ export function applyDocumentEnhance(
   } else if (mode === "grayscale") {
     for (let i = 0; i < d.length; i += 4) {
       let g = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2]
-      g = Math.min(255, Math.max(0, 1.25 * (g - 110) + 128))
-      if (g > 195) g = Math.min(255, g + 35)
+      g = Math.min(255, Math.max(0, 1.4 * (g - 110) + 128))
+      if (g > 180) g = Math.min(255, g + 40)
       d[i] = g
       d[i + 1] = g
       d[i + 2] = g
     }
   } else if (mode === "enhanced_color") {
-    const cFactor = 1.35
+    const cFactor = 1.5
     for (let i = 0; i < d.length; i += 4) {
       let r = d[i]
       let g = d[i + 1]
       let b = d[i + 2]
 
-      r = cFactor * (r - 128) + 128 + 15
-      g = cFactor * (g - 128) + 128 + 15
-      b = cFactor * (b - 128) + 128 + 15
+      r = cFactor * (r - 128) + 128 + 20
+      g = cFactor * (g - 128) + 128 + 20
+      b = cFactor * (b - 128) + 128 + 20
 
       const lum = 0.299 * r + 0.587 * g + 0.114 * b
 
-      if (lum > 175) {
-        const whiteLift = Math.min(255, lum + (lum - 175) * 0.9)
-        r = Math.min(255, r * 0.35 + whiteLift * 0.65)
-        g = Math.min(255, g * 0.35 + whiteLift * 0.65)
-        b = Math.min(255, b * 0.35 + whiteLift * 0.65)
+      if (lum > 145) {
+        const whiteLift = Math.min(255, lum + (lum - 145) * 1.25)
+        r = Math.min(255, r * 0.2 + whiteLift * 0.8)
+        g = Math.min(255, g * 0.2 + whiteLift * 0.8)
+        b = Math.min(255, b * 0.2 + whiteLift * 0.8)
+      } else if (lum < 110) {
+        r = Math.max(0, r * 0.75)
+        g = Math.max(0, g * 0.75)
+        b = Math.max(0, b * 0.75)
       }
 
       d[i] = Math.min(255, Math.max(0, r))

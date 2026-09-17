@@ -11,7 +11,6 @@ import {
   Unlock,
   ZoomIn,
   ZoomOut,
-  CreditCard,
   Maximize2,
 } from "lucide-react"
 import {
@@ -128,15 +127,6 @@ export function IdCardEditorModal({
     }, 50)
   }
 
-  const handleStandardCardCrop = () => {
-    setCropPct({
-      xPct: 14,
-      yPct: 20,
-      wPct: 72,
-      hPct: 46,
-    })
-  }
-
   const handleFullImage = () => {
     setCropPct({
       xPct: 2,
@@ -244,6 +234,16 @@ export function IdCardEditorModal({
     setActiveDrag(null)
   }
 
+  const getLiveFilterStyle = () => {
+    if (filterMode === "photocopy_bw") {
+      return "grayscale(100%) contrast(350%) brightness(120%)"
+    }
+    if (filterMode === "enhanced_color") {
+      return "contrast(155%) brightness(115%) saturate(125%)"
+    }
+    return "none"
+  }
+
   const handleSave = async () => {
     if (!imageSource) return
     setIsProcessing(true)
@@ -290,17 +290,6 @@ export function IdCardEditorModal({
             >
               <Sparkles className="h-3.5 w-3.5 text-amber-300" />
               Kartı Otomatik Bul
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={handleStandardCardCrop}
-              className="h-8 gap-1.5 text-xs bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border-zinc-700"
-              title="Merkezde standart kimlik oranında seç"
-            >
-              <CreditCard className="h-3.5 w-3.5 text-blue-400" />
-              Standart Kimlik Boyutu
             </Button>
             <Button
               type="button"
@@ -425,9 +414,11 @@ export function IdCardEditorModal({
                 alt={cardTitle}
                 style={{
                   transform: `rotate(${rotation}deg)`,
+                  filter: getLiveFilterStyle(),
                   maxHeight: "56vh",
                   maxWidth: "100%",
                   objectFit: "contain",
+                  transition: "filter 0.15s ease",
                 }}
                 className="block pointer-events-none rounded"
                 onLoad={onImageLoad}
@@ -502,7 +493,7 @@ export function IdCardEditorModal({
                 {/* CENTER BADGE */}
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                   <span className="bg-blue-900/80 text-blue-200 text-[11px] font-semibold px-2.5 py-1 rounded-md backdrop-blur-sm border border-blue-400/40 shadow-sm flex items-center gap-1.5">
-                    <CreditCard className="h-3.5 w-3.5" />
+                    <Scan className="h-3.5 w-3.5" />
                     Kimlik Sınırı
                   </span>
                 </div>
