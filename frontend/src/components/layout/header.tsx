@@ -7,9 +7,12 @@ import { NotificationButton } from "@/components/layout/notification-button"
 const pageTitles: Record<string, string> = {
   "/": "Gösterge Paneli",
   "/motorcycles": "Motosikletler",
+  "/brands": "Markalar",
   "/spare-parts": "Yedek Parçalar",
   "/customers": "Müşteriler",
+  "/sales": "Satış Geçmişi",
   "/pos": "Satış / POS",
+  "/documents": "Evrak & Noter Takibi",
 }
 
 export function Header() {

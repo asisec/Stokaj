@@ -107,6 +107,28 @@ export interface Sale {
   created_at: string
 }
 
+export type DocumentStatus = "notary_pending" | "plate_pending" | "ready_for_delivery" | "delivered";
+
+export interface RegistrationDocument {
+  id: number;
+  sale_id: number | null;
+  motorcycle_id: number;
+  customer_id: number;
+  motorcycle?: Motorcycle;
+  customer?: Customer;
+  plate_number: string;
+  registration_serial: string;
+  notary_name: string;
+  notary_doc_no: string;
+  notary_date: string | null;
+  has_insurance: boolean;
+  status: DocumentStatus;
+  delivered_at: string | null;
+  notes: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface SalesTrend {
   date: string
   sales_count: number
@@ -190,5 +212,19 @@ export const api = {
   deleteSale: (id: number) => request<void>(`/api/sales/${id}`, { method: "DELETE" }),
 
   getDashboardStats: () => request<DashboardStats>("/api/dashboard/stats"),
+
+  getDocuments: (search?: string, status?: string) => {
+    const params = new URLSearchParams()
+    if (search) params.set("search", search)
+    if (status) params.set("status", status)
+    const query = params.toString()
+    return request<RegistrationDocument[]>(`/api/documents${query ? `?${query}` : ""}`)
+  },
+  getDocument: (id: number) => request<RegistrationDocument>(`/api/documents/${id}`),
+  createDocument: (data: Partial<RegistrationDocument>) =>
+    request<RegistrationDocument>("/api/documents", { method: "POST", body: JSON.stringify(data) }),
+  updateDocument: (id: number, data: Partial<RegistrationDocument>) =>
+    request<RegistrationDocument>(`/api/documents/${id}`, { method: "PUT", body: JSON.stringify(data) }),
+  deleteDocument: (id: number) => request<{ message: string }>(`/api/documents/${id}`, { method: "DELETE" }),
 }
 

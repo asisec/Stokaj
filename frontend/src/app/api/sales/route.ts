@@ -52,6 +52,36 @@ export async function POST(req: NextRequest) {
       await sql`INSERT INTO sale_items (sale_id, item_type, item_id, item_name, quantity, unit_price, purchase_price, total_price) VALUES (${sale.id}, ${si.item_type}, ${si.item_id}, ${si.item_name}, ${si.quantity}, 0, 0, 0)`;
       if (si.item_type === "motorcycle") {
         await sql`UPDATE motorcycles SET status='sold', updated_at=NOW() WHERE id=${si.item_id}`;
+        try {
+          await sql`
+            CREATE TABLE IF NOT EXISTS registration_documents (
+              id SERIAL PRIMARY KEY,
+              sale_id INT,
+              motorcycle_id INT NOT NULL,
+              customer_id INT NOT NULL,
+              plate_number VARCHAR(50) DEFAULT '',
+              registration_serial VARCHAR(50) DEFAULT '',
+              notary_name VARCHAR(150) DEFAULT '',
+              notary_doc_no VARCHAR(100) DEFAULT '',
+              notary_date DATE,
+              has_insurance BOOLEAN DEFAULT false,
+              status VARCHAR(30) DEFAULT 'notary_pending',
+              delivered_at TIMESTAMP,
+              notes TEXT DEFAULT '',
+              created_at TIMESTAMP DEFAULT NOW(),
+              updated_at TIMESTAMP DEFAULT NOW()
+            )
+          `;
+          await sql`
+            INSERT INTO registration_documents (
+              sale_id, motorcycle_id, customer_id, status, created_at, updated_at
+            ) VALUES (
+              ${sale.id}, ${si.item_id}, ${body.customer_id}, 'notary_pending', NOW(), NOW()
+            )
+          `;
+        } catch (e) {
+          console.error("Auto document creation failed:", e);
+        }
       } else if (si.item_type === "spare_part") {
         await sql`UPDATE spare_parts SET quantity = quantity - ${si.quantity}, updated_at=NOW() WHERE id=${si.item_id}`;
       }
