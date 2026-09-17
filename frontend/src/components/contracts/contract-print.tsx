@@ -63,7 +63,7 @@ export function printContract(data: ContractData) {
       <style>
         @page {
           size: A4 portrait;
-          margin: 8mm 12mm 8mm 12mm;
+          margin: 6mm 10mm;
         }
         * {
           box-sizing: border-box;
@@ -71,16 +71,15 @@ export function printContract(data: ContractData) {
           print-color-adjust: exact !important;
         }
         html, body {
-          height: 100%;
           margin: 0;
           padding: 0;
+          background: #fff;
         }
         body {
           font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
-          font-size: 10.5px;
-          line-height: 1.35;
+          font-size: 10px;
+          line-height: 1.3;
           color: #1a1a1a;
-          background: #fff;
         }
         .container {
           width: 100%;
@@ -93,27 +92,27 @@ export function printContract(data: ContractData) {
           justify-content: space-between;
           align-items: center;
           border-bottom: 2px solid #0f172a;
-          padding-bottom: 8px;
-          margin-bottom: 10px;
+          padding-bottom: 6px;
+          margin-bottom: 8px;
         }
         .header-left {
           flex: 1;
-          padding-right: 16px;
+          padding-right: 14px;
         }
         .company-title {
-          font-size: 17px;
+          font-size: 16px;
           font-weight: 900;
           letter-spacing: 0.5px;
           color: #0f172a;
           text-transform: uppercase;
-          margin: 0 0 3px 0;
+          margin: 0 0 2px 0;
           line-height: 1.15;
         }
         .company-subtitle {
-          font-size: 10px;
+          font-size: 9.5px;
           color: #475569;
           margin: 0;
-          line-height: 1.35;
+          line-height: 1.3;
         }
         .header-right {
           text-align: right;
@@ -121,25 +120,25 @@ export function printContract(data: ContractData) {
           display: flex;
           flex-direction: column;
           align-items: flex-end;
-          gap: 4px;
+          gap: 3px;
         }
         .doc-badge {
           border: 1.5px solid #0f172a;
           color: #0f172a;
           background: #f8fafc;
-          font-size: 10.5px;
+          font-size: 10px;
           font-weight: 800;
-          padding: 4px 10px;
+          padding: 3px 8px;
           border-radius: 4px;
           display: inline-block;
           letter-spacing: 0.5px;
           text-transform: uppercase;
         }
         .header-meta-box {
-          font-size: 10px;
+          font-size: 9.5px;
           color: #334155;
           text-align: right;
-          line-height: 1.35;
+          line-height: 1.3;
         }
         .header-meta-box span {
           color: #64748b;
@@ -152,28 +151,28 @@ export function printContract(data: ContractData) {
         }
         .grid-2 {
           display: flex;
-          gap: 10px;
-          margin-bottom: 10px;
+          gap: 8px;
+          margin-bottom: 8px;
           align-items: stretch;
           page-break-inside: avoid;
         }
         .card {
           flex: 1 1 50%;
-          width: calc(50% - 5px);
+          width: calc(50% - 4px);
           border: 1px solid #cbd5e1;
           border-radius: 5px;
-          padding: 8px 10px;
+          padding: 6px 8px;
           background: #f8fafc;
           display: flex;
           flex-direction: column;
         }
         .card-title {
-          font-size: 10.5px;
+          font-size: 10px;
           font-weight: 700;
           color: #0f172a;
           border-bottom: 1px solid #e2e8f0;
-          padding-bottom: 4px;
-          margin-bottom: 6px;
+          padding-bottom: 3px;
+          margin-bottom: 4px;
           text-transform: uppercase;
           letter-spacing: 0.3px;
         }
@@ -187,12 +186,12 @@ export function printContract(data: ContractData) {
           vertical-align: top;
         }
         .info-table td {
-          padding: 2px 0;
-          font-size: 10px;
-          line-height: 1.35;
+          padding: 1.5px 0;
+          font-size: 9.5px;
+          line-height: 1.3;
         }
         .info-table td.label-col {
-          width: 105px;
+          width: 95px;
           font-weight: 600;
           color: #475569;
           white-space: nowrap;
@@ -205,60 +204,60 @@ export function printContract(data: ContractData) {
         .id-cards-section {
           border: 1px solid #cbd5e1;
           border-radius: 5px;
-          padding: 8px 10px;
-          margin-bottom: 10px;
+          padding: 6px 8px;
+          margin-bottom: 8px;
           background: #fff;
           page-break-inside: avoid;
         }
         .id-cards-container {
           display: flex;
-          gap: 12px;
+          gap: 10px;
           justify-content: center;
-          margin-top: 6px;
+          margin-top: 4px;
         }
         .id-card-box {
           flex: 1;
           max-width: 48%;
           border: 1px dashed #94a3b8;
           border-radius: 5px;
-          padding: 6px;
+          padding: 4px;
           text-align: center;
           background: #fcfcfc;
         }
         .id-card-box img {
           max-width: 100%;
-          height: 130px;
+          height: 105px;
           object-fit: contain;
           border-radius: 4px;
           border: 1px solid #e2e8f0;
         }
         .id-card-label {
-          font-size: 9.5px;
+          font-size: 9px;
           font-weight: 600;
           color: #64748b;
-          margin-top: 4px;
+          margin-top: 3px;
         }
         .terms-section {
           border: 1px solid #cbd5e1;
           border-radius: 5px;
-          padding: 8px 10px;
-          margin-bottom: 10px;
+          padding: 6px 8px;
+          margin-bottom: 8px;
           background: #fff;
           page-break-inside: avoid;
         }
         .terms-title {
-          font-size: 10.5px;
+          font-size: 10px;
           font-weight: 700;
           color: #0f172a;
           border-bottom: 1px solid #e2e8f0;
-          padding-bottom: 4px;
-          margin-bottom: 6px;
+          padding-bottom: 3px;
+          margin-bottom: 4px;
           text-transform: uppercase;
         }
         .term-item {
-          font-size: 9.5px;
-          line-height: 1.35;
-          margin-bottom: 4px;
+          font-size: 9px;
+          line-height: 1.3;
+          margin-bottom: 3px;
           color: #334155;
           text-align: justify;
         }
@@ -271,74 +270,79 @@ export function printContract(data: ContractData) {
         .handwritten-box {
           border: 1.5px solid #0f172a;
           border-radius: 5px;
-          padding: 8px 10px;
-          margin-bottom: 10px;
+          padding: 6px 8px;
+          margin-bottom: 8px;
           background: #fdfdfd;
           page-break-inside: avoid;
         }
         .handwritten-instruction {
-          font-size: 10px;
+          font-size: 9.5px;
           font-weight: 700;
           color: #0f172a;
-          margin-bottom: 4px;
+          margin-bottom: 2px;
         }
         .handwritten-lines {
           border-bottom: 1px dashed #94a3b8;
-          height: 28px;
-          margin-top: 4px;
+          height: 24px;
+          margin-top: 2px;
         }
         .signatures {
           display: flex;
           justify-content: space-between;
-          gap: 12px;
-          margin-top: 2px;
+          gap: 10px;
+          margin-top: 0px;
           page-break-inside: avoid;
         }
         .sig-block {
           flex: 1 1 50%;
-          width: calc(50% - 6px);
+          width: calc(50% - 5px);
           border: 1px solid #cbd5e1;
           border-radius: 5px;
-          padding: 8px 12px 10px;
+          padding: 6px 10px 8px;
           text-align: center;
           background: #f8fafc;
         }
         .sig-title {
           font-weight: 700;
-          font-size: 10.5px;
+          font-size: 10px;
           color: #0f172a;
           text-transform: uppercase;
           letter-spacing: 0.3px;
-          padding-bottom: 4px;
+          padding-bottom: 3px;
           border-bottom: 1px solid #e2e8f0;
         }
         .sig-name {
-          font-size: 10px;
+          font-size: 9.5px;
           color: #334155;
           font-weight: 600;
-          margin-top: 6px;
-          min-height: 16px;
+          margin-top: 4px;
+          min-height: 14px;
         }
         .sig-space {
-          height: 38px;
+          height: 30px;
         }
         .sig-line {
-          font-size: 9.5px;
+          font-size: 9px;
           color: #64748b;
           border-top: 1px dashed #94a3b8;
-          padding-top: 4px;
+          padding-top: 3px;
           font-weight: 500;
         }
         @media print {
           @page {
             size: A4 portrait;
-            margin: 8mm 12mm 8mm 12mm;
+            margin: 6mm 10mm;
+          }
+          html, body {
+            height: auto;
+            overflow: hidden;
           }
           body {
             print-color-adjust: exact;
             -webkit-print-color-adjust: exact;
           }
           .container {
+            page-break-inside: avoid;
             page-break-after: avoid;
           }
         }
