@@ -302,26 +302,27 @@ export function IdCardEditorModal({
               <Maximize2 className="h-3.5 w-3.5" />
               Tam Görsel
             </Button>
-            <div className="h-4 w-px bg-zinc-700 mx-1 hidden sm:block" />
             <Button
               type="button"
               variant="outline"
               size="sm"
-              onClick={() => handleZoomBox(1.05)}
-              className="h-8 w-8 p-0 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border-zinc-700"
-              title="Çerçeveyi Büyüt (+)"
+              onClick={() => handleZoomBox(1.06)}
+              className="h-8 gap-1 text-xs bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border-zinc-700 px-2.5"
+              title="Çerçeveyi Dışa Doğru Genişlet"
             >
-              <ZoomIn className="h-3.5 w-3.5" />
+              <ZoomIn className="h-3.5 w-3.5 text-blue-400" />
+              Genişlet (+)
             </Button>
             <Button
               type="button"
               variant="outline"
               size="sm"
-              onClick={() => handleZoomBox(0.95)}
-              className="h-8 w-8 p-0 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border-zinc-700"
-              title="Çerçeveyi Küçült (-)"
+              onClick={() => handleZoomBox(0.94)}
+              className="h-8 gap-1 text-xs bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border-zinc-700 px-2.5"
+              title="Çerçeveyi İçe Doğru Daralt"
             >
-              <ZoomOut className="h-3.5 w-3.5" />
+              <ZoomOut className="h-3.5 w-3.5 text-blue-400" />
+              Daralt (-)
             </Button>
             <Button
               type="button"

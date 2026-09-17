@@ -32,7 +32,7 @@ export function detectCardBounds(canvas: HTMLCanvasElement): CropBox {
     return { x: 0, y: 0, width: w, height: h }
   }
 
-  const sampleW = 320
+  const sampleW = 360
   const sampleH = Math.round((sampleW * h) / w)
   const tempCanvas = document.createElement("canvas")
   tempCanvas.width = sampleW
@@ -40,10 +40,10 @@ export function detectCardBounds(canvas: HTMLCanvasElement): CropBox {
   const tCtx = tempCanvas.getContext("2d")
 
   const defaultCrop = () => {
-    let rw = Math.round(w * 0.74)
+    let rw = Math.round(w * 0.76)
     let rh = Math.round(rw / ID_CARD_RATIO)
-    if (rh > h * 0.88) {
-      rh = Math.round(h * 0.85)
+    if (rh > h * 0.90) {
+      rh = Math.round(h * 0.86)
       rw = Math.round(rh * ID_CARD_RATIO)
     }
     const rx = Math.round((w - rw) / 2)
@@ -64,94 +64,117 @@ export function detectCardBounds(canvas: HTMLCanvasElement): CropBox {
   const imgData = tCtx.getImageData(0, 0, sampleW, sampleH)
   const data = imgData.data
 
-  const getLuminance = (x: number, y: number): number => {
+  const getColor = (x: number, y: number) => {
     const px = Math.max(0, Math.min(sampleW - 1, x))
     const py = Math.max(0, Math.min(sampleH - 1, y))
     const idx = (py * sampleW + px) * 4
-    return 0.299 * data[idx] + 0.587 * data[idx + 1] + 0.114 * data[idx + 2]
+    const r = data[idx]
+    const g = data[idx + 1]
+    const b = data[idx + 2]
+    const lum = 0.299 * r + 0.587 * g + 0.114 * b
+    return { r, g, b, lum }
   }
 
-  const rowEnergy = new Float32Array(sampleH)
-  const xStart = Math.floor(sampleW * 0.25)
-  const xEnd = Math.floor(sampleW * 0.75)
+  const getDiff = (p1: { r: number; g: number; b: number; lum: number }, p2: { r: number; g: number; b: number; lum: number }) => {
+    const rgbDiff = (Math.abs(p1.r - p2.r) + Math.abs(p1.g - p2.g) + Math.abs(p1.b - p2.b)) / 3
+    const lumDiff = Math.abs(p1.lum - p2.lum)
+    return Math.max(rgbDiff, lumDiff)
+  }
+
+  const rowDiff = new Float32Array(sampleH)
+  const xStart = Math.floor(sampleW * 0.15)
+  const xEnd = Math.floor(sampleW * 0.85)
+  const countX = Math.max(1, Math.floor((xEnd - xStart) / 2))
+
   for (let y = 3; y < sampleH - 3; y++) {
     let sum = 0
     for (let x = xStart; x < xEnd; x += 2) {
-      const diff1 = Math.abs(getLuminance(x, y + 2) - getLuminance(x, y - 2))
-      const diff2 = Math.abs(getLuminance(x, y + 1) - getLuminance(x, y - 1))
-      sum += diff1 * 0.7 + diff2 * 0.3
+      const p1 = getColor(x, y - 2)
+      const p2 = getColor(x, y + 2)
+      sum += getDiff(p1, p2)
     }
-    rowEnergy[y] = sum
+    rowDiff[y] = sum / countX
   }
 
-  const colEnergy = new Float32Array(sampleW)
-  const yStart = Math.floor(sampleH * 0.25)
-  const yEnd = Math.floor(sampleH * 0.75)
+  const colDiff = new Float32Array(sampleW)
+  const yStart = Math.floor(sampleH * 0.15)
+  const yEnd = Math.floor(sampleH * 0.85)
+  const countY = Math.max(1, Math.floor((yEnd - yStart) / 2))
+
   for (let x = 3; x < sampleW - 3; x++) {
     let sum = 0
     for (let y = yStart; y < yEnd; y += 2) {
-      const diff1 = Math.abs(getLuminance(x + 2, y) - getLuminance(x - 2, y))
-      const diff2 = Math.abs(getLuminance(x + 1, y) - getLuminance(x - 1, y))
-      sum += diff1 * 0.7 + diff2 * 0.3
+      const p1 = getColor(x - 2, y)
+      const p2 = getColor(x + 2, y)
+      sum += getDiff(p1, p2)
     }
-    colEnergy[x] = sum
+    colDiff[x] = sum / countY
   }
 
-  // Baseline edge noise at outer margins
-  let topMarginEnergy = 0
-  for (let y = 1; y < Math.floor(sampleH * 0.08); y++) {
-    topMarginEnergy += rowEnergy[y]
+  let noiseTop = 0
+  let nTopCount = 0
+  for (let y = 2; y < Math.floor(sampleH * 0.08); y++) {
+    noiseTop += rowDiff[y]
+    nTopCount++
   }
-  const baseEnergyTop = topMarginEnergy / Math.max(1, Math.floor(sampleH * 0.08) - 1)
+  const bgNoiseTop = noiseTop / Math.max(1, nTopCount)
 
-  let bottomMarginEnergy = 0
-  for (let y = Math.floor(sampleH * 0.92); y < sampleH - 1; y++) {
-    bottomMarginEnergy += rowEnergy[y]
+  let noiseBottom = 0
+  let nBottomCount = 0
+  for (let y = sampleH - Math.floor(sampleH * 0.08); y < sampleH - 2; y++) {
+    noiseBottom += rowDiff[y]
+    nBottomCount++
   }
-  const baseEnergyBottom = bottomMarginEnergy / Math.max(1, sampleH - 1 - Math.floor(sampleH * 0.92))
+  const bgNoiseBottom = noiseBottom / Math.max(1, nBottomCount)
 
-  let leftMarginEnergy = 0
-  for (let x = 1; x < Math.floor(sampleW * 0.08); x++) {
-    leftMarginEnergy += colEnergy[x]
+  let noiseLeft = 0
+  let nLeftCount = 0
+  for (let x = 2; x < Math.floor(sampleW * 0.08); x++) {
+    noiseLeft += colDiff[x]
+    nLeftCount++
   }
-  const baseEnergyLeft = leftMarginEnergy / Math.max(1, Math.floor(sampleW * 0.08) - 1)
+  const bgNoiseLeft = noiseLeft / Math.max(1, nLeftCount)
 
-  let rightMarginEnergy = 0
-  for (let x = Math.floor(sampleW * 0.92); x < sampleW - 1; x++) {
-    rightMarginEnergy += colEnergy[x]
+  let noiseRight = 0
+  let nRightCount = 0
+  for (let x = sampleW - Math.floor(sampleW * 0.08); x < sampleW - 2; x++) {
+    noiseRight += colDiff[x]
+    nRightCount++
   }
-  const baseEnergyRight = rightMarginEnergy / Math.max(1, sampleW - 1 - Math.floor(sampleW * 0.92))
-
-  const thresholdFactor = 1.75
+  const bgNoiseRight = noiseRight / Math.max(1, nRightCount)
 
   let peakTop = -1
-  for (let y = Math.floor(sampleH * 0.06); y < Math.floor(sampleH * 0.45); y++) {
-    if (rowEnergy[y] > baseEnergyTop * thresholdFactor + 12) {
-      peakTop = Math.max(0, y - 2)
+  const topThreshold = Math.max(6.0, bgNoiseTop * 1.6 + 3.0)
+  for (let y = Math.floor(sampleH * 0.05); y < Math.floor(sampleH * 0.45); y++) {
+    if (rowDiff[y] > topThreshold) {
+      peakTop = Math.max(0, y - 4)
       break
     }
   }
 
   let peakBottom = -1
-  for (let y = sampleH - Math.floor(sampleH * 0.06); y > Math.floor(sampleH * 0.55); y--) {
-    if (rowEnergy[y] > baseEnergyBottom * thresholdFactor + 12) {
-      peakBottom = Math.min(sampleH - 1, y + 2)
+  const bottomThreshold = Math.max(6.0, bgNoiseBottom * 1.6 + 3.0)
+  for (let y = sampleH - Math.floor(sampleH * 0.05); y > Math.floor(sampleH * 0.55); y--) {
+    if (rowDiff[y] > bottomThreshold) {
+      peakBottom = Math.min(sampleH - 1, y + 4)
       break
     }
   }
 
   let peakLeft = -1
-  for (let x = Math.floor(sampleW * 0.06); x < Math.floor(sampleW * 0.45); x++) {
-    if (colEnergy[x] > baseEnergyLeft * thresholdFactor + 12) {
-      peakLeft = Math.max(0, x - 2)
+  const leftThreshold = Math.max(6.0, bgNoiseLeft * 1.6 + 3.0)
+  for (let x = Math.floor(sampleW * 0.05); x < Math.floor(sampleW * 0.45); x++) {
+    if (colDiff[x] > leftThreshold) {
+      peakLeft = Math.max(0, x - 4)
       break
     }
   }
 
   let peakRight = -1
-  for (let x = sampleW - Math.floor(sampleW * 0.06); x > Math.floor(sampleW * 0.55); x--) {
-    if (colEnergy[x] > baseEnergyRight * thresholdFactor + 12) {
-      peakRight = Math.min(sampleW - 1, x + 2)
+  const rightThreshold = Math.max(6.0, bgNoiseRight * 1.6 + 3.0)
+  for (let x = sampleW - Math.floor(sampleW * 0.05); x > Math.floor(sampleW * 0.55); x--) {
+    if (colDiff[x] > rightThreshold) {
+      peakRight = Math.min(sampleW - 1, x + 4)
       break
     }
   }
@@ -159,25 +182,36 @@ export function detectCardBounds(canvas: HTMLCanvasElement): CropBox {
   const scaleX = w / sampleW
   const scaleY = h / sampleH
 
-  let finalTop = peakTop > 0 ? peakTop : Math.floor(sampleH * 0.16)
-  let finalBottom = peakBottom > 0 ? peakBottom : Math.floor(sampleH * 0.84)
-  let finalLeft = peakLeft > 0 ? peakLeft : Math.floor(sampleW * 0.16)
-  let finalRight = peakRight > 0 ? peakRight : Math.floor(sampleW * 0.84)
+  let finalLeft = peakLeft > 0 ? peakLeft : Math.floor(sampleW * 0.14)
+  let finalRight = peakRight > 0 ? peakRight : Math.floor(sampleW * 0.86)
+  let finalTop = peakTop > 0 ? peakTop : Math.floor(sampleH * 0.15)
+  let finalBottom = peakBottom > 0 ? peakBottom : Math.floor(sampleH * 0.85)
 
-  let rx = Math.round(finalLeft * scaleX)
-  let ry = Math.round(finalTop * scaleY)
-  let rw = Math.round((finalRight - finalLeft) * scaleX)
-  let rh = Math.round((finalBottom - finalTop) * scaleY)
+  let pixelWidth = (finalRight - finalLeft) * scaleX
+  let pixelHeight = pixelWidth / ID_CARD_RATIO
 
-  if (rw < w * 0.35 || rh < h * 0.25 || rw > w * 0.98) {
-    return defaultCrop()
+  let pixelCenterY = ((finalTop + finalBottom) / 2) * scaleY
+  let pixelTop = pixelCenterY - pixelHeight / 2
+  let pixelLeft = finalLeft * scaleX
+
+  if (pixelTop < 0) {
+    pixelTop = 0
+  }
+  if (pixelTop + pixelHeight > h) {
+    pixelTop = Math.max(0, h - pixelHeight)
+  }
+  if (pixelLeft < 0) {
+    pixelLeft = 0
+  }
+  if (pixelLeft + pixelWidth > w) {
+    pixelLeft = Math.max(0, w - pixelWidth)
   }
 
   return {
-    x: Math.max(0, rx),
-    y: Math.max(0, ry),
-    width: Math.min(w - rx, rw),
-    height: Math.min(h - ry, rh),
+    x: Math.round(pixelLeft),
+    y: Math.round(pixelTop),
+    width: Math.round(pixelWidth),
+    height: Math.round(pixelHeight),
   }
 }
 
@@ -199,7 +233,7 @@ export function applyDocumentEnhance(
       totalGray += 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2]
     }
     const avgGray = totalGray / len
-    const threshold = Math.max(120, Math.min(175, avgGray * 0.96))
+    const threshold = Math.max(125, Math.min(180, avgGray * 0.98))
 
     for (let i = 0; i < d.length; i += 4) {
       const g = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2]
@@ -211,34 +245,34 @@ export function applyDocumentEnhance(
   } else if (mode === "grayscale") {
     for (let i = 0; i < d.length; i += 4) {
       let g = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2]
-      g = Math.min(255, Math.max(0, 1.4 * (g - 110) + 128))
-      if (g > 180) g = Math.min(255, g + 40)
+      g = Math.min(255, Math.max(0, 1.45 * (g - 110) + 128))
+      if (g > 175) g = Math.min(255, g + 45)
       d[i] = g
       d[i + 1] = g
       d[i + 2] = g
     }
   } else if (mode === "enhanced_color") {
-    const cFactor = 1.5
+    const cFactor = 1.6
     for (let i = 0; i < d.length; i += 4) {
       let r = d[i]
       let g = d[i + 1]
       let b = d[i + 2]
 
-      r = cFactor * (r - 128) + 128 + 20
-      g = cFactor * (g - 128) + 128 + 20
-      b = cFactor * (b - 128) + 128 + 20
+      r = cFactor * (r - 128) + 128 + 25
+      g = cFactor * (g - 128) + 128 + 25
+      b = cFactor * (b - 128) + 128 + 25
 
       const lum = 0.299 * r + 0.587 * g + 0.114 * b
 
-      if (lum > 145) {
-        const whiteLift = Math.min(255, lum + (lum - 145) * 1.25)
-        r = Math.min(255, r * 0.2 + whiteLift * 0.8)
-        g = Math.min(255, g * 0.2 + whiteLift * 0.8)
-        b = Math.min(255, b * 0.2 + whiteLift * 0.8)
-      } else if (lum < 110) {
-        r = Math.max(0, r * 0.75)
-        g = Math.max(0, g * 0.75)
-        b = Math.max(0, b * 0.75)
+      if (lum > 140) {
+        const whiteLift = Math.min(255, lum + (lum - 140) * 1.4)
+        r = Math.min(255, r * 0.15 + whiteLift * 0.85)
+        g = Math.min(255, g * 0.15 + whiteLift * 0.85)
+        b = Math.min(255, b * 0.15 + whiteLift * 0.85)
+      } else if (lum < 115) {
+        r = Math.max(0, r * 0.7)
+        g = Math.max(0, g * 0.7)
+        b = Math.max(0, b * 0.7)
       }
 
       d[i] = Math.min(255, Math.max(0, r))
@@ -257,7 +291,7 @@ export function detectCardBoundsPct(canvas: HTMLCanvasElement): CropPctBox {
   return {
     xPct: Math.max(0, Math.min(90, Math.round((box.x / w) * 1000) / 10)),
     yPct: Math.max(0, Math.min(90, Math.round((box.y / h) * 1000) / 10)),
-    wPct: Math.max(10, Math.min(100, Math.round((box.width / w) * 1000) / 10)),
+    wPct: Math.max(15, Math.min(100, Math.round((box.width / w) * 1000) / 10)),
     hPct: Math.max(10, Math.min(100, Math.round((box.height / h) * 1000) / 10)),
   }
 }
