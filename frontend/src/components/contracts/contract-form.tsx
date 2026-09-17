@@ -14,6 +14,7 @@ import {
   Trash2,
   CheckCircle2,
   HelpCircle,
+  Crop,
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -25,6 +26,7 @@ import { toast } from "sonner"
 import { api, type Customer, type Motorcycle } from "@/lib/api"
 import { processIdCardImage } from "@/lib/image-processing"
 import { printContract, type ContractData } from "./contract-print"
+import { IdCardEditorModal } from "./id-card-editor-modal"
 
 const DEFAULT_COMPANY_KEY = "stokaj_contract_company_info"
 
@@ -68,6 +70,9 @@ export function ContractForm() {
   const [idBackProcessed, setIdBackProcessed] = useState<string | null>(null)
   const [backRotation, setBackRotation] = useState(0)
   const [isProcessingBack, setIsProcessingBack] = useState(false)
+
+  const [editorOpen, setEditorOpen] = useState(false)
+  const [editorTarget, setEditorTarget] = useState<"front" | "back">("front")
 
   const [autoClean, setAutoClean] = useState(true)
   const [specialNotes, setSpecialNotes] = useState("")
@@ -169,8 +174,8 @@ export function ContractForm() {
 
         if (autoClean) {
           const processed = await processIdCardImage(rawUrl, {
-            autoCrop: true,
-            cleanBackground: true,
+            autoDetectBounds: true,
+            filterMode: "enhanced_color",
             rotation: 0,
           })
           setIdFrontProcessed(processed)
@@ -178,7 +183,9 @@ export function ContractForm() {
           setIdFrontProcessed(rawUrl)
         }
         setIsProcessingFront(false)
-        toast.success("Kimlik ön yüzü yüklendi ve işlendi")
+        setEditorTarget("front")
+        setEditorOpen(true)
+        toast.success("Kimlik ön yüzü yüklendi. Kırpma ve temizleme ekranı açıldı.")
       }
       reader.readAsDataURL(file)
     } catch {
@@ -201,8 +208,8 @@ export function ContractForm() {
 
         if (autoClean) {
           const processed = await processIdCardImage(rawUrl, {
-            autoCrop: true,
-            cleanBackground: true,
+            autoDetectBounds: true,
+            filterMode: "enhanced_color",
             rotation: 0,
           })
           setIdBackProcessed(processed)
@@ -210,7 +217,9 @@ export function ContractForm() {
           setIdBackProcessed(rawUrl)
         }
         setIsProcessingBack(false)
-        toast.success("Kimlik arka yüzü yüklendi ve işlendi")
+        setEditorTarget("back")
+        setEditorOpen(true)
+        toast.success("Kimlik arka yüzü yüklendi. Kırpma ve temizleme ekranı açıldı.")
       }
       reader.readAsDataURL(file)
     } catch {
@@ -226,8 +235,8 @@ export function ContractForm() {
     setIsProcessingFront(true)
     try {
       const processed = await processIdCardImage(idFrontRaw, {
-        autoCrop: autoClean,
-        cleanBackground: autoClean,
+        autoDetectBounds: autoClean,
+        filterMode: autoClean ? "enhanced_color" : "original",
         rotation: nextRot,
       })
       setIdFrontProcessed(processed)
@@ -243,8 +252,8 @@ export function ContractForm() {
     setIsProcessingBack(true)
     try {
       const processed = await processIdCardImage(idBackRaw, {
-        autoCrop: autoClean,
-        cleanBackground: autoClean,
+        autoDetectBounds: autoClean,
+        filterMode: autoClean ? "enhanced_color" : "original",
         rotation: nextRot,
       })
       setIdBackProcessed(processed)
@@ -701,6 +710,19 @@ export function ContractForm() {
                     <div className="flex items-center gap-1">
                       <Button
                         type="button"
+                        variant="outline"
+                        size="sm"
+                        className="h-7 text-xs gap-1 border-blue-500/40 text-blue-400 hover:bg-blue-500/10 px-2"
+                        onClick={() => {
+                          setEditorTarget("front")
+                          setEditorOpen(true)
+                        }}
+                      >
+                        <Crop className="h-3.5 w-3.5" />
+                        Kırp & Düzenle
+                      </Button>
+                      <Button
+                        type="button"
                         variant="ghost"
                         size="icon"
                         className="h-7 w-7"
@@ -735,17 +757,32 @@ export function ContractForm() {
                 />
 
                 {idFrontProcessed ? (
-                  <div
-                    className="relative group border border-border rounded-xl overflow-hidden bg-white/5 cursor-pointer flex items-center justify-center p-2"
-                    onClick={() => frontInputRef.current?.click()}
-                  >
-                    <img
-                      src={idFrontProcessed}
-                      alt="Kimlik Ön"
-                      className="w-full h-36 object-contain rounded-lg shadow-sm"
-                    />
-                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-xs text-white font-medium">
-                      Görseli Değiştirmek İçin Tıklayın
+                  <div className="space-y-1.5">
+                    <div
+                      className="relative group border border-border rounded-xl overflow-hidden bg-white/5 cursor-pointer flex items-center justify-center p-2"
+                      onClick={() => frontInputRef.current?.click()}
+                    >
+                      <img
+                        src={idFrontProcessed}
+                        alt="Kimlik Ön"
+                        className="w-full h-36 object-contain rounded-lg shadow-sm"
+                      />
+                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-xs text-white font-medium">
+                        Görseli Değiştirmek İçin Tıklayın
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between text-[11px] text-zinc-400 px-1">
+                      <span>Masa / arka planı temizle:</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditorTarget("front")
+                          setEditorOpen(true)
+                        }}
+                        className="text-blue-400 hover:underline font-semibold"
+                      >
+                        Kırp & Netleştir
+                      </button>
                     </div>
                   </div>
                 ) : (
@@ -772,6 +809,19 @@ export function ContractForm() {
                   <Label className="text-xs font-semibold">Kimlik Arka Yüzü</Label>
                   {idBackProcessed && (
                     <div className="flex items-center gap-1">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="h-7 text-xs gap-1 border-blue-500/40 text-blue-400 hover:bg-blue-500/10 px-2"
+                        onClick={() => {
+                          setEditorTarget("back")
+                          setEditorOpen(true)
+                        }}
+                      >
+                        <Crop className="h-3.5 w-3.5" />
+                        Kırp & Düzenle
+                      </Button>
                       <Button
                         type="button"
                         variant="ghost"
@@ -808,17 +858,32 @@ export function ContractForm() {
                 />
 
                 {idBackProcessed ? (
-                  <div
-                    className="relative group border border-border rounded-xl overflow-hidden bg-white/5 cursor-pointer flex items-center justify-center p-2"
-                    onClick={() => backInputRef.current?.click()}
-                  >
-                    <img
-                      src={idBackProcessed}
-                      alt="Kimlik Arka"
-                      className="w-full h-36 object-contain rounded-lg shadow-sm"
-                    />
-                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-xs text-white font-medium">
-                      Görseli Değiştirmek İçin Tıklayın
+                  <div className="space-y-1.5">
+                    <div
+                      className="relative group border border-border rounded-xl overflow-hidden bg-white/5 cursor-pointer flex items-center justify-center p-2"
+                      onClick={() => backInputRef.current?.click()}
+                    >
+                      <img
+                        src={idBackProcessed}
+                        alt="Kimlik Arka"
+                        className="w-full h-36 object-contain rounded-lg shadow-sm"
+                      />
+                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-xs text-white font-medium">
+                        Görseli Değiştirmek İçin Tıklayın
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between text-[11px] text-zinc-400 px-1">
+                      <span>Masa / arka planı temizle:</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditorTarget("back")
+                          setEditorOpen(true)
+                        }}
+                        className="text-blue-400 hover:underline font-semibold"
+                      >
+                        Kırp & Netleştir
+                      </button>
                     </div>
                   </div>
                 ) : (
@@ -852,6 +917,23 @@ export function ContractForm() {
           </Card>
         </div>
       </div>
+
+      {/* ID CARD EDITOR MODAL */}
+      <IdCardEditorModal
+        open={editorOpen}
+        onOpenChange={setEditorOpen}
+        imageSource={editorTarget === "front" ? idFrontRaw : idBackRaw}
+        cardTitle={editorTarget === "front" ? "Kimlik Ön Yüzü" : "Kimlik Arka Yüzü"}
+        onSave={(processedUrl) => {
+          if (editorTarget === "front") {
+            setIdFrontProcessed(processedUrl)
+            toast.success("Kimlik ön yüzü kırpıldı ve temizlendi")
+          } else {
+            setIdBackProcessed(processedUrl)
+            toast.success("Kimlik arka yüzü kırpıldı ve temizlendi")
+          }
+        }}
+      />
     </div>
   )
 }
