@@ -379,7 +379,7 @@ export function printContract(data: ContractData) {
           <div class="terms-title">SÖZLEŞME VE TESLİMAT ŞARTLARI</div>
           
           <div class="term-item">
-            <strong>1. EKSİKSİZ VE HASARSIZ TESLİMAT:</strong> Alıcı, yukarıda şasi ve motor numarası belirtilen aracı, anahtarları, şarj aletleri (varsa), avadanlıkları ve resmi belgeleri ile birlikte çalışır, eksiksiz, ayıpsız ve hasarsız vaziyette bizzat muayene ederek teslim almıştır.
+            <strong>1. EKSİKSİZ VE HASARSIZ TESLİMAT:</strong> Alıcı, yukarıda şasi ve motor numarası belirtilen aracı, anahtarları, şarj aleti ve resmi belgeleri ile birlikte çalışır, eksiksiz, ayıpsız ve hasarsız vaziyette bizzat muayene ederek teslim almıştır.
           </div>
 
           <div class="term-item">
@@ -387,18 +387,22 @@ export function printContract(data: ContractData) {
           </div>
 
           <div class="term-item">
-            <strong>3. PARÇA KIRILMASI, KAYBOLMASI VE YEDEK PARÇA SİPARİŞİ:</strong> Araç tesliminden sonra alıcı kaynaklı kullanım hataları, kaza, düşme, devrilme, hor kullanım neticesinde kırılan, hasar gören veya kaybolan parçalar (grenaj, şarj aleti, ayna, anahtar, koruma demiri, kumanda vb.) garanti kapsamı dışındadır. Bu tür parça ihtiyaçlarında alıcı, orijinal yedek parça siparişi ve temini amacıyla satıcı firma veya yetkili yedek parça noktası ile iletişime geçerek ücreti mukabilinde tedarik sağlayabileceğini bilir ve kabul eder.
+            <strong>3. NAKLİYE, YERİNDE SERVİS VE ÇEKİCİ SORUMLULUĞU:</strong> Aracın alıcıya ilk teslimatının gerçekleştirilmesinden sonra, satıcı firmanın aracı bulunduğu yerden alma, servise taşıma, nakletme veya tekrar yerine bırakma gibi herhangi bir yükümlülüğü bulunmamaktadır. Olası bakım, onarım veya yerinde yapılacak her türlü servis, nakliye, çekici ve ulaşım masrafları münhasıran alıcıya ve kullanıcıya aittir.
           </div>
 
           <div class="term-item">
-            <strong>4. TRAFİK, İDARİ VE HUKUKİ SORUMLULUK:</strong> Aracın fiilen teslim edildiği tarih ve saatten itibaren araca ait her türlü hukuki, cezai, idari sorumluluk, trafik cezaları, kaza, otoyol geçiş ücretleri ve üçüncü şahıslara verilecek zararlar münhasıran alıcıya aittir.
+            <strong>4. PARÇA KIRILMASI, KAYBOLMASI VE YEDEK PARÇA SİPARİŞİ:</strong> Araç tesliminden sonra alıcı kaynaklı kullanım hataları, kaza, düşme, devrilme, hor kullanım neticesinde kırılan, hasar gören veya kaybolan parçalar (grenaj, şarj aleti, ayna, anahtar, koruma demiri, kumanda vb.) garanti kapsamı dışındadır. Bu tür parça ihtiyaçlarında alıcı, orijinal yedek parça siparişi ve temini amacıyla satıcı firma veya yetkili yedek parça noktası ile iletişime geçerek ücreti mukabilinde tedarik sağlayabileceğini bilir ve kabul eder.
+          </div>
+
+          <div class="term-item">
+            <strong>5. TRAFİK, İDARİ VE HUKUKİ SORUMLULUK:</strong> Aracın fiilen teslim edildiği tarih ve saatten itibaren araca ait her türlü hukuki, cezai, idari sorumluluk, trafik cezaları, kaza, otoyol geçiş ücretleri ve üçüncü şahıslara verilecek zararlar münhasıran alıcıya aittir.
           </div>
 
           ${
             data.specialNotes
               ? `
             <div class="term-item">
-              <strong>5. ÖZEL NOTLAR:</strong> ${data.specialNotes}
+              <strong>6. ÖZEL NOTLAR:</strong> ${data.specialNotes}
             </div>
           `
               : ""

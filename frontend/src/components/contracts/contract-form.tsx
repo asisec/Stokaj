@@ -644,7 +644,7 @@ export function ContractForm() {
                 <p className="flex items-start gap-1.5 text-zinc-300">
                   <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 mt-0.5 shrink-0" />
                   <span>
-                    <strong>Eksiksiz Teslim:</strong> Araç, anahtarları, şarj aletleri ve resmi belgeleri ile eksiksiz teslim alınmıştır.
+                    <strong>Eksiksiz Teslim:</strong> Araç, anahtarları, şarj aleti ve resmi belgeleri ile eksiksiz teslim alınmıştır.
                   </span>
                 </p>
                 <p className="flex items-start gap-1.5 text-zinc-300">
@@ -655,6 +655,12 @@ export function ContractForm() {
                 </p>
                 <p className="flex items-start gap-1.5 text-zinc-300">
                   <CheckCircle2 className="h-3.5 w-3.5 text-amber-400 mt-0.5 shrink-0" />
+                  <span>
+                    <strong>Nakliye & Yerinde Servis:</strong> İlk teslimat sonrasında yerinden alma/bırakma yükümlülüğü yoktur. Nakliye ve yerinde servis giderleri alıcıya aittir.
+                  </span>
+                </p>
+                <p className="flex items-start gap-1.5 text-zinc-300">
+                  <CheckCircle2 className="h-3.5 w-3.5 text-purple-400 mt-0.5 shrink-0" />
                   <span>
                     <strong>Kırılma/Kaybolma ve Parça Siparişi:</strong> Şarj aleti, anahtar veya plastik parça kırılma/kaybolma durumlarında sipariş için satıcı veya yetkili distribütör ile iletişime geçilir.
                   </span>
