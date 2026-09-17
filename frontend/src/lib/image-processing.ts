@@ -5,10 +5,18 @@ export interface CropBox {
   height: number
 }
 
+export interface CropPctBox {
+  xPct: number
+  yPct: number
+  wPct: number
+  hPct: number
+}
+
 export type FilterMode = "enhanced_color" | "photocopy_bw" | "grayscale" | "original"
 
 export interface ProcessImageOptions {
   cropBox?: CropBox
+  cropPct?: CropPctBox
   autoDetectBounds?: boolean
   filterMode?: FilterMode
   rotation?: number
@@ -236,12 +244,25 @@ export function applyDocumentEnhance(
   ctx.putImageData(imgData, 0, 0)
 }
 
+export function detectCardBoundsPct(canvas: HTMLCanvasElement): CropPctBox {
+  const box = detectCardBounds(canvas)
+  const w = canvas.width || 1
+  const h = canvas.height || 1
+  return {
+    xPct: Math.max(0, Math.min(90, Math.round((box.x / w) * 1000) / 10)),
+    yPct: Math.max(0, Math.min(90, Math.round((box.y / h) * 1000) / 10)),
+    wPct: Math.max(10, Math.min(100, Math.round((box.width / w) * 1000) / 10)),
+    hPct: Math.max(10, Math.min(100, Math.round((box.height / h) * 1000) / 10)),
+  }
+}
+
 export function processIdCardImage(
   imageSource: string | File,
   options: ProcessImageOptions = {}
 ): Promise<string> {
   const {
     cropBox,
+    cropPct,
     autoDetectBounds = true,
     filterMode = "enhanced_color",
     rotation = 0,
@@ -269,8 +290,15 @@ export function processIdCardImage(
         rCtx.rotate((rotation * Math.PI) / 180)
         rCtx.drawImage(img, -img.width / 2, -img.height / 2)
 
-        let targetCrop = cropBox
-        if (!targetCrop && autoDetectBounds) {
+        let targetCrop: CropBox | undefined = cropBox
+        if (cropPct) {
+          targetCrop = {
+            x: Math.round((cropPct.xPct / 100) * sw),
+            y: Math.round((cropPct.yPct / 100) * sh),
+            width: Math.round((cropPct.wPct / 100) * sw),
+            height: Math.round((cropPct.hPct / 100) * sh),
+          }
+        } else if (!targetCrop && autoDetectBounds) {
           targetCrop = detectCardBounds(rotatedCanvas)
         }
 

@@ -6,13 +6,13 @@ import {
   Sparkles,
   Check,
   X,
-  Maximize2,
   Scan,
   Lock,
   Unlock,
   ZoomIn,
   ZoomOut,
   CreditCard,
+  Maximize2,
 } from "lucide-react"
 import {
   Dialog,
@@ -24,10 +24,10 @@ import {
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import {
-  detectCardBounds,
+  detectCardBoundsPct,
   processIdCardImage,
   ID_CARD_RATIO,
-  type CropBox,
+  type CropPctBox,
   type FilterMode,
 } from "@/lib/image-processing"
 
@@ -49,232 +49,194 @@ export function IdCardEditorModal({
   const [rotation, setRotation] = useState(0)
   const [filterMode, setFilterMode] = useState<FilterMode>("enhanced_color")
   const [lockRatio, setLockRatio] = useState(true)
-  const [cropBox, setCropBox] = useState<CropBox | null>(null)
-  const [naturalSize, setNaturalSize] = useState<{ w: number; h: number }>({ w: 0, h: 0 })
+  const [cropPct, setCropPct] = useState<CropPctBox>({
+    xPct: 14,
+    yPct: 20,
+    wPct: 72,
+    hPct: 46,
+  })
   const [isProcessing, setIsProcessing] = useState(false)
+  const [imageLoaded, setImageLoaded] = useState(false)
 
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-  const containerRef = useRef<HTMLDivElement>(null)
+  const imageWrapperRef = useRef<HTMLDivElement>(null)
+  const imgRef = useRef<HTMLImageElement>(null)
 
   const [activeDrag, setActiveDrag] = useState<string | null>(null)
-  const dragStartPos = useRef<{ mouseX: number; mouseY: number; box: CropBox }>({
-    mouseX: 0,
-    mouseY: 0,
-    box: { x: 0, y: 0, width: 0, height: 0 },
+  const dragStartPos = useRef<{
+    clientX: number
+    clientY: number
+    box: CropPctBox
+    wrapperWidth: number
+    wrapperHeight: number
+  }>({
+    clientX: 0,
+    clientY: 0,
+    box: { xPct: 14, yPct: 20, wPct: 72, hPct: 46 },
+    wrapperWidth: 1,
+    wrapperHeight: 1,
   })
 
-  const getStandardCrop = (w: number, h: number): CropBox => {
-    let rw = Math.round(w * 0.74)
-    let rh = Math.round(rw / ID_CARD_RATIO)
-    if (rh > h * 0.88) {
-      rh = Math.round(h * 0.84)
-      rw = Math.round(rh * ID_CARD_RATIO)
-    }
-    const rx = Math.round((w - rw) / 2)
-    const ry = Math.round((h - rh) / 2)
-    return {
-      x: Math.max(0, rx),
-      y: Math.max(0, ry),
-      width: Math.min(w - rx, rw),
-      height: Math.min(h - ry, rh),
-    }
-  }
-
   useEffect(() => {
-    if (!open || !imageSource) return
-
+    if (!open) {
+      setImageLoaded(false)
+      return
+    }
     setRotation(0)
     setFilterMode("enhanced_color")
     setLockRatio(true)
-
-    const img = new Image()
-    img.onload = () => {
-      const sw = img.width
-      const sh = img.height
-      setNaturalSize({ w: sw, h: sh })
-
-      const tempCanvas = document.createElement("canvas")
-      tempCanvas.width = sw
-      tempCanvas.height = sh
-      const ctx = tempCanvas.getContext("2d")
-      if (ctx) {
-        ctx.drawImage(img, 0, 0)
-        const detected = detectCardBounds(tempCanvas)
-        setCropBox(detected)
-      } else {
-        setCropBox(getStandardCrop(sw, sh))
-      }
-    }
-    img.src = imageSource
+    setCropPct({
+      xPct: 14,
+      yPct: 20,
+      wPct: 72,
+      hPct: 46,
+    })
   }, [open, imageSource])
 
-  useEffect(() => {
-    if (!open || !imageSource) return
-
-    const canvas = canvasRef.current
-    if (!canvas) return
-    const ctx = canvas.getContext("2d")
-    if (!ctx) return
-
+  const runAutoDetect = () => {
+    if (!imageSource) return
     const img = new Image()
     img.onload = () => {
       const isRotated = rotation % 180 !== 0
       const sw = isRotated ? img.height : img.width
       const sh = isRotated ? img.width : img.height
 
+      const canvas = document.createElement("canvas")
       canvas.width = sw
       canvas.height = sh
-
-      ctx.save()
-      ctx.translate(sw / 2, sh / 2)
-      ctx.rotate((rotation * Math.PI) / 180)
-      ctx.drawImage(img, -img.width / 2, -img.height / 2)
-      ctx.restore()
+      const ctx = canvas.getContext("2d")
+      if (ctx) {
+        ctx.translate(sw / 2, sh / 2)
+        ctx.rotate((rotation * Math.PI) / 180)
+        ctx.drawImage(img, -img.width / 2, -img.height / 2)
+        const pctBox = detectCardBoundsPct(canvas)
+        setCropPct(pctBox)
+      }
     }
     img.src = imageSource
-  }, [open, imageSource, rotation])
+  }
+
+  const onImageLoad = () => {
+    setImageLoaded(true)
+    runAutoDetect()
+  }
 
   const handleRotate = () => {
     const nextRot = (rotation + 90) % 360
     setRotation(nextRot)
-
-    const img = new Image()
-    img.onload = () => {
-      const isRotated = nextRot % 180 !== 0
-      const sw = isRotated ? img.height : img.width
-      const sh = isRotated ? img.width : img.height
-      setNaturalSize({ w: sw, h: sh })
-
-      const tempCanvas = document.createElement("canvas")
-      tempCanvas.width = sw
-      tempCanvas.height = sh
-      const ctx = tempCanvas.getContext("2d")
-      if (ctx) {
-        ctx.translate(sw / 2, sh / 2)
-        ctx.rotate((nextRot * Math.PI) / 180)
-        ctx.drawImage(img, -img.width / 2, -img.height / 2)
-        const detected = detectCardBounds(tempCanvas)
-        setCropBox(detected)
-      } else {
-        setCropBox(getStandardCrop(sw, sh))
-      }
-    }
-    img.src = imageSource!
-  }
-
-  const handleAutoDetect = () => {
-    const canvas = canvasRef.current
-    if (!canvas) return
-    const detected = detectCardBounds(canvas)
-    setCropBox(detected)
+    setTimeout(() => {
+      runAutoDetect()
+    }, 50)
   }
 
   const handleStandardCardCrop = () => {
-    const canvas = canvasRef.current
-    const w = canvas?.width || naturalSize.w
-    const h = canvas?.height || naturalSize.h
-    if (w && h) {
-      setCropBox(getStandardCrop(w, h))
-    }
+    setCropPct({
+      xPct: 14,
+      yPct: 20,
+      wPct: 72,
+      hPct: 46,
+    })
+  }
+
+  const handleFullImage = () => {
+    setCropPct({
+      xPct: 2,
+      yPct: 2,
+      wPct: 96,
+      hPct: 96,
+    })
   }
 
   const handleZoomBox = (factor: number) => {
-    if (!cropBox || !canvasRef.current) return
-    const cw = canvasRef.current.width
-    const ch = canvasRef.current.height
+    const nw = Math.max(15, Math.min(98, cropPct.wPct * factor))
+    const nh = lockRatio ? nw / ID_CARD_RATIO : Math.max(10, Math.min(98, cropPct.hPct * factor))
 
-    const nw = Math.round(cropBox.width * factor)
-    const nh = lockRatio ? Math.round(nw / ID_CARD_RATIO) : Math.round(cropBox.height * factor)
+    const nx = Math.max(0, Math.min(100 - nw, cropPct.xPct - (nw - cropPct.wPct) / 2))
+    const ny = Math.max(0, Math.min(100 - nh, cropPct.yPct - (nh - cropPct.hPct) / 2))
 
-    if (nw < 80 || nh < 50 || nw > cw || nh > ch) return
-
-    const nx = Math.max(0, Math.min(cw - nw, Math.round(cropBox.x - (nw - cropBox.width) / 2)))
-    const ny = Math.max(0, Math.min(ch - nh, Math.round(cropBox.y - (nh - cropBox.height) / 2)))
-
-    setCropBox({
-      x: nx,
-      y: ny,
-      width: nw,
-      height: nh,
+    setCropPct({
+      xPct: Math.round(nx * 10) / 10,
+      yPct: Math.round(ny * 10) / 10,
+      wPct: Math.round(nw * 10) / 10,
+      hPct: Math.round(nh * 10) / 10,
     })
   }
 
   const onMouseDownHandle = (handle: string, e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    if (!cropBox) return
+    if (!imageWrapperRef.current) return
 
+    const rect = imageWrapperRef.current.getBoundingClientRect()
     setActiveDrag(handle)
     dragStartPos.current = {
-      mouseX: e.clientX,
-      mouseY: e.clientY,
-      box: { ...cropBox },
+      clientX: e.clientX,
+      clientY: e.clientY,
+      box: { ...cropPct },
+      wrapperWidth: rect.width || 1,
+      wrapperHeight: rect.height || 1,
     }
   }
 
   const onMouseMove = (e: React.MouseEvent) => {
-    if (!activeDrag || !cropBox || !containerRef.current || !canvasRef.current) return
+    if (!activeDrag || !imageWrapperRef.current) return
 
-    const containerRect = containerRef.current.getBoundingClientRect()
-    const scaleX = canvasRef.current.width / containerRect.width
-    const scaleY = canvasRef.current.height / containerRect.height
+    const { clientX, clientY, box, wrapperWidth, wrapperHeight } = dragStartPos.current
+    const deltaXPct = ((e.clientX - clientX) / wrapperWidth) * 100
+    const deltaYPct = ((e.clientY - clientY) / wrapperHeight) * 100
 
-    const deltaX = (e.clientX - dragStartPos.current.mouseX) * scaleX
-    const deltaY = (e.clientY - dragStartPos.current.mouseY) * scaleY
-
-    const orig = dragStartPos.current.box
-    let { x, y, width, height } = orig
-    const minW = 60
-    const minH = 40
+    let { xPct, yPct, wPct, hPct } = box
+    const minW = 15
+    const minH = 10
 
     if (activeDrag === "move") {
-      x = Math.max(0, Math.min(canvasRef.current.width - width, orig.x + deltaX))
-      y = Math.max(0, Math.min(canvasRef.current.height - height, orig.y + deltaY))
+      xPct = Math.max(0, Math.min(100 - wPct, box.xPct + deltaXPct))
+      yPct = Math.max(0, Math.min(100 - hPct, box.yPct + deltaYPct))
     } else if (lockRatio) {
-      if (activeDrag.includes("e") || activeDrag.includes("s")) {
-        const targetW = Math.max(minW, Math.min(canvasRef.current.width - orig.x, orig.width + deltaX))
-        width = targetW
-        height = Math.round(targetW / ID_CARD_RATIO)
-        if (orig.y + height > canvasRef.current.height) {
-          height = canvasRef.current.height - orig.y
-          width = Math.round(height * ID_CARD_RATIO)
-        }
-      } else if (activeDrag.includes("w") || activeDrag.includes("n")) {
-        const targetW = Math.max(minW, orig.width - deltaX)
-        const targetH = Math.round(targetW / ID_CARD_RATIO)
-        const newX = orig.x + orig.width - targetW
-        const newY = orig.y + orig.height - targetH
-        if (newX >= 0 && newY >= 0) {
-          x = newX
-          y = newY
-          width = targetW
-          height = targetH
-        }
+      if (activeDrag === "se") {
+        wPct = Math.max(minW, Math.min(100 - box.xPct, box.wPct + deltaXPct))
+        hPct = Math.max(minH, Math.min(100 - box.yPct, wPct / ID_CARD_RATIO))
+      } else if (activeDrag === "sw") {
+        const targetW = Math.max(minW, Math.min(box.xPct + box.wPct, box.wPct - deltaXPct))
+        xPct = box.xPct + box.wPct - targetW
+        wPct = targetW
+        hPct = Math.max(minH, Math.min(100 - box.yPct, wPct / ID_CARD_RATIO))
+      } else if (activeDrag === "ne") {
+        wPct = Math.max(minW, Math.min(100 - box.xPct, box.wPct + deltaXPct))
+        const targetH = Math.max(minH, wPct / ID_CARD_RATIO)
+        yPct = Math.max(0, box.yPct + box.hPct - targetH)
+        hPct = targetH
+      } else if (activeDrag === "nw") {
+        const targetW = Math.max(minW, Math.min(box.xPct + box.wPct, box.wPct - deltaXPct))
+        const targetH = Math.max(minH, targetW / ID_CARD_RATIO)
+        xPct = Math.max(0, box.xPct + box.wPct - targetW)
+        yPct = Math.max(0, box.yPct + box.hPct - targetH)
+        wPct = targetW
+        hPct = targetH
       }
     } else {
       if (activeDrag.includes("w")) {
-        const newX = Math.max(0, Math.min(orig.x + orig.width - minW, orig.x + deltaX))
-        width = orig.width + (orig.x - newX)
-        x = newX
+        const newX = Math.max(0, Math.min(box.xPct + box.wPct - minW, box.xPct + deltaXPct))
+        wPct = box.wPct + (box.xPct - newX)
+        xPct = newX
       }
       if (activeDrag.includes("e")) {
-        width = Math.max(minW, Math.min(canvasRef.current.width - orig.x, orig.width + deltaX))
+        wPct = Math.max(minW, Math.min(100 - box.xPct, box.wPct + deltaXPct))
       }
       if (activeDrag.includes("n")) {
-        const newY = Math.max(0, Math.min(orig.y + orig.height - minH, orig.y + deltaY))
-        height = orig.height + (orig.y - newY)
-        y = newY
+        const newY = Math.max(0, Math.min(box.yPct + box.hPct - minH, box.yPct + deltaYPct))
+        hPct = box.hPct + (box.yPct - newY)
+        yPct = newY
       }
       if (activeDrag.includes("s")) {
-        height = Math.max(minH, Math.min(canvasRef.current.height - orig.y, orig.height + deltaY))
+        hPct = Math.max(minH, Math.min(100 - box.yPct, box.hPct + deltaYPct))
       }
     }
 
-    setCropBox({
-      x: Math.round(x),
-      y: Math.round(y),
-      width: Math.round(width),
-      height: Math.round(height),
+    setCropPct({
+      xPct: Math.round(xPct * 10) / 10,
+      yPct: Math.round(yPct * 10) / 10,
+      wPct: Math.round(wPct * 10) / 10,
+      hPct: Math.round(hPct * 10) / 10,
     })
   }
 
@@ -288,8 +250,7 @@ export function IdCardEditorModal({
 
     try {
       const processed = await processIdCardImage(imageSource, {
-        cropBox: cropBox || undefined,
-        autoDetectBounds: !cropBox,
+        cropPct,
         filterMode,
         rotation,
       })
@@ -300,18 +261,6 @@ export function IdCardEditorModal({
       setIsProcessing(false)
     }
   }
-
-  const canvasWidth = canvasRef.current?.width || naturalSize.w || 1
-  const canvasHeight = canvasRef.current?.height || naturalSize.h || 1
-
-  const cropPct = cropBox
-    ? {
-        left: `${(cropBox.x / canvasWidth) * 100}%`,
-        top: `${(cropBox.y / canvasHeight) * 100}%`,
-        width: `${(cropBox.width / canvasWidth) * 100}%`,
-        height: `${(cropBox.height / canvasHeight) * 100}%`,
-      }
-    : { left: "12%", top: "20%", width: "76%", height: "60%" }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -335,7 +284,7 @@ export function IdCardEditorModal({
               type="button"
               variant="default"
               size="sm"
-              onClick={handleAutoDetect}
+              onClick={runAutoDetect}
               className="h-8 gap-1.5 text-xs bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-sm"
               title="Kenar algılama ile kartı otomatik seç"
             >
@@ -352,6 +301,17 @@ export function IdCardEditorModal({
             >
               <CreditCard className="h-3.5 w-3.5 text-blue-400" />
               Standart Kimlik Boyutu
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={handleFullImage}
+              className="h-8 gap-1 text-xs text-zinc-400 hover:text-zinc-200"
+              title="Tüm görseli seç"
+            >
+              <Maximize2 className="h-3.5 w-3.5" />
+              Tam Görsel
             </Button>
             <div className="h-4 w-px bg-zinc-700 mx-1 hidden sm:block" />
             <Button
@@ -447,94 +407,115 @@ export function IdCardEditorModal({
 
         {/* CROP WORKSPACE */}
         <div
-          ref={containerRef}
           onMouseMove={onMouseMove}
           onMouseUp={onMouseUp}
           onMouseLeave={onMouseUp}
-          className="relative flex-1 min-h-[380px] max-h-[60vh] bg-zinc-950 rounded-xl overflow-hidden flex items-center justify-center select-none border border-zinc-800 my-2 shadow-inner"
+          className="relative flex-1 min-h-[380px] max-h-[62vh] bg-zinc-950 rounded-xl overflow-hidden flex items-center justify-center p-3 select-none border border-zinc-800 my-2 shadow-inner"
         >
-          <canvas
-            ref={canvasRef}
-            className="max-w-full max-h-[58vh] object-contain block pointer-events-none"
-          />
-
-          {/* CROP OVERLAY */}
-          {cropBox && (
+          {imageSource ? (
             <div
-              style={{
-                position: "absolute",
-                left: cropPct.left,
-                top: cropPct.top,
-                width: cropPct.width,
-                height: cropPct.height,
-              }}
-              className="border-[2.5px] border-blue-400 bg-blue-500/10 shadow-[0_0_0_9999px_rgba(0,0,0,0.72)] cursor-move transition-shadow"
-              onMouseDown={(e) => onMouseDownHandle("move", e)}
+              ref={imageWrapperRef}
+              className="relative inline-block select-none shadow-2xl rounded"
+              style={{ lineHeight: 0 }}
             >
-              {/* CORNER BRACKETS (HIGH-VISIBILITY VIEWFINDER) */}
-              <div className="absolute top-0 left-0 w-4 h-4 border-t-4 border-l-4 border-white pointer-events-none" />
-              <div className="absolute top-0 right-0 w-4 h-4 border-t-4 border-r-4 border-white pointer-events-none" />
-              <div className="absolute bottom-0 left-0 w-4 h-4 border-b-4 border-l-4 border-white pointer-events-none" />
-              <div className="absolute bottom-0 right-0 w-4 h-4 border-b-4 border-r-4 border-white pointer-events-none" />
-
-              {/* CORNER DRAG HANDLES (BIGGER & EASIER TO GRAB) */}
-              <div
-                className="absolute -top-3.5 -left-3.5 w-7 h-7 bg-blue-500 border-2 border-white rounded-full cursor-nwse-resize shadow-lg flex items-center justify-center hover:scale-110 transition-transform"
-                onMouseDown={(e) => onMouseDownHandle("nw", e)}
-              >
-                <div className="w-1.5 h-1.5 bg-white rounded-full" />
-              </div>
-              <div
-                className="absolute -top-3.5 -right-3.5 w-7 h-7 bg-blue-500 border-2 border-white rounded-full cursor-nesw-resize shadow-lg flex items-center justify-center hover:scale-110 transition-transform"
-                onMouseDown={(e) => onMouseDownHandle("ne", e)}
-              >
-                <div className="w-1.5 h-1.5 bg-white rounded-full" />
-              </div>
-              <div
-                className="absolute -bottom-3.5 -left-3.5 w-7 h-7 bg-blue-500 border-2 border-white rounded-full cursor-nesw-resize shadow-lg flex items-center justify-center hover:scale-110 transition-transform"
-                onMouseDown={(e) => onMouseDownHandle("sw", e)}
-              >
-                <div className="w-1.5 h-1.5 bg-white rounded-full" />
-              </div>
-              <div
-                className="absolute -bottom-3.5 -right-3.5 w-7 h-7 bg-blue-500 border-2 border-white rounded-full cursor-nwse-resize shadow-lg flex items-center justify-center hover:scale-110 transition-transform"
-                onMouseDown={(e) => onMouseDownHandle("se", e)}
-              >
-                <div className="w-1.5 h-1.5 bg-white rounded-full" />
-              </div>
-
-              {/* EDGE HANDLES */}
-              <div
-                className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-2.5 bg-blue-500 border border-white rounded-full cursor-ns-resize shadow"
-                onMouseDown={(e) => onMouseDownHandle("n", e)}
-              />
-              <div
-                className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 w-8 h-2.5 bg-blue-500 border border-white rounded-full cursor-ns-resize shadow"
-                onMouseDown={(e) => onMouseDownHandle("s", e)}
-              />
-              <div
-                className="absolute left-0 top-1/2 -translate-x-1/2 -translate-y-1/2 w-2.5 h-8 bg-blue-500 border border-white rounded-full cursor-ew-resize shadow"
-                onMouseDown={(e) => onMouseDownHandle("w", e)}
-              />
-              <div
-                className="absolute right-0 top-1/2 translate-x-1/2 -translate-y-1/2 w-2.5 h-8 bg-blue-500 border border-white rounded-full cursor-ew-resize shadow"
-                onMouseDown={(e) => onMouseDownHandle("e", e)}
+              {/* IMAGE (ALWAYS VISIBLE, NO CANVAS GLITCHES) */}
+              <img
+                ref={imgRef}
+                src={imageSource}
+                alt={cardTitle}
+                style={{
+                  transform: `rotate(${rotation}deg)`,
+                  maxHeight: "56vh",
+                  maxWidth: "100%",
+                  objectFit: "contain",
+                }}
+                className="block pointer-events-none rounded"
+                onLoad={onImageLoad}
               />
 
-              {/* CENTER BADGE */}
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <span className="bg-blue-900/80 text-blue-200 text-[11px] font-semibold px-2.5 py-1 rounded-md backdrop-blur-sm border border-blue-400/40 shadow-sm flex items-center gap-1.5">
-                  <CreditCard className="h-3.5 w-3.5" />
-                  Kimlik Sınırı
-                </span>
+              {/* CROP OVERLAY (POSITIONED ACCURATELY OVER THE IMAGE) */}
+              <div
+                style={{
+                  position: "absolute",
+                  left: `${cropPct.xPct}%`,
+                  top: `${cropPct.yPct}%`,
+                  width: `${cropPct.wPct}%`,
+                  height: `${cropPct.hPct}%`,
+                }}
+                className="border-[2.5px] border-blue-400 bg-blue-500/15 shadow-[0_0_0_9999px_rgba(0,0,0,0.72)] cursor-move transition-shadow"
+                onMouseDown={(e) => onMouseDownHandle("move", e)}
+              >
+                {/* CORNER BRACKETS */}
+                <div className="absolute top-0 left-0 w-4 h-4 border-t-4 border-l-4 border-white pointer-events-none" />
+                <div className="absolute top-0 right-0 w-4 h-4 border-t-4 border-r-4 border-white pointer-events-none" />
+                <div className="absolute bottom-0 left-0 w-4 h-4 border-b-4 border-l-4 border-white pointer-events-none" />
+                <div className="absolute bottom-0 right-0 w-4 h-4 border-b-4 border-r-4 border-white pointer-events-none" />
+
+                {/* CORNER HANDLES */}
+                <div
+                  className="absolute -top-3.5 -left-3.5 w-7 h-7 bg-blue-500 border-2 border-white rounded-full cursor-nwse-resize shadow-lg flex items-center justify-center hover:scale-110 transition-transform"
+                  onMouseDown={(e) => onMouseDownHandle("nw", e)}
+                >
+                  <div className="w-1.5 h-1.5 bg-white rounded-full" />
+                </div>
+                <div
+                  className="absolute -top-3.5 -right-3.5 w-7 h-7 bg-blue-500 border-2 border-white rounded-full cursor-nesw-resize shadow-lg flex items-center justify-center hover:scale-110 transition-transform"
+                  onMouseDown={(e) => onMouseDownHandle("ne", e)}
+                >
+                  <div className="w-1.5 h-1.5 bg-white rounded-full" />
+                </div>
+                <div
+                  className="absolute -bottom-3.5 -left-3.5 w-7 h-7 bg-blue-500 border-2 border-white rounded-full cursor-nesw-resize shadow-lg flex items-center justify-center hover:scale-110 transition-transform"
+                  onMouseDown={(e) => onMouseDownHandle("sw", e)}
+                >
+                  <div className="w-1.5 h-1.5 bg-white rounded-full" />
+                </div>
+                <div
+                  className="absolute -bottom-3.5 -right-3.5 w-7 h-7 bg-blue-500 border-2 border-white rounded-full cursor-nwse-resize shadow-lg flex items-center justify-center hover:scale-110 transition-transform"
+                  onMouseDown={(e) => onMouseDownHandle("se", e)}
+                >
+                  <div className="w-1.5 h-1.5 bg-white rounded-full" />
+                </div>
+
+                {/* EDGE HANDLES (WHEN FREE RATIO) */}
+                {!lockRatio && (
+                  <>
+                    <div
+                      className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-2.5 bg-blue-500 border border-white rounded-full cursor-ns-resize shadow"
+                      onMouseDown={(e) => onMouseDownHandle("n", e)}
+                    />
+                    <div
+                      className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 w-8 h-2.5 bg-blue-500 border border-white rounded-full cursor-ns-resize shadow"
+                      onMouseDown={(e) => onMouseDownHandle("s", e)}
+                    />
+                    <div
+                      className="absolute left-0 top-1/2 -translate-x-1/2 -translate-y-1/2 w-2.5 h-8 bg-blue-500 border border-white rounded-full cursor-ew-resize shadow"
+                      onMouseDown={(e) => onMouseDownHandle("w", e)}
+                    />
+                    <div
+                      className="absolute right-0 top-1/2 translate-x-1/2 -translate-y-1/2 w-2.5 h-8 bg-blue-500 border border-white rounded-full cursor-ew-resize shadow"
+                      onMouseDown={(e) => onMouseDownHandle("e", e)}
+                    />
+                  </>
+                )}
+
+                {/* CENTER BADGE */}
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <span className="bg-blue-900/80 text-blue-200 text-[11px] font-semibold px-2.5 py-1 rounded-md backdrop-blur-sm border border-blue-400/40 shadow-sm flex items-center gap-1.5">
+                    <CreditCard className="h-3.5 w-3.5" />
+                    Kimlik Sınırı
+                  </span>
+                </div>
               </div>
             </div>
+          ) : (
+            <div className="text-sm text-zinc-500">Görsel yüklenmedi</div>
           )}
         </div>
 
         <DialogFooter className="flex flex-col sm:flex-row items-center justify-between gap-3 w-full pt-2">
           <div className="text-xs text-zinc-400 text-center sm:text-left">
-            💡 İpucu: Mavi kutunun ortasından tutarak taşıyabilir, köşelerindeki yuvarlaklardan çekerek kartın tam üstüne oturtabilirsiniz.
+            💡 İpucu: Mavi çerçevenin ortasından tutarak sürükleyebilir, köşelerindeki yuvarlaklardan çekerek kartın tam üstüne oturtabilirsiniz.
           </div>
           <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
             <Button
