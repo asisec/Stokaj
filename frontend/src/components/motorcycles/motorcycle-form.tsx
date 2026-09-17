@@ -31,7 +31,6 @@ const initialFormState = {
   model: "",
   year: new Date().getFullYear(),
   color: "",
-  purchase_price: 0,
   is_other_branch: false,
   branch_name: "",
 };
@@ -58,7 +57,6 @@ export function MotorcycleForm({
         model: motorcycle.model,
         year: motorcycle.year,
         color: motorcycle.color,
-        purchase_price: motorcycle.purchase_price,
         is_other_branch: motorcycle.is_other_branch || false,
         branch_name: motorcycle.branch_name || "",
       });
@@ -329,21 +327,7 @@ export function MotorcycleForm({
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label
-              htmlFor="purchase_price"
-              className="text-zinc-400 text-sm"
-            >
-              Alış Fiyatı (₺)
-            </Label>
-            <CurrencyInput
-              id="purchase_price"
-              value={formData.purchase_price}
-              onChange={(val) => handleChange("purchase_price", val)}
-              className="bg-zinc-900/50 border-zinc-800 text-zinc-200 focus:border-blue-500/50 transition-colors"
-              required
-            />
-          </div>
+
 
           <div className="flex justify-end gap-3 pt-4">
             <Button

@@ -36,6 +36,8 @@ export async function DELETE(req: NextRequest, { params }: P) {
       for (const item of sale.items) {
         if (item.item_type === "motorcycle") {
           await sql`UPDATE motorcycles SET status='available', sale_price=0, updated_at=NOW() WHERE id=${item.item_id}`;
+        } else if (item.item_type === "spare_part") {
+          await sql`UPDATE spare_parts SET quantity = quantity + ${item.quantity}, updated_at=NOW() WHERE id=${item.item_id}`;
         }
       }
     }

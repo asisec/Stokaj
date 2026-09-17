@@ -85,10 +85,6 @@ export function MotorcycleTable({
     color: "",
     status: "all",
     location: "all",
-    minPurchasePrice: "",
-    maxPurchasePrice: "",
-    minSalePrice: "",
-    maxSalePrice: "",
   });
 
   const handleFilterChange = (key: keyof typeof filters, value: string) => {
@@ -105,10 +101,6 @@ export function MotorcycleTable({
       color: "",
       status: "all",
       location: "all",
-      minPurchasePrice: "",
-      maxPurchasePrice: "",
-      minSalePrice: "",
-      maxSalePrice: "",
     });
   };
 
@@ -143,11 +135,7 @@ export function MotorcycleTable({
     if (filters.year) data = data.filter(m => m.year.toString() === filters.year);
     if (filters.color) data = data.filter(m => m.color.toLowerCase().includes(filters.color.toLowerCase()));
     
-    if (filters.minPurchasePrice) data = data.filter(m => m.purchase_price >= Number(filters.minPurchasePrice));
-    if (filters.maxPurchasePrice) data = data.filter(m => m.purchase_price <= Number(filters.maxPurchasePrice));
     
-    if (filters.minSalePrice) data = data.filter(m => m.sale_price >= Number(filters.minSalePrice));
-    if (filters.maxSalePrice) data = data.filter(m => m.sale_price <= Number(filters.maxSalePrice));
 
     if (filters.global) {
       const query = filters.global.toLowerCase();
@@ -161,8 +149,6 @@ export function MotorcycleTable({
           m.model.toLowerCase().includes(query) ||
           m.year.toString().includes(query) ||
           m.color.toLowerCase().includes(query) ||
-          m.purchase_price.toString().includes(query) ||
-          m.sale_price.toString().includes(query) ||
           statusText.includes(query) ||
           locationText.includes(query)
         );
@@ -249,42 +235,7 @@ export function MotorcycleTable({
           <span className="text-zinc-400">{row.getValue("color")}</span>
         ),
       },
-      {
-        accessorKey: "purchase_price",
-        header: ({ column }) => (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="text-zinc-400 hover:text-zinc-200 -ml-4"
-          >
-            Alış Fiyatı
-            <ArrowUpDown className="ml-2 h-3.5 w-3.5" />
-          </Button>
-        ),
-        cell: ({ row }) => (
-          <span className="text-zinc-400 tabular-nums">
-            {isCensored ? "****" : formatCurrency(row.getValue("purchase_price"))}
-          </span>
-        ),
-      },
-      {
-        accessorKey: "sale_price",
-        header: ({ column }) => (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="text-zinc-400 hover:text-zinc-200 -ml-4"
-          >
-            Satış Fiyatı
-            <ArrowUpDown className="ml-2 h-3.5 w-3.5" />
-          </Button>
-        ),
-        cell: ({ row }) => (
-          <span className="text-zinc-200 font-semibold tabular-nums">
-            {row.getValue("status") === "sold" ? (isCensored ? "****" : formatCurrency(row.getValue("sale_price"))) : "-"}
-          </span>
-        ),
-      },
+
       {
         accessorKey: "status",
         header: () => <span className="text-zinc-400">Durum</span>,
@@ -444,7 +395,7 @@ export function MotorcycleTable({
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
           <Input
-            placeholder="Tüm tablodaki verilerde ara (Şasi, Marka, Model, Yıl, Renk, Fiyat, Durum, Konum)..."
+            placeholder="Tüm tablodaki verilerde ara (Şasi, Marka, Model, Yıl, Renk, Durum, Konum)..."
             value={filters.global}
             onChange={(e) => handleFilterChange("global", e.target.value)}
             className="pl-10 bg-zinc-900/50 border-zinc-800 text-zinc-200 placeholder:text-zinc-600 focus:border-zinc-600 transition-colors"
@@ -538,27 +489,7 @@ export function MotorcycleTable({
                   <Input placeholder="Örn: Kırmızı" value={filters.color} onChange={(e) => handleFilterChange("color", e.target.value)} className="bg-zinc-900/50 border-zinc-800/80 text-zinc-200 h-10 placeholder:text-zinc-600 hover:border-zinc-700 focus:border-blue-500 focus-visible:ring-1 focus-visible:ring-blue-500 focus-visible:ring-offset-0 transition-all rounded-xl" />
                 </div>
 
-                <div className="col-span-2 my-2">
-                  <div className="h-px w-full bg-gradient-to-r from-zinc-800/0 via-zinc-800 to-zinc-800/0" />
-                </div>
 
-                <div className="space-y-2">
-                  <Label className="text-zinc-400 text-xs font-medium uppercase tracking-wider">Min Alış Fiyatı (₺)</Label>
-                  <Input type="number" placeholder="0" value={filters.minPurchasePrice} onChange={(e) => handleFilterChange("minPurchasePrice", e.target.value)} className="bg-zinc-900/50 border-zinc-800/80 text-zinc-200 h-10 placeholder:text-zinc-600 hover:border-zinc-700 focus:border-blue-500 focus-visible:ring-1 focus-visible:ring-blue-500 focus-visible:ring-offset-0 transition-all rounded-xl" />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-zinc-400 text-xs font-medium uppercase tracking-wider">Max Alış Fiyatı (₺)</Label>
-                  <Input type="number" placeholder="Sınırsız" value={filters.maxPurchasePrice} onChange={(e) => handleFilterChange("maxPurchasePrice", e.target.value)} className="bg-zinc-900/50 border-zinc-800/80 text-zinc-200 h-10 placeholder:text-zinc-600 hover:border-zinc-700 focus:border-blue-500 focus-visible:ring-1 focus-visible:ring-blue-500 focus-visible:ring-offset-0 transition-all rounded-xl" />
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="text-zinc-400 text-xs font-medium uppercase tracking-wider">Min Satış Fiyatı (₺)</Label>
-                  <Input type="number" placeholder="0" value={filters.minSalePrice} onChange={(e) => handleFilterChange("minSalePrice", e.target.value)} className="bg-zinc-900/50 border-zinc-800/80 text-zinc-200 h-10 placeholder:text-zinc-600 hover:border-zinc-700 focus:border-blue-500 focus-visible:ring-1 focus-visible:ring-blue-500 focus-visible:ring-offset-0 transition-all rounded-xl" />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-zinc-400 text-xs font-medium uppercase tracking-wider">Max Satış Fiyatı (₺)</Label>
-                  <Input type="number" placeholder="Sınırsız" value={filters.maxSalePrice} onChange={(e) => handleFilterChange("maxSalePrice", e.target.value)} className="bg-zinc-900/50 border-zinc-800/80 text-zinc-200 h-10 placeholder:text-zinc-600 hover:border-zinc-700 focus:border-blue-500 focus-visible:ring-1 focus-visible:ring-blue-500 focus-visible:ring-offset-0 transition-all rounded-xl" />
-                </div>
               </div>
             </div>
           </PopoverContent>

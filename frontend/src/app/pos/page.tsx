@@ -49,31 +49,9 @@ interface CartItem {
   item_id: number;
   item_name: string;
   quantity: number;
-  unit_price: number;
   max_quantity?: number; // Only for spare parts to limit input
 }
 
-interface PaymentLine {
-  id: number;
-  method: string;
-  amount: string;
-  installments?: number;
-}
-
-const paymentMethods = [
-  { value: "cash", label: "Nakit", icon: Banknote },
-  { value: "credit_card", label: "Kredi Kartı", icon: CreditCard },
-  { value: "bank_transfer", label: "Havale / EFT", icon: Building2 },
-  { value: "open_account", label: "Açık Hesap", icon: BookOpen },
-];
-
-const installmentOptions = [0, 2, 3, 4, 6, 9, 12];
-
-const methodLabel = (value: string) =>
-  paymentMethods.find((m) => m.value === value)?.label ?? value;
-
-const formatCurrency = (value: number) =>
-  new Intl.NumberFormat("tr-TR", { style: "currency", currency: "TRY" }).format(value);
 
 export default function POSPage() {
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -81,14 +59,10 @@ export default function POSPage() {
   const [spareParts, setSpareParts] = useState<SparePart[]>([]);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [cart, setCart] = useState<CartItem[]>([]);
-  const [paymentLines, setPaymentLines] = useState<PaymentLine[]>([
-    { id: 1, method: "cash", amount: "" },
-  ]);
   const [customerSearch, setCustomerSearch] = useState("");
   const [productSearch, setProductSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [customPrices, setCustomPrices] = useState<Record<string, string>>({});
   const [sparePartQuantities, setSparePartQuantities] = useState<Record<number, number>>({});
   const [nextId, setNextId] = useState(2);
   const [activeTab, setActiveTab] = useState<"motorcycles" | "spare_parts">("motorcycles");
@@ -152,37 +126,12 @@ export default function POSPage() {
     );
   }, [spareParts, productSearch]);
 
-  const cartTotal = useMemo(
-    () => cart.reduce((sum, item) => sum + item.unit_price * item.quantity, 0),
-    [cart]
-  );
-
-  const paidTotal = useMemo(
-    () =>
-      paymentLines.reduce((sum, line) => {
-        const val = parseFloat(line.amount);
-        return sum + (isNaN(val) ? 0 : val);
-      }, 0),
-    [paymentLines]
-  );
-
-  const remaining = cartTotal - paidTotal;
-
-  const getCustomPriceKey = (type: string, id: number) => `${type}_${id}`;
-
   const addMotorcycleToCart = (motorcycle: Motorcycle) => {
     const existing = cart.find(
       (item) => item.item_type === "motorcycle" && item.item_id === motorcycle.id
     );
     if (existing) {
       toast.error("Bu motosiklet zaten sepette");
-      return;
-    }
-    const priceKey = getCustomPriceKey("motorcycle", motorcycle.id);
-    const priceStr = customPrices[priceKey];
-    const price = priceStr ? parseFloat(priceStr) : 0;
-    if (!price || price <= 0) {
-      toast.error("Lütfen önce satış fiyatını girin");
       return;
     }
     setCart((prev) => [
@@ -192,7 +141,6 @@ export default function POSPage() {
         item_id: motorcycle.id,
         item_name: `${motorcycle.brand} ${motorcycle.model} (${motorcycle.year})`,
         quantity: 1,
-        unit_price: price,
       },
     ]);
     toast.success("Motosiklet sepete eklendi");
@@ -202,14 +150,6 @@ export default function POSPage() {
     const quantity = sparePartQuantities[sparePart.id] || 1;
     if (quantity > sparePart.quantity) {
       toast.error("Yeterli stok bulunmuyor");
-      return;
-    }
-
-    const priceKey = getCustomPriceKey("spare_part", sparePart.id);
-    const priceStr = customPrices[priceKey];
-    const price = priceStr ? parseFloat(priceStr) : 0;
-    if (!price || price <= 0) {
-      toast.error("Lütfen önce satış fiyatını girin");
       return;
     }
 
@@ -225,8 +165,6 @@ export default function POSPage() {
           return prev;
         }
         newCart[existingIdx].quantity = newTotalQty;
-        // Optionally update unit price to latest entered
-        newCart[existingIdx].unit_price = price;
         toast.success("Yedek parça miktarı güncellendi");
         return newCart;
       }
@@ -239,8 +177,7 @@ export default function POSPage() {
           item_id: sparePart.id,
           item_name: sparePart.name,
           quantity: quantity,
-          unit_price: price,
-          max_quantity: sparePart.quantity,
+            max_quantity: sparePart.quantity,
         },
       ];
     });
@@ -263,40 +200,9 @@ export default function POSPage() {
     setCart((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const addPaymentLine = () => {
-    setPaymentLines((prev) => [...prev, { id: nextId, method: "cash", amount: "" }]);
-    setNextId((n) => n + 1);
-  };
-
-  const removePaymentLine = (id: number) => {
-    setPaymentLines((prev) => prev.filter((line) => line.id !== id));
-  };
-
-  const updatePaymentLine = (id: number, field: keyof PaymentLine, value: any) => {
-    setPaymentLines((prev) =>
-      prev.map((line) => (line.id === id ? { ...line, [field]: value } : line))
-    );
-  };
-
-  const fillRemaining = (id: number) => {
-    const others = paymentLines
-      .filter((l) => l.id !== id)
-      .reduce((sum, l) => {
-        const v = parseFloat(l.amount);
-        return sum + (isNaN(v) ? 0 : v);
-      }, 0);
-    const rem = cartTotal - others;
-    if (rem > 0) {
-      updatePaymentLine(id, "amount", rem.toFixed(2));
-    }
-  };
-
   const canComplete =
     !!selectedCustomer &&
-    cart.length > 0 &&
-    paymentLines.length > 0 &&
-    paymentLines.every((l) => l.amount && parseFloat(l.amount) > 0) &&
-    Math.abs(remaining) < 0.01;
+    cart.length > 0;
 
   const handleCompleteSale = async () => {
     if (!canComplete) return;
@@ -304,23 +210,15 @@ export default function POSPage() {
     try {
       await api.createSale({
         customer_id: selectedCustomer!.id,
-        payments: paymentLines.map((l) => ({
-          method: l.method === "credit_card" && l.installments && l.installments > 0 ? `credit_card_${l.installments}` : l.method,
-          amount: parseFloat(l.amount),
-        })),
         items: cart.map((item) => ({
           item_type: item.item_type,
           item_id: item.item_id,
           quantity: item.quantity,
-          unit_price: item.unit_price,
         })),
       });
       toast.success("Satış başarıyla tamamlandı!");
       setCart([]);
       setSelectedCustomer(null);
-      setPaymentLines([{ id: 1, method: "cash", amount: "" }]);
-      setNextId(2);
-      setCustomPrices({});
       setSparePartQuantities({});
       await fetchData();
     } catch {
@@ -501,7 +399,6 @@ export default function POSPage() {
                       const inCart = cart.some(
                         (item) => item.item_type === "motorcycle" && item.item_id === motorcycle.id
                       );
-                      const priceKey = getCustomPriceKey("motorcycle", motorcycle.id);
                       return (
                         <div
                           key={motorcycle.id}
@@ -519,9 +416,6 @@ export default function POSPage() {
                                 <h3 className="font-bold text-zinc-100 text-[14px] group-hover:text-blue-400 transition-colors leading-tight truncate">
                                   {motorcycle.brand} {motorcycle.model}
                                 </h3>
-                                <span className="text-[11px] text-emerald-500/80 font-medium whitespace-nowrap hidden sm:inline-block">
-                                  (Maliyet: {isCensored ? "****" : formatCurrency(motorcycle.purchase_price)})
-                                </span>
                               </div>
                               <div className="text-xs text-zinc-500 flex items-center gap-2 truncate">
                                 <span className="font-medium text-zinc-400 bg-zinc-800/50 px-2 py-0.5 rounded">
@@ -533,39 +427,24 @@ export default function POSPage() {
                             </div>
 
                             {/* Alt kısım: İşlemler */}
-                            <div className="flex items-center w-full">
-                              {inCart ? (
-                                <Badge className="bg-blue-500/20 text-blue-300 border-none px-3 h-10 rounded-xl w-full flex justify-center text-sm">
-                                  <Check className="h-4 w-4 mr-2" />
-                                  Sepette
-                                </Badge>
-                              ) : (
-                                <div className="flex items-center border border-zinc-800 rounded-xl overflow-hidden bg-zinc-950/50 focus-within:border-blue-500/50 focus-within:ring-1 focus-within:ring-blue-500/20 transition-all w-full">
-                                  <Input
-                                    type="number"
-                                    step="0.01"
-                                    min="0"
-                                    disabled={inCart}
-                                    placeholder="Satış Fiyatı (₺)"
-                                    value={customPrices[priceKey] || ""}
-                                    onChange={(e) =>
-                                      setCustomPrices((prev) => ({
-                                        ...prev,
-                                        [priceKey]: e.target.value,
-                                      }))
-                                    }
-                                    className="flex-1 h-10 border-0 bg-transparent rounded-none text-zinc-200 font-medium placeholder:text-zinc-600 focus-visible:ring-0 px-4"
-                                  />
-                                  <Button
-                                    disabled={inCart}
-                                    onClick={() => addMotorcycleToCart(motorcycle)}
-                                    className="h-10 rounded-none bg-blue-600 hover:bg-blue-500 text-white font-semibold px-6 transition-colors shrink-0"
-                                  >
-                                    Ekle
-                                  </Button>
-                                </div>
-                              )}
-                            </div>
+                              <div className="flex items-center w-full">
+                                {inCart ? (
+                                  <Badge className="bg-blue-500/20 text-blue-300 border-none px-3 h-10 rounded-xl w-full flex justify-center text-sm">
+                                    <Check className="h-4 w-4 mr-2" />
+                                    Sepette
+                                  </Badge>
+                                ) : (
+                                  <div className="flex items-center border border-zinc-800 rounded-xl overflow-hidden bg-zinc-950/50 focus-within:border-blue-500/50 focus-within:ring-1 focus-within:ring-blue-500/20 transition-all w-full">
+                                    <Button
+                                      disabled={inCart}
+                                      onClick={() => addMotorcycleToCart(motorcycle)}
+                                      className="w-full h-10 rounded-none bg-blue-600 hover:bg-blue-500 text-white font-semibold px-6 transition-colors"
+                                    >
+                                      Sepete Ekle
+                                    </Button>
+                                  </div>
+                                )}
+                              </div>
                           </div>
                         </div>
                       );
@@ -584,7 +463,6 @@ export default function POSPage() {
                 <ScrollArea className="h-full px-5 pb-5">
                   <div className="flex flex-col gap-2 pt-2 pb-4">
                     {availableSpareParts.map((sp) => {
-                      const priceKey = getCustomPriceKey("spare_part", sp.id);
                       return (
                         <div
                           key={sp.id}
@@ -619,27 +497,13 @@ export default function POSPage() {
                                       [sp.id]: parseInt(e.target.value) || 1,
                                     }))
                                   }
-                                  className="w-[70px] h-10 border-0 border-r border-zinc-800 bg-transparent rounded-none text-center text-zinc-200 font-medium focus-visible:ring-0 px-1 placeholder:text-zinc-600"
-                                />
-                                <Input
-                                  type="number"
-                                  step="0.01"
-                                  min="0"
-                                  placeholder="Satış Fiyatı (₺)"
-                                  value={customPrices[priceKey] || ""}
-                                  onChange={(e) =>
-                                    setCustomPrices((prev) => ({
-                                      ...prev,
-                                      [priceKey]: e.target.value,
-                                    }))
-                                  }
-                                  className="flex-1 h-10 border-0 bg-transparent rounded-none text-zinc-200 font-medium focus-visible:ring-0 px-3 placeholder:text-zinc-600"
+                                  className="w-[70px] h-10 border-0 border-r border-zinc-800 bg-transparent text-center text-zinc-200 font-medium focus-visible:ring-0 px-1 placeholder:text-zinc-600 flex-1"
                                 />
                                 <Button
                                   onClick={() => addSparePartToCart(sp)}
-                                  className="h-10 rounded-none bg-blue-600 hover:bg-blue-500 text-white font-semibold px-6 transition-colors shrink-0"
+                                  className="h-10 rounded-none bg-blue-600 hover:bg-blue-500 text-white font-semibold px-6 transition-colors shrink-0 w-[120px]"
                                 >
-                                  Ekle
+                                  Sepete Ekle
                                 </Button>
                               </div>
                             </div>
@@ -727,9 +591,6 @@ export default function POSPage() {
                       >
                         <div className="flex-1 min-w-0">
                           <div className="text-sm font-semibold text-zinc-100 truncate">{item.item_name}</div>
-                          <div className="text-xs text-emerald-400 font-medium mt-0.5">
-                            {isCensored ? "****" : formatCurrency(item.unit_price)}
-                          </div>
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
                           {item.item_type === "spare_part" && (
@@ -766,96 +627,12 @@ export default function POSPage() {
             {cart.length > 0 && (
               <div className="shrink-0 bg-zinc-900/90 border-t border-zinc-800/60 px-5 pt-3 pb-4 backdrop-blur-md flex flex-col gap-2.5">
 
-                {/* Genel Toplam */}
+                {/* Özet Footer */}
                 <div className="flex items-center justify-between py-1">
-                  <span className="text-sm font-medium text-zinc-400">Genel Toplam</span>
+                  <span className="text-sm font-medium text-zinc-400">Toplam Ürün</span>
                   <span className="text-xl font-bold text-emerald-400 tabular-nums">
-                    {isCensored ? "****" : formatCurrency(cartTotal)}
+                    {cart.reduce((sum, item) => sum + item.quantity, 0)} Adet
                   </span>
-                </div>
-
-                {/* TAHSİLAT başlık */}
-                <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest">Tahsilat</span>
-                  <button
-                    onClick={addPaymentLine}
-                    className="flex items-center gap-1.5 text-xs text-blue-400 hover:text-blue-300 transition-colors font-semibold bg-blue-500/10 hover:bg-blue-500/20 px-3 py-1.5 rounded-lg"
-                  >
-                    <Plus className="h-3.5 w-3.5" />
-                    Yöntem Ekle
-                  </button>
-                </div>
-
-                {/* Ödeme satırları - max 2 görünür, geri scroll */}
-                <div className="flex flex-col gap-2 max-h-[96px] overflow-y-auto">
-                  {paymentLines.map((line) => (
-                    <div key={line.id} className="flex items-center gap-2">
-                      <Select value={line.method} onValueChange={(val) => updatePaymentLine(line.id, "method", val)}>
-                        <SelectTrigger className="h-10 flex-1 bg-zinc-950/60 border-zinc-800 rounded-xl text-zinc-200 text-xs focus:ring-0 focus:border-blue-500/50">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="bg-zinc-900 border-zinc-800 rounded-xl">
-                          {paymentMethods.map((m) => {
-                            const Icon = m.icon;
-                            return (
-                              <SelectItem key={m.value} value={m.value} className="text-zinc-300 focus:bg-zinc-800 text-xs rounded-lg my-0.5">
-                                <span className="flex items-center gap-2"><Icon className="h-3.5 w-3.5 opacity-70" />{m.label}</span>
-                              </SelectItem>
-                            );
-                          })}
-                        </SelectContent>
-                      </Select>
-
-                      {line.method === "credit_card" && (
-                        <Select value={line.installments?.toString() || "0"} onValueChange={(val) => updatePaymentLine(line.id, "installments", parseInt(val))}>
-                          <SelectTrigger className="h-10 w-[85px] bg-zinc-950/60 border-zinc-800 rounded-xl text-zinc-200 text-xs focus:ring-0 focus:border-blue-500/50">
-                            <SelectValue placeholder="Taksit" />
-                          </SelectTrigger>
-                          <SelectContent className="bg-zinc-900 border-zinc-800 rounded-xl">
-                            {installmentOptions.map((opt) => (
-                              <SelectItem key={opt} value={opt.toString()} className="text-zinc-300 focus:bg-zinc-800 text-xs rounded-lg">
-                                {opt === 0 ? "Tek Çekim" : `${opt} Taksit`}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      )}
-
-                      <Input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        placeholder="Tutar"
-                        value={line.amount || ""}
-                        onChange={(e) => updatePaymentLine(line.id, "amount", parseFloat(e.target.value))}
-                        className="w-[90px] h-10 px-3 rounded-xl bg-zinc-950/60 border-zinc-800 text-zinc-100 font-medium text-sm focus:border-blue-500/50 text-left [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                      />
-
-                      {paymentLines.length > 1 && (
-                        <button onClick={() => removePaymentLine(line.id)} className="p-2 rounded-xl text-zinc-500 hover:text-red-400 hover:bg-red-500/10 transition-colors shrink-0">
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      )}
-                    </div>
-                  ))}
-                </div>
-
-                {/* Kalan Tutar */}
-                <div className={cn(
-                  "flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-all duration-300",
-                  Math.abs(remaining) < 0.01
-                    ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-400"
-                    : remaining > 0
-                    ? "bg-amber-500/10 border border-amber-500/20 text-amber-400"
-                    : "bg-red-500/10 border border-red-500/20 text-red-400"
-                )}>
-                  <span className="flex items-center gap-2">
-                    {Math.abs(remaining) < 0.01 ? <Check className="h-4 w-4" /> : <AlertCircle className="h-4 w-4" />}
-                    {Math.abs(remaining) < 0.01 ? "Ödeme Tamam" : remaining > 0 ? "Kalan Tutar" : "Fazla Ödeme"}
-                  </span>
-                  {Math.abs(remaining) >= 0.01 && (
-                    <span className="tabular-nums text-sm">{formatCurrency(Math.abs(remaining))}</span>
-                  )}
                 </div>
 
                 {!selectedCustomer && (

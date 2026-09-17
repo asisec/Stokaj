@@ -9,9 +9,6 @@ import { CustomerForm } from "@/components/customers/customer-form";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { customToast as toast } from "@/lib/toast";
 
-import { PaymentModal } from "@/components/customers/payment-modal";
-import { TransactionsModal } from "@/components/customers/transactions-modal";
-
 export default function CustomersPage() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
@@ -21,10 +18,6 @@ export default function CustomersPage() {
   
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
-
-  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
-  const [transactionsModalOpen, setTransactionsModalOpen] = useState(false);
-  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
 
   const fetchCustomers = useCallback(() => {
     setLoading(true);
@@ -49,16 +42,6 @@ export default function CustomersPage() {
     setConfirmOpen(true);
   };
 
-  const handlePaymentClick = (customer: Customer) => {
-    setSelectedCustomer(customer);
-    setPaymentModalOpen(true);
-  };
-
-  const handleTransactionsClick = (customer: Customer) => {
-    setSelectedCustomer(customer);
-    setTransactionsModalOpen(true);
-  };
-
   const handleConfirmDelete = async () => {
     if (deletingId === null) return;
     try {
@@ -77,16 +60,6 @@ export default function CustomersPage() {
     if (!open) {
       setEditingCustomer(null);
     }
-  };
-
-  const handlePaymentModalChange = (open: boolean) => {
-    setPaymentModalOpen(open);
-    if (!open) setSelectedCustomer(null);
-  };
-
-  const handleTransactionsModalChange = (open: boolean) => {
-    setTransactionsModalOpen(open);
-    if (!open) setSelectedCustomer(null);
   };
 
   return (
@@ -113,8 +86,6 @@ export default function CustomersPage() {
         customers={customers}
         onEdit={handleEdit}
         onDelete={handleDeleteClick}
-        onPayment={handlePaymentClick}
-        onTransactions={handleTransactionsClick}
         loading={loading}
       />
 
@@ -123,19 +94,6 @@ export default function CustomersPage() {
         onOpenChange={handleDialogChange}
         customer={editingCustomer}
         onSuccess={fetchCustomers}
-      />
-
-      <PaymentModal
-        open={paymentModalOpen}
-        onOpenChange={handlePaymentModalChange}
-        customer={selectedCustomer}
-        onSuccess={fetchCustomers}
-      />
-
-      <TransactionsModal
-        open={transactionsModalOpen}
-        onOpenChange={handleTransactionsModalChange}
-        customer={selectedCustomer}
       />
 
       <ConfirmDialog

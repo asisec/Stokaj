@@ -23,31 +23,23 @@ export async function GET(req: NextRequest) {
   
   try {
     const sql = getDb();
-    const [mc, sp, spq, ls, cust, sc, rev, cost, rec, recent, trend, brands, cwb, spay, cpay] = await Promise.all([
+    const [mc, sp, spq, ls, cust, sc, recent, trend, brands] = await Promise.all([
       sql`SELECT COUNT(*) as total, COUNT(*) FILTER (WHERE status='available') as available, COUNT(*) FILTER (WHERE status='sold') as sold FROM motorcycles`,
       sql`SELECT COUNT(*) as total FROM spare_parts`,
       sql`SELECT COALESCE(SUM(quantity), 0) as total FROM spare_parts`,
       sql`SELECT COUNT(*) as total FROM spare_parts WHERE quantity < 5`,
       sql`SELECT COUNT(*) as total FROM customers`,
       sql`SELECT COUNT(*) as total FROM sales`,
-      sql`SELECT COALESCE(SUM(total_amount), 0) as total FROM sales`,
-      sql`SELECT COALESCE(SUM(purchase_price * quantity), 0) as total FROM sale_items`,
-      sql`SELECT COALESCE(SUM(balance), 0) as total FROM customers WHERE balance > 0`,
       sql`
         SELECT s.*, row_to_json(c.*) as customer,
-          COALESCE(json_agg(DISTINCT si.*) FILTER (WHERE si.id IS NOT NULL), '[]') as items,
-          COALESCE(json_agg(DISTINCT sp.*) FILTER (WHERE sp.id IS NOT NULL), '[]') as payments
+          COALESCE(json_agg(DISTINCT si.*) FILTER (WHERE si.id IS NOT NULL), '[]') as items
         FROM sales s
         LEFT JOIN customers c ON c.id = s.customer_id
         LEFT JOIN sale_items si ON si.sale_id = s.id
-        LEFT JOIN sale_payments sp ON sp.sale_id = s.id
         GROUP BY s.id, c.id ORDER BY s.created_at DESC LIMIT 5
       `,
-      sql`SELECT to_char(s.created_at, 'YYYY-MM-DD') as date, SUM(si.total_price - (si.purchase_price * si.quantity)) as revenue FROM sales s JOIN sale_items si ON s.id = si.sale_id WHERE s.created_at >= NOW() - INTERVAL '1 year' GROUP BY date ORDER BY date`,
-      sql`SELECT m.brand, COUNT(si.id)::int as count FROM sale_items si JOIN motorcycles m ON si.item_id = m.id WHERE si.item_type = 'motorcycle' GROUP BY m.brand ORDER BY count DESC LIMIT 5`,
-      sql`SELECT * FROM customers WHERE balance != 0 ORDER BY balance DESC`,
-      sql`SELECT COALESCE(SUM(amount), 0) as total FROM sale_payments`,
-      sql`SELECT COALESCE(SUM(amount), 0) as total FROM customer_transactions WHERE type = 'credit' AND reference_type = 'payment'`,
+      sql`SELECT to_char(s.created_at, 'YYYY-MM-DD') as date, SUM(si.quantity) as sales_count FROM sales s JOIN sale_items si ON s.id = si.sale_id WHERE s.created_at >= NOW() - INTERVAL '1 year' GROUP BY date ORDER BY date`,
+      sql`SELECT m.brand, COUNT(si.id)::int as count FROM sale_items si JOIN motorcycles m ON si.item_id = m.id WHERE si.item_type = 'motorcycle' GROUP BY m.brand ORDER BY count DESC LIMIT 5`
     ]);
 
     return NextResponse.json({
@@ -59,12 +51,9 @@ export async function GET(req: NextRequest) {
       low_stock_count: Number(ls[0].total),
       total_customers: Number(cust[0].total),
       total_sales: Number(sc[0].total),
-      total_revenue: Number(rev[0].total) - Number(cost[0].total),
-      total_receivables: Number(rec[0].total),
       recent_sales: recent,
       sales_trend: trend,
-      top_brands: brands,
-      customers_with_balance: cwb,
+      top_brands: brands
     });
   } catch (e) {
     console.error("Dashboard error:", e);

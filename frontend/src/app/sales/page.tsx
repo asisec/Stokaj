@@ -30,17 +30,7 @@ import {
 } from "@/components/ui/popover";
 import { Printer, Search, Calendar, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Filter, SlidersHorizontal } from "lucide-react";
 
-const formatCurrency = (value: number) =>
-  new Intl.NumberFormat("tr-TR", { style: "currency", currency: "TRY" }).format(value);
-
 const formatDate = (date: string) => new Date(date).toLocaleDateString("tr-TR");
-
-const paymentMethodLabels: Record<string, string> = {
-  cash: "Nakit",
-  credit_card: "Kredi Kartı (Tek Çekim)",
-  transfer: "Havale/EFT",
-  open_account: "Açık Hesap (Veresiye)",
-};
 
 const ITEMS_PER_PAGE = 10;
 
@@ -53,9 +43,6 @@ export default function SalesPage() {
   const [filters, setFilters] = useState({
     startDate: "",
     endDate: "",
-    minTotal: "",
-    maxTotal: "",
-    paymentMethod: "all"
   });
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
@@ -76,15 +63,12 @@ export default function SalesPage() {
     setFilters({
       startDate: "",
       endDate: "",
-      minTotal: "",
-      maxTotal: "",
-      paymentMethod: "all"
     });
     setSearchTerm("");
     setCurrentPage(1);
   };
 
-  const activeFiltersCount = Object.values(filters).filter(v => v !== "" && v !== "all").length;
+  const activeFiltersCount = Object.values(filters).filter(v => v !== "").length;
 
   const filteredSales = useMemo(() => {
     return sales.filter((sale) => {
@@ -98,12 +82,6 @@ export default function SalesPage() {
       
       if (filters.startDate && saleDate < filters.startDate) matchesFilters = false;
       if (filters.endDate && saleDate > filters.endDate) matchesFilters = false;
-      if (filters.minTotal && sale.total_amount < Number(filters.minTotal)) matchesFilters = false;
-      if (filters.maxTotal && sale.total_amount > Number(filters.maxTotal)) matchesFilters = false;
-      if (filters.paymentMethod !== "all") {
-        const hasPaymentMethod = sale.payments?.some(p => p.method.startsWith(filters.paymentMethod));
-        if (!hasPaymentMethod) matchesFilters = false;
-      }
 
       return matchesSearch && matchesFilters;
     });
@@ -182,31 +160,6 @@ export default function SalesPage() {
                   <Label className="text-xs font-medium text-zinc-400 uppercase tracking-wider">Bitiş Tarihi</Label>
                   <Input type="date" value={filters.endDate} onChange={(e) => handleFilterChange("endDate", e.target.value)} className="bg-zinc-900/50 border-zinc-800/80 text-zinc-200 h-10 hover:border-zinc-700 focus:border-emerald-500 transition-all rounded-xl" />
                 </div>
-                
-                <div className="space-y-2">
-                  <Label className="text-xs font-medium text-zinc-400 uppercase tracking-wider">Min. Tutar (₺)</Label>
-                  <Input type="number" placeholder="0" value={filters.minTotal} onChange={(e) => handleFilterChange("minTotal", e.target.value)} className="bg-zinc-900/50 border-zinc-800/80 text-zinc-200 h-10 hover:border-zinc-700 focus:border-emerald-500 transition-all rounded-xl" />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-xs font-medium text-zinc-400 uppercase tracking-wider">Maks. Tutar (₺)</Label>
-                  <Input type="number" placeholder="Sınırsız" value={filters.maxTotal} onChange={(e) => handleFilterChange("maxTotal", e.target.value)} className="bg-zinc-900/50 border-zinc-800/80 text-zinc-200 h-10 hover:border-zinc-700 focus:border-emerald-500 transition-all rounded-xl" />
-                </div>
-
-                <div className="space-y-2 sm:col-span-2">
-                  <Label className="text-xs font-medium text-zinc-400 uppercase tracking-wider">Ödeme Yöntemi</Label>
-                  <Select value={filters.paymentMethod} onValueChange={(v) => handleFilterChange("paymentMethod", v)}>
-                    <SelectTrigger className="bg-zinc-900/50 border-zinc-800/80 text-zinc-200 h-10 hover:border-zinc-700 focus:border-emerald-500 transition-all rounded-xl">
-                      <SelectValue placeholder="Tümü" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-zinc-950 border-zinc-800 text-zinc-200 rounded-xl">
-                      <SelectItem value="all">Tümü</SelectItem>
-                      <SelectItem value="cash">Nakit</SelectItem>
-                      <SelectItem value="credit_card">Kredi Kartı</SelectItem>
-                      <SelectItem value="transfer">Havale / EFT</SelectItem>
-                      <SelectItem value="open_account">Açık Hesap (Veresiye)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
               </div>
             </div>
           </PopoverContent>
@@ -235,20 +188,19 @@ export default function SalesPage() {
             <TableRow className="border-zinc-800/50 hover:bg-transparent bg-zinc-900/50 print:bg-transparent print:border-gray-300">
               <TableHead className="text-zinc-400 font-medium print:text-gray-700">Tarih</TableHead>
               <TableHead className="text-zinc-400 font-medium print:text-gray-700">Müşteri</TableHead>
-              <TableHead className="text-zinc-400 font-medium print:text-gray-700">Ürünler</TableHead>
-              <TableHead className="text-zinc-400 font-medium print:text-gray-700">Toplam</TableHead>
-              <TableHead className="text-emerald-400/80 font-medium print:text-gray-700">Kâr</TableHead>
-              <TableHead className="text-zinc-400 font-medium print:text-gray-700">Ödeme</TableHead>
+              <TableHead className="text-zinc-400 font-medium print:text-gray-700">Telefon</TableHead>
+              <TableHead className="text-zinc-400 font-medium print:text-gray-700">Satılan Ürünler</TableHead>
+              <TableHead className="text-right text-zinc-400 font-medium print:text-gray-700">Adet</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-8 text-zinc-500">Yükleniyor...</TableCell>
+                <TableCell colSpan={5} className="text-center py-8 text-zinc-500">Yükleniyor...</TableCell>
               </TableRow>
             ) : paginatedSales.length > 0 ? (
               paginatedSales.map((sale) => {
-                const profit = sale.total_amount - (sale.items?.reduce((acc, item) => acc + (item.purchase_price * item.quantity), 0) || 0);
+                const totalQty = sale.items?.reduce((acc, item) => acc + item.quantity, 0) || 1;
                 return (
                 <TableRow key={sale.id} className="border-zinc-800/50 hover:bg-zinc-800/30 print:border-gray-200 print:hover:bg-transparent">
                   <TableCell className="text-zinc-400 print:text-black">
@@ -259,49 +211,23 @@ export default function SalesPage() {
                       ? (isCensored ? "**** ****" : `${sale.customer.first_name} ${sale.customer.last_name}`)
                       : "-"}
                   </TableCell>
-                  <TableCell className="text-zinc-400 max-w-[250px] truncate print:text-black print:whitespace-normal">
+                  <TableCell className="text-zinc-400 print:text-black">
+                    {sale.customer?.phone ? (isCensored ? "***********" : sale.customer.phone) : "-"}
+                  </TableCell>
+                  <TableCell className="text-zinc-400 max-w-[300px] truncate print:text-black print:whitespace-normal">
                     {sale.items
                       ? sale.items.map((item) => item.item_name).join(", ")
                       : "-"}
                   </TableCell>
-                  <TableCell className="text-zinc-200 font-semibold print:text-black">
-                    {isCensored ? "****" : formatCurrency(sale.total_amount)}
-                  </TableCell>
-                  <TableCell className="text-emerald-400 font-semibold print:text-black">
-                    {isCensored ? "****" : formatCurrency(profit)}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex flex-col gap-1">
-                      {sale.payments && sale.payments.length > 0 ? (
-                        sale.payments.map((p) => {
-                          let label = paymentMethodLabels[p.method] || p.method;
-                          if (p.method.startsWith("credit_card_")) {
-                            const installments = p.method.split("_")[2];
-                            label = `Kredi Kartı (${installments} Taksit)`;
-                          }
-                          return (
-                            <Badge
-                              key={p.id}
-                              variant="secondary"
-                              className="bg-zinc-800 text-zinc-300 border-zinc-700 w-max print:bg-transparent print:border-none print:p-0 print:text-black"
-                            >
-                              {label} ({isCensored ? "****" : formatCurrency(p.amount)})
-                            </Badge>
-                          );
-                        })
-                      ) : (
-                        <Badge variant="secondary" className="bg-zinc-800 text-zinc-500 border-zinc-700 print:bg-transparent print:border-none print:text-gray-500">
-                          Belirtilmemiş
-                        </Badge>
-                      )}
-                    </div>
+                  <TableCell className="text-right font-medium text-zinc-200 print:text-black">
+                    {totalQty}
                   </TableCell>
                 </TableRow>
                 );
               })
             ) : (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-8 text-zinc-500 print:text-black">Kayıt bulunamadı.</TableCell>
+                <TableCell colSpan={5} className="text-center py-8 text-zinc-500 print:text-black">Kayıt bulunamadı.</TableCell>
               </TableRow>
             )}
           </TableBody>

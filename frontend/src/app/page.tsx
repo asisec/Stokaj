@@ -38,26 +38,11 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useCensorStore } from "@/store/censor";
-import { PaymentModal } from "@/components/customers/payment-modal";
-import { type Customer } from "@/lib/api";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
-const formatCurrency = (value: number) =>
-  new Intl.NumberFormat("tr-TR", { style: "currency", currency: "TRY" }).format(
-    value
-  );
-
 const formatDate = (date: string) =>
   new Date(date).toLocaleDateString("tr-TR");
-
-const paymentMethodLabels: Record<string, string> = {
-  cash: "Nakit",
-  credit_card: "Kredi Kartı",
-  bank_transfer: "Havale/EFT",
-  installment: "Taksit",
-  open_account: "Açık Hesap",
-};
 
 export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -66,19 +51,7 @@ export default function DashboardPage() {
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const { isCensored, toggleCensor } = useCensorStore();
 
-  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
-  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [timeRange, setTimeRange] = useState<"1w" | "1m" | "6m" | "1y">("6m");
-
-  const handlePaymentClick = (customer: Customer) => {
-    setSelectedCustomer(customer);
-    setPaymentModalOpen(true);
-  };
-
-  const handlePaymentModalChange = (open: boolean) => {
-    setPaymentModalOpen(open);
-    if (!open) setSelectedCustomer(null);
-  };
 
   const loadStats = () => {
     api
@@ -129,10 +102,10 @@ export default function DashboardPage() {
       const monthlyData: Record<string, number> = {};
       filtered.forEach(t => {
         const month = t.date.substring(0, 7); // YYYY-MM
-        monthlyData[month] = (monthlyData[month] || 0) + Number(t.revenue);
+        monthlyData[month] = (monthlyData[month] || 0) + Number(t.sales_count);
       });
       return Object.entries(monthlyData)
-        .map(([month, revenue]) => ({ date: month, displayDate: month, revenue }))
+        .map(([month, sales_count]) => ({ date: month, displayDate: month, sales_count }))
         .sort((a, b) => a.date.localeCompare(b.date));
     }
   }, [stats?.sales_trend, timeRange]);
@@ -189,9 +162,9 @@ export default function DashboardPage() {
       bgGlow: "bg-purple-500/10",
     },
     {
-      title: "Net Kâr",
-      value: formatCurrency(stats.total_revenue),
-      subtitle: "Toplam Satış - Alış",
+      title: "Satış İşlemleri",
+      value: stats.total_sales.toLocaleString("tr-TR"),
+      subtitle: "Tamamlanan Satış",
       icon: ShoppingCart,
       gradient: "from-amber-500/20 to-amber-600/5",
       border: "border-l-amber-500",
@@ -284,15 +257,6 @@ export default function DashboardPage() {
                       Ürünler
                     </TableHead>
                     <TableHead className="text-zinc-400 font-medium">
-                      Toplam
-                    </TableHead>
-                    <TableHead className="text-emerald-400/80 font-medium">
-                      Kâr
-                    </TableHead>
-                    <TableHead className="text-zinc-400 font-medium">
-                      Ödeme
-                    </TableHead>
-                    <TableHead className="text-zinc-400 font-medium">
                       Tarih
                     </TableHead>
                     <TableHead className="text-right text-zinc-400 font-medium">
@@ -302,7 +266,6 @@ export default function DashboardPage() {
                 </TableHeader>
                 <TableBody>
                   {stats.recent_sales.slice(0, 5).map((sale) => {
-                    const profit = sale.total_amount - (sale.items?.reduce((acc, item) => acc + (item.purchase_price * item.quantity), 0) || 0);
                     return (
                     <TableRow
                       key={sale.id}
@@ -318,40 +281,8 @@ export default function DashboardPage() {
                           ? sale.items.map((item) => item.item_name).join(", ")
                           : "-"}
                       </TableCell>
-                      <TableCell className="text-zinc-200 font-semibold transition-all">
-                        {isCensored ? "****" : formatCurrency(sale.total_amount)}
-                      </TableCell>
-                      <TableCell className="text-emerald-400 font-semibold transition-all">
-                        {isCensored ? "****" : formatCurrency(profit)}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-col gap-1">
-                          {sale.payments && sale.payments.length > 0 ? (
-                            sale.payments.map((p) => {
-                              let label = paymentMethodLabels[p.method] || p.method;
-                              if (p.method.startsWith("credit_card_")) {
-                                const installments = p.method.split("_")[2];
-                                label = `Kredi Kartı (${installments} Taksit)`;
-                              }
-                              return (
-                                <Badge
-                                  key={p.id}
-                                  variant="secondary"
-                                  className="bg-zinc-800 text-zinc-300 border-zinc-700 w-max"
-                                >
-                                  {label} ({isCensored ? "****" : formatCurrency(p.amount)})
-                                </Badge>
-                              );
-                            })
-                          ) : (
-                            <Badge variant="secondary" className="bg-zinc-800 text-zinc-500 border-zinc-700">
-                              Belirtilmemiş
-                            </Badge>
-                          )}
-                        </div>
-                      </TableCell>
                       <TableCell className="text-zinc-400">
-                        {formatDate(sale.created_at)}
+                        {new Date(sale.created_at).toLocaleDateString("tr-TR")}
                       </TableCell>
                       <TableCell className="text-right">
                         <button
@@ -377,60 +308,6 @@ export default function DashboardPage() {
         </CardContent>
       </Card>
 
-      <Card className="border-zinc-800/50 bg-zinc-900/50 backdrop-blur-sm mb-8 border-t-4 border-t-rose-500">
-        <CardHeader className="flex flex-row items-center justify-between pb-4">
-          <CardTitle className="text-lg font-semibold text-zinc-100 flex items-center gap-2">
-            <Wallet className="h-5 w-5 text-rose-400" />
-            Toplam Alacaklar (Açık Hesaplar)
-          </CardTitle>
-          <div className="text-2xl font-bold text-rose-400">
-            {isCensored ? "****" : formatCurrency(stats.total_receivables || 0)}
-          </div>
-        </CardHeader>
-        <CardContent>
-          {stats.customers_with_balance && stats.customers_with_balance.length > 0 ? (
-            <div className="rounded-xl border border-zinc-800/50 overflow-hidden">
-              <Table>
-                <TableHeader>
-                  <TableRow className="border-zinc-800/50 hover:bg-transparent">
-                    <TableHead className="text-zinc-400 font-medium">Müşteri</TableHead>
-                    <TableHead className="text-zinc-400 font-medium">Telefon</TableHead>
-                    <TableHead className="text-right text-zinc-400 font-medium">Bakiye (Borç)</TableHead>
-                    <TableHead className="text-right text-zinc-400 font-medium w-[120px]">İşlem</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {stats.customers_with_balance.map((customer) => (
-                    <TableRow key={customer.id} className="border-zinc-800/50 hover:bg-zinc-800/30">
-                      <TableCell className="font-medium text-zinc-200">
-                        {isCensored ? "**** ****" : `${customer.first_name} ${customer.last_name}`}
-                      </TableCell>
-                      <TableCell className="text-zinc-400">
-                        {isCensored ? "***********" : customer.phone || "-"}
-                      </TableCell>
-                      <TableCell className="text-right font-bold text-rose-400">
-                        {isCensored ? "****" : formatCurrency(customer.balance)}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <button
-                          onClick={() => handlePaymentClick(customer)}
-                          className="px-3 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 text-sm font-medium transition-colors"
-                        >
-                          Tahsilat Al
-                        </button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          ) : (
-            <div className="text-center py-8 text-zinc-500">
-              Tahsil edilecek açık hesap bulunmuyor.
-            </div>
-          )}
-        </CardContent>
-      </Card>
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7 mb-8">
         {/* Sales Trend Line Chart */}
         <Card className="border-zinc-800/50 bg-zinc-900/50 backdrop-blur-sm xl:col-span-4">
@@ -477,17 +354,17 @@ export default function DashboardPage() {
                       fontSize={12}
                       tickLine={false}
                       axisLine={false}
-                      tickFormatter={(value) => isCensored ? "****" : `₺${value}`}
+                      allowDecimals={false}
                     />
                     <RechartsTooltip
                       contentStyle={{ backgroundColor: "#18181b", borderColor: "#27272a", borderRadius: "8px" }}
                       itemStyle={{ color: "#e4e4e7" }}
-                      formatter={(value: number) => [isCensored ? "****" : formatCurrency(value), "Net Kâr"]}
+                      formatter={(value: any) => [value, "Satış Adedi"]}
                       labelStyle={{ color: "#a1a1aa", marginBottom: "4px" }}
                     />
                     <Line
                       type="monotone"
-                      dataKey="revenue"
+                      dataKey="sales_count"
                       stroke="#3b82f6"
                       strokeWidth={3}
                       dot={{ fill: "#3b82f6", strokeWidth: 2 }}
@@ -534,7 +411,7 @@ export default function DashboardPage() {
                     <RechartsTooltip
                       contentStyle={{ backgroundColor: "#18181b", borderColor: "#27272a", borderRadius: "8px" }}
                       itemStyle={{ color: "#e4e4e7" }}
-                      formatter={(value: number) => [isCensored ? "****" : value, "Adet"]}
+                      formatter={(value: any) => [isCensored ? "****" : value, "Adet"]}
                     />
                   </PieChart>
                 </ResponsiveContainer>
@@ -568,7 +445,7 @@ export default function DashboardPage() {
               Satışı Silmek İstediğinize Emin Misiniz?
             </AlertDialogTitle>
             <AlertDialogDescription className="text-zinc-400">
-              Bu işlem geri alınamaz. İlgili satış kaydı ve ödeme geçmişi kalıcı olarak silinecek. Satılan motosikletler <span className="font-semibold text-zinc-300">tekrar stoka</span> eklenecektir.
+              Bu işlem geri alınamaz. İlgili satış kaydı kalıcı olarak silinecek. Satılan motosikletler <span className="font-semibold text-zinc-300">tekrar stoka</span> eklenecektir.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -584,13 +461,6 @@ export default function DashboardPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      <PaymentModal
-        open={paymentModalOpen}
-        onOpenChange={handlePaymentModalChange}
-        customer={selectedCustomer}
-        onSuccess={loadStats}
-      />
     </div>
   );
 }

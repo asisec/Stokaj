@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
   try {
     const rows = await sql`
       INSERT INTO motorcycles (brand, model, year, color, chassis_number, status, purchase_price, sale_price, is_other_branch, branch_name, created_at, updated_at)
-      VALUES (${body.brand}, ${body.model}, ${body.year}, ${body.color || ""}, ${body.chassis_number}, ${body.status || "available"}, ${body.purchase_price || 0}, ${body.sale_price || 0}, ${body.is_other_branch || false}, ${body.branch_name || ""}, NOW(), NOW())
+      VALUES (${body.brand}, ${body.model}, ${body.year}, ${body.color || ""}, ${body.chassis_number}, ${body.status || "available"}, 0, 0, ${body.is_other_branch || false}, ${body.branch_name || ""}, NOW(), NOW())
       RETURNING *`;
     return ok(rows[0], 201);
   } catch (e) { return err(String(e), 500); }

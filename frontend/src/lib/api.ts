@@ -40,8 +40,6 @@ export interface Motorcycle {
   model: string
   year: number
   color: string
-  purchase_price: number
-  sale_price: number
   status: string
   is_other_branch: boolean
   branch_name: string
@@ -70,7 +68,6 @@ export interface Customer {
   phone: string
   email: string
   address: string
-  balance: number
   sales?: Sale[]
   created_at: string
   updated_at: string
@@ -80,7 +77,6 @@ export interface CustomerTransaction {
   id: number;
   customer_id: number;
   type: string;
-  amount: number;
   description: string;
   reference_type: string;
   reference_id: number;
@@ -94,23 +90,18 @@ export interface SaleItem {
   item_id: number
   item_name: string
   quantity: number
-  unit_price: number
-  purchase_price: number
-  total_price: number
 }
 
 export interface SalePayment {
   id: number
   sale_id: number
   method: string
-  amount: number
 }
 
 export interface Sale {
   id: number
   customer_id: number
   customer: Customer
-  total_amount: number
   payments: SalePayment[]
   items: SaleItem[]
   created_at: string
@@ -118,7 +109,7 @@ export interface Sale {
 
 export interface SalesTrend {
   date: string
-  revenue: number
+  sales_count: number
 }
 
 export interface BrandStat {
@@ -132,15 +123,12 @@ export interface DashboardStats {
   sold_motorcycles: number;
   total_spare_parts: number;
   total_spare_parts_quantity: number;
-  low_stock_parts: number;
+  low_stock_count: number;
   total_customers: number;
   total_sales: number;
-  total_revenue: number;
-  total_receivables: number;
   recent_sales: Sale[];
   sales_trend: SalesTrend[];
   top_brands: BrandStat[];
-  customers_with_balance: Customer[];
 }
 
 export const api = {
@@ -155,6 +143,12 @@ export const api = {
   createMotorcycle: (data: Partial<Motorcycle>) => request<Motorcycle>("/api/motorcycles", { method: "POST", body: JSON.stringify(data) }),
   updateMotorcycle: (id: number, data: Partial<Motorcycle>) => request<Motorcycle>(`/api/motorcycles/${id}`, { method: "PUT", body: JSON.stringify(data) }),
   deleteMotorcycle: (id: number) => request<void>(`/api/motorcycles/${id}`, { method: "DELETE" }),
+  getPublicMotorcycleByChassis: async (chassis: string) => {
+    const list = await request<Motorcycle[]>(`/api/motorcycles?search=${encodeURIComponent(chassis)}`);
+    const found = list.find((m) => m.chassis_number.toLowerCase() === chassis.toLowerCase());
+    if (!found) throw new Error("Motosiklet bulunamadı");
+    return found;
+  },
 
   getSpareParts: (search?: string) => {
     const params = new URLSearchParams()
@@ -175,29 +169,24 @@ export const api = {
     return request<Customer[]>(`/api/customers${query ? `?${query}` : ""}`)
   },
   getCustomer: (id: number) => request<Customer>(`/api/customers/${id}`),
-  createCustomer: (customer: Omit<Customer, "id" | "created_at" | "updated_at" | "balance" | "sales">) =>
+  createCustomer: (customer: Omit<Customer, "id" | "created_at" | "updated_at" | "sales">) =>
     request<Customer>("/api/customers", {
       method: "POST",
       body: JSON.stringify(customer),
     }),
-  updateCustomer: (id: number, customer: Omit<Customer, "id" | "created_at" | "updated_at" | "balance" | "sales">) =>
+  updateCustomer: (id: number, customer: Omit<Customer, "id" | "created_at" | "updated_at" | "sales">) =>
     request<Customer>(`/api/customers/${id}`, {
       method: "PUT",
       body: JSON.stringify(customer),
     }),
   deleteCustomer: (id: number) =>
     request<{ message: string }>(`/api/customers/${id}`, { method: "DELETE" }),
-  addCustomerPayment: (id: number, payment: { amount: number; method: string; description?: string }) =>
-    request<{ message: string; balance: number }>(`/api/customers/${id}/payments`, {
-      method: "POST",
-      body: JSON.stringify(payment),
-    }),
   getCustomerTransactions: (id: number) =>
     request<CustomerTransaction[]>(`/api/customers/${id}/transactions`),
 
   getSales: () => request<Sale[]>("/api/sales"),
   getSale: (id: number) => request<Sale>(`/api/sales/${id}`),
-  createSale: (data: { customer_id: number; payments: { method: string; amount: number }[]; items: { item_type: string; item_id: number; quantity: number; unit_price: number }[] }) => request<Sale>("/api/sales", { method: "POST", body: JSON.stringify(data) }),
+  createSale: (data: { customer_id: number; items: { item_type: string; item_id: number; quantity: number; }[] }) => request<Sale>("/api/sales", { method: "POST", body: JSON.stringify(data) }),
   deleteSale: (id: number) => request<void>(`/api/sales/${id}`, { method: "DELETE" }),
 
   getDashboardStats: () => request<DashboardStats>("/api/dashboard/stats"),
