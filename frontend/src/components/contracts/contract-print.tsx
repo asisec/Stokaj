@@ -88,46 +88,64 @@ export function printContract(data: ContractData) {
         .header {
           display: flex;
           justify-content: space-between;
-          align-items: flex-start;
-          border-bottom: 2.5px solid #0f172a;
-          padding-bottom: 12px;
+          align-items: center;
+          border-bottom: 2px solid #0f172a;
+          padding-bottom: 14px;
           margin-bottom: 16px;
         }
         .header-left {
           flex: 1;
+          padding-right: 20px;
         }
         .company-title {
-          font-size: 18px;
-          font-weight: 800;
+          font-size: 20px;
+          font-weight: 900;
           letter-spacing: 0.5px;
           color: #0f172a;
           text-transform: uppercase;
-          margin: 0 0 4px 0;
+          margin: 0 0 5px 0;
+          line-height: 1.15;
         }
         .company-subtitle {
           font-size: 11px;
           color: #475569;
           margin: 0;
-          line-height: 1.4;
+          line-height: 1.45;
         }
         .header-right {
           text-align: right;
+          flex-shrink: 0;
+          display: flex;
+          flex-direction: column;
+          align-items: flex-end;
+          gap: 6px;
         }
         .doc-badge {
-          background: #0f172a;
-          color: #fff;
-          font-size: 11.5px;
-          font-weight: 700;
+          border: 1.5px solid #0f172a;
+          color: #0f172a;
+          background: #f8fafc;
+          font-size: 11px;
+          font-weight: 800;
           padding: 5px 12px;
           border-radius: 4px;
           display: inline-block;
-          margin-bottom: 6px;
-          letter-spacing: 0.5px;
+          letter-spacing: 0.6px;
+          text-transform: uppercase;
         }
-        .doc-meta {
-          font-size: 10.5px;
-          color: #475569;
+        .header-meta-box {
+          font-size: 11px;
+          color: #334155;
+          text-align: right;
           line-height: 1.4;
+        }
+        .header-meta-box span {
+          color: #64748b;
+          font-weight: 600;
+          margin-right: 4px;
+        }
+        .header-meta-box strong {
+          color: #0f172a;
+          font-weight: 700;
         }
         .grid-2 {
           display: flex;
@@ -317,13 +335,13 @@ export function printContract(data: ContractData) {
         <div class="header">
           <div class="header-left">
             <h1 class="company-title">${data.companyName || "MOTOSİKLET SATIŞ VE TESLİM NOKTASI"}</h1>
-            <p class="company-subtitle">${data.companyAddress ? data.companyAddress + " | " : ""}Tel: ${data.companyPhone || "-"}</p>
+            <p class="company-subtitle">${data.companyAddress ? data.companyAddress + "<br/>" : ""}<strong>Tel:</strong> ${data.companyPhone || "-"}</p>
           </div>
           <div class="header-right">
             <div class="doc-badge">TESLİM - TESELLÜM VE SATIŞ SÖZLEŞMESİ</div>
-            <div class="doc-meta">
-              <strong>Tarih:</strong> ${formattedDate}<br/>
-              <strong>Sözleşme No:</strong> ${data.contractNo || "STK-" + Date.now().toString().slice(-6)}
+            <div class="header-meta-box">
+              <div><span>Tarih:</span> <strong>${formattedDate}</strong></div>
+              <div><span>Sözleşme No:</span> <strong style="font-family: monospace; letter-spacing: 0.5px;">${data.contractNo || "SZL-" + Date.now().toString().slice(-6)}</strong></div>
             </div>
           </div>
         </div>
