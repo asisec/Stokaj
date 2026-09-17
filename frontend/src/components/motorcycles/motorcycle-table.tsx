@@ -358,18 +358,28 @@ export function MotorcycleTable({
                 <th>Model</th>
                 <th>Yıl</th>
                 <th>Renk</th>
+                <th>Konum</th>
+                <th>Durum</th>
               </tr>
             </thead>
             <tbody>
-              ${table.getRowModel().rows.map(row => `
-                <tr>
-                  <td>${row.original.chassis_number}</td>
-                  <td>${row.original.brand}</td>
-                  <td>${row.original.model}</td>
-                  <td>${row.original.year}</td>
-                  <td>${row.original.color}</td>
-                </tr>
-              `).join('')}
+              ${table.getRowModel().rows.map(row => {
+                const location = row.original.is_other_branch && row.original.branch_name
+                  ? row.original.branch_name
+                  : "Merkez";
+                const status = row.original.status === "available" ? "Bekliyor" : "Satıldı";
+                return `
+                  <tr>
+                    <td>${row.original.chassis_number}</td>
+                    <td>${row.original.brand}</td>
+                    <td>${row.original.model}</td>
+                    <td>${row.original.year}</td>
+                    <td>${row.original.color}</td>
+                    <td>${location}</td>
+                    <td>${status}</td>
+                  </tr>
+                `;
+              }).join('')}
             </tbody>
           </table>
           <script>
