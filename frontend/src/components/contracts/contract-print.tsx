@@ -379,23 +379,23 @@ export function printContract(data: ContractData) {
           <div class="terms-title">SÖZLEŞME VE TESLİMAT ŞARTLARI</div>
           
           <div class="term-item">
-            <strong>1. EKSİKSİZ VE HASARSIZ TESLİMAT:</strong> Alıcı, yukarıda şasi ve motor numarası belirtilen aracı, anahtarları, şarj aleti ve resmi belgeleri ile birlikte çalışır, eksiksiz, ayıpsız ve hasarsız vaziyette bizzat muayene ederek teslim almıştır.
+            <strong>1. EKSİKSİZ TESLİMAT:</strong> Alıcı; aracı, anahtarlarını, şarj aletini ve evraklarını bizzat kontrol etmiş, eksiksiz, hasarsız ve çalışır durumda teslim almıştır.
           </div>
 
           <div class="term-item">
-            <strong>2. YETKİLİ SERVİS VE TEKNİK ARIZA SORUMLULUĞU:</strong> Satışa konu araç üretici / ithalatçı firma garantisi altındadır. Teslim anından itibaren araçta meydana gelebilecek olası mekanik, elektriksel, yazılımsal veya batarya/şarj arızalarında müdahale yetkisi münhasıran üretici/ithalatçı firmanın <strong>Yetkili Servislerine</strong> aittir. <strong>Satıcı firmanın servis, bakım, arıza tespiti veya garanti tamir yükümlülüğü bulunmamaktadır.</strong> Alıcı, herhangi bir teknik arıza vukuunda yetkili servise bizzat başvuracağını kabul ve taahhüt eder.
+            <strong>2. SERVİS VE GARANTİ:</strong> Araç üretici garantisindedir. Arıza, bakım ve garanti işlemleri münhasıran <strong>Yetkili Servisler</strong> tarafından yapılır; satıcı firmanın tamir veya servis yükümlülüğü yoktur.
           </div>
 
           <div class="term-item">
-            <strong>3. NAKLİYE, YERİNDE SERVİS VE ÇEKİCİ SORUMLULUĞU:</strong> Aracın alıcıya ilk teslimatının gerçekleştirilmesinden sonra, satıcı firmanın aracı bulunduğu yerden alma, servise taşıma, nakletme veya tekrar yerine bırakma gibi herhangi bir yükümlülüğü bulunmamaktadır. Olası bakım, onarım veya yerinde yapılacak her türlü servis, nakliye, çekici ve ulaşım masrafları münhasıran alıcıya ve kullanıcıya aittir.
+            <strong>3. NAKLİYE VE ÇEKİCİ:</strong> Teslimat sonrası aracın servise götürülmesi/getirilmesi satıcının sorumluluğunda değildir. Nakliye, çekici ve yerinde servis masrafları tamamen alıcıya aittir.
           </div>
 
           <div class="term-item">
-            <strong>4. PARÇA KIRILMASI, KAYBOLMASI VE YEDEK PARÇA SİPARİŞİ:</strong> Araç tesliminden sonra alıcı kaynaklı kullanım hataları, kaza, düşme, devrilme, hor kullanım neticesinde kırılan, hasar gören veya kaybolan parçalar (grenaj, şarj aleti, ayna, anahtar, koruma demiri, kumanda vb.) garanti kapsamı dışındadır. Bu tür parça ihtiyaçlarında alıcı, orijinal yedek parça siparişi ve temini amacıyla satıcı firma veya yetkili yedek parça noktası ile iletişime geçerek ücreti mukabilinde tedarik sağlayabileceğini bilir ve kabul eder.
+            <strong>4. KULLANICI HATASI VE PARÇA TEMİNİ:</strong> Düşme, kaza veya hatalı kullanımdan kaynaklanan parça kırılmaları ve kayıplar (şarj aleti, ayna, anahtar vb.) garanti dışıdır. İhtiyaç halinde parçalar ücreti karşılığında satıcıdan sipariş edilebilir.
           </div>
 
           <div class="term-item">
-            <strong>5. TRAFİK, İDARİ VE HUKUKİ SORUMLULUK:</strong> Aracın fiilen teslim edildiği tarih ve saatten itibaren araca ait her türlü hukuki, cezai, idari sorumluluk, trafik cezaları, kaza, otoyol geçiş ücretleri ve üçüncü şahıslara verilecek zararlar münhasıran alıcıya aittir.
+            <strong>5. HUKUKİ VE TRAFİK SORUMLULUĞU:</strong> Teslim anından itibaren araca ait her türlü kaza, trafik cezası, idari ve hukuki sorumluluk münhasıran alıcıya aittir.
           </div>
 
           ${

@@ -644,25 +644,31 @@ export function ContractForm() {
                 <p className="flex items-start gap-1.5 text-zinc-300">
                   <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 mt-0.5 shrink-0" />
                   <span>
-                    <strong>Eksiksiz Teslim:</strong> Araç, anahtarları, şarj aleti ve resmi belgeleri ile eksiksiz teslim alınmıştır.
+                    <strong>1. Eksiksiz Teslim:</strong> Araç, anahtarları, şarj aleti ve evraklar kontrol edilerek eksiksiz teslim alınmıştır.
                   </span>
                 </p>
                 <p className="flex items-start gap-1.5 text-zinc-300">
                   <CheckCircle2 className="h-3.5 w-3.5 text-blue-400 mt-0.5 shrink-0" />
                   <span>
-                    <strong>Yetkili Servis & Arıza Sorumluluğu:</strong> Garanti münhasıran yetkili servislere aittir, satıcı teknik/arıza sorumluluğu taşımaz.
+                    <strong>2. Servis & Garanti:</strong> Bakım ve arıza işlemleri Yetkili Servislerce yapılır; satıcının tamir yükümlülüğü yoktur.
                   </span>
                 </p>
                 <p className="flex items-start gap-1.5 text-zinc-300">
                   <CheckCircle2 className="h-3.5 w-3.5 text-amber-400 mt-0.5 shrink-0" />
                   <span>
-                    <strong>Nakliye & Yerinde Servis:</strong> İlk teslimat sonrasında yerinden alma/bırakma yükümlülüğü yoktur. Nakliye ve yerinde servis giderleri alıcıya aittir.
+                    <strong>3. Nakliye & Çekici:</strong> Servise taşıma satıcının sorumluluğunda değildir. Nakliye/çekici masrafları alıcıya aittir.
                   </span>
                 </p>
                 <p className="flex items-start gap-1.5 text-zinc-300">
                   <CheckCircle2 className="h-3.5 w-3.5 text-purple-400 mt-0.5 shrink-0" />
                   <span>
-                    <strong>Kırılma/Kaybolma ve Parça Siparişi:</strong> Şarj aleti, anahtar veya plastik parça kırılma/kaybolma durumlarında sipariş için satıcı veya yetkili distribütör ile iletişime geçilir.
+                    <strong>4. Parça & Kullanıcı Hatası:</strong> Düşme/kaza kaynaklı kırılmalar garanti dışıdır; parçalar ücretiyle satıcıdan sipariş edilebilir.
+                  </span>
+                </p>
+                <p className="flex items-start gap-1.5 text-zinc-300">
+                  <CheckCircle2 className="h-3.5 w-3.5 text-rose-400 mt-0.5 shrink-0" />
+                  <span>
+                    <strong>5. Hukuki Sorumluluk:</strong> Teslim anından itibaren trafik cezaları ve tüm hukuki sorumluluk alıcıya aittir.
                   </span>
                 </p>
               </div>
