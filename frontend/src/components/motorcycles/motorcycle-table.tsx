@@ -359,7 +359,6 @@ export function MotorcycleTable({
                 <th>Yıl</th>
                 <th>Renk</th>
                 <th>Konum</th>
-                <th>Durum</th>
               </tr>
             </thead>
             <tbody>
@@ -367,7 +366,6 @@ export function MotorcycleTable({
                 const location = row.original.is_other_branch && row.original.branch_name
                   ? row.original.branch_name
                   : "Merkez";
-                const status = row.original.status === "available" ? "Bekliyor" : "Satıldı";
                 return `
                   <tr>
                     <td>${row.original.chassis_number}</td>
@@ -376,7 +374,6 @@ export function MotorcycleTable({
                     <td>${row.original.year}</td>
                     <td>${row.original.color}</td>
                     <td>${location}</td>
-                    <td>${status}</td>
                   </tr>
                 `;
               }).join('')}
