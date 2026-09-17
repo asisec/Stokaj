@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Bike, LayoutDashboard, Wrench, Users, ShoppingCart, LogOut, Tags, FileText, FileCheck2 } from "lucide-react"
+import { Bike, LayoutDashboard, Wrench, Users, ShoppingCart, LogOut, Tags, FileText, FileCheck2, FileSignature } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { removeToken } from "@/lib/auth"
 import { useCensorStore } from "@/store/censor"
@@ -36,6 +36,7 @@ const navigationGroups: NavGroup[] = [
       { label: "Satış / POS", href: "/pos", icon: ShoppingCart },
       { label: "Satış Geçmişi", href: "/sales", icon: FileText },
       { label: "Evrak & Noter", href: "/documents", icon: FileCheck2 },
+      { label: "Müşteri Sözleşmesi", href: "/contracts", icon: FileSignature },
     ],
   },
   {
