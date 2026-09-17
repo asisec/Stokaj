@@ -63,7 +63,7 @@ export function printContract(data: ContractData) {
       <style>
         @page {
           size: A4 portrait;
-          margin: 12mm 15mm 12mm 15mm;
+          margin: 12mm 15mm;
         }
         * {
           box-sizing: border-box;
@@ -72,8 +72,8 @@ export function printContract(data: ContractData) {
         }
         body {
           font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
-          font-size: 11px;
-          line-height: 1.35;
+          font-size: 11.5px;
+          line-height: 1.45;
           color: #1a1a1a;
           background: #fff;
           margin: 0;
@@ -82,30 +82,33 @@ export function printContract(data: ContractData) {
         .container {
           width: 100%;
           max-width: 100%;
+          display: flex;
+          flex-direction: column;
         }
         .header {
           display: flex;
           justify-content: space-between;
           align-items: flex-start;
-          border-bottom: 2px solid #0f172a;
-          padding-bottom: 8px;
-          margin-bottom: 12px;
+          border-bottom: 2.5px solid #0f172a;
+          padding-bottom: 12px;
+          margin-bottom: 16px;
         }
         .header-left {
           flex: 1;
         }
         .company-title {
-          font-size: 16px;
+          font-size: 18px;
           font-weight: 800;
           letter-spacing: 0.5px;
           color: #0f172a;
           text-transform: uppercase;
-          margin: 0 0 2px 0;
+          margin: 0 0 4px 0;
         }
         .company-subtitle {
-          font-size: 10px;
+          font-size: 11px;
           color: #475569;
           margin: 0;
+          line-height: 1.4;
         }
         .header-right {
           text-align: right;
@@ -113,163 +116,167 @@ export function printContract(data: ContractData) {
         .doc-badge {
           background: #0f172a;
           color: #fff;
-          font-size: 11px;
+          font-size: 11.5px;
           font-weight: 700;
-          padding: 4px 10px;
+          padding: 5px 12px;
           border-radius: 4px;
           display: inline-block;
-          margin-bottom: 4px;
+          margin-bottom: 6px;
           letter-spacing: 0.5px;
         }
         .doc-meta {
-          font-size: 10px;
+          font-size: 10.5px;
           color: #475569;
+          line-height: 1.4;
         }
         .grid-2 {
           display: flex;
-          gap: 12px;
-          margin-bottom: 10px;
+          gap: 14px;
+          margin-bottom: 14px;
         }
         .card {
           flex: 1;
           border: 1px solid #cbd5e1;
-          border-radius: 5px;
-          padding: 8px 10px;
+          border-radius: 6px;
+          padding: 12px 14px;
           background: #f8fafc;
         }
         .card-title {
-          font-size: 11px;
+          font-size: 12px;
           font-weight: 700;
           color: #0f172a;
           border-bottom: 1px solid #e2e8f0;
-          padding-bottom: 4px;
-          margin-bottom: 6px;
+          padding-bottom: 6px;
+          margin-bottom: 10px;
           text-transform: uppercase;
           letter-spacing: 0.3px;
         }
         .info-row {
           display: flex;
-          margin-bottom: 3px;
+          margin-bottom: 5px;
         }
         .info-label {
-          width: 90px;
+          width: 95px;
           font-weight: 600;
           color: #475569;
-          font-size: 10.5px;
+          font-size: 11px;
         }
         .info-value {
           flex: 1;
           font-weight: 500;
           color: #0f172a;
-          font-size: 10.5px;
+          font-size: 11px;
         }
         .id-cards-section {
           border: 1px solid #cbd5e1;
-          border-radius: 5px;
-          padding: 8px 10px;
-          margin-bottom: 10px;
+          border-radius: 6px;
+          padding: 12px 14px;
+          margin-bottom: 14px;
           background: #fff;
         }
         .id-cards-container {
           display: flex;
-          gap: 12px;
+          gap: 16px;
           justify-content: center;
-          margin-top: 6px;
+          margin-top: 8px;
         }
         .id-card-box {
           flex: 1;
           max-width: 48%;
           border: 1px dashed #94a3b8;
           border-radius: 6px;
-          padding: 6px;
+          padding: 8px;
           text-align: center;
           background: #fcfcfc;
         }
         .id-card-box img {
           max-width: 100%;
-          height: 120px;
+          height: 155px;
           object-fit: contain;
           border-radius: 4px;
           border: 1px solid #e2e8f0;
         }
         .id-card-label {
-          font-size: 10px;
+          font-size: 10.5px;
           font-weight: 600;
           color: #64748b;
-          margin-top: 4px;
+          margin-top: 6px;
         }
         .terms-section {
           border: 1px solid #cbd5e1;
-          border-radius: 5px;
-          padding: 8px 10px;
-          margin-bottom: 10px;
+          border-radius: 6px;
+          padding: 12px 14px;
+          margin-bottom: 14px;
           background: #fff;
         }
         .terms-title {
-          font-size: 11px;
+          font-size: 12px;
           font-weight: 700;
           color: #0f172a;
           border-bottom: 1px solid #e2e8f0;
-          padding-bottom: 4px;
-          margin-bottom: 6px;
+          padding-bottom: 6px;
+          margin-bottom: 8px;
           text-transform: uppercase;
         }
         .term-item {
-          font-size: 9.5px;
-          line-height: 1.35;
-          margin-bottom: 4px;
+          font-size: 10.5px;
+          line-height: 1.45;
+          margin-bottom: 6px;
           color: #334155;
           text-align: justify;
+        }
+        .term-item:last-child {
+          margin-bottom: 0;
         }
         .term-item strong {
           color: #0f172a;
         }
         .handwritten-box {
           border: 1.5px solid #0f172a;
-          border-radius: 5px;
-          padding: 8px 10px;
-          margin-bottom: 12px;
+          border-radius: 6px;
+          padding: 10px 14px;
+          margin-bottom: 14px;
           background: #fdfdfd;
         }
         .handwritten-instruction {
-          font-size: 10.5px;
+          font-size: 11px;
           font-weight: 700;
           color: #0f172a;
-          margin-bottom: 4px;
+          margin-bottom: 6px;
         }
         .handwritten-lines {
           border-bottom: 1px dashed #94a3b8;
-          height: 28px;
-          margin-top: 4px;
+          height: 36px;
+          margin-top: 6px;
         }
         .signatures {
           display: flex;
           justify-content: space-between;
           gap: 20px;
-          margin-top: 10px;
+          margin-top: 6px;
         }
         .sig-block {
           flex: 1;
           border: 1px solid #cbd5e1;
-          border-radius: 5px;
-          padding: 8px 12px;
+          border-radius: 6px;
+          padding: 12px 16px;
           text-align: center;
-          height: 95px;
+          height: 120px;
           display: flex;
           flex-direction: column;
           justify-content: space-between;
         }
         .sig-title {
           font-weight: 700;
-          font-size: 10.5px;
+          font-size: 11px;
           color: #0f172a;
           text-transform: uppercase;
         }
         .sig-line {
-          font-size: 9.5px;
+          font-size: 10px;
           color: #64748b;
           border-top: 1px solid #cbd5e1;
-          padding-top: 4px;
+          padding-top: 6px;
         }
         @media print {
           body {
