@@ -133,39 +133,52 @@ export function printContract(data: ContractData) {
           display: flex;
           gap: 14px;
           margin-bottom: 14px;
+          align-items: stretch;
         }
         .card {
-          flex: 1;
+          flex: 1 1 50%;
+          width: calc(50% - 7px);
           border: 1px solid #cbd5e1;
           border-radius: 6px;
           padding: 12px 14px;
           background: #f8fafc;
+          display: flex;
+          flex-direction: column;
         }
         .card-title {
-          font-size: 12px;
+          font-size: 11.5px;
           font-weight: 700;
           color: #0f172a;
           border-bottom: 1px solid #e2e8f0;
           padding-bottom: 6px;
-          margin-bottom: 10px;
+          margin-bottom: 8px;
           text-transform: uppercase;
           letter-spacing: 0.3px;
         }
-        .info-row {
-          display: flex;
-          margin-bottom: 5px;
+        .info-table {
+          width: 100%;
+          border-collapse: collapse;
+          table-layout: fixed;
+          flex: 1;
         }
-        .info-label {
-          width: 95px;
+        .info-table tr {
+          vertical-align: top;
+        }
+        .info-table td {
+          padding: 3px 0;
+          font-size: 11px;
+          line-height: 1.4;
+        }
+        .info-table td.label-col {
+          width: 115px;
           font-weight: 600;
           color: #475569;
-          font-size: 11px;
+          white-space: nowrap;
         }
-        .info-value {
-          flex: 1;
-          font-weight: 500;
+        .info-table td.val-col {
           color: #0f172a;
-          font-size: 11px;
+          font-weight: 500;
+          word-break: break-word;
         }
         .id-cards-section {
           border: 1px solid #cbd5e1;
@@ -252,31 +265,43 @@ export function printContract(data: ContractData) {
         .signatures {
           display: flex;
           justify-content: space-between;
-          gap: 20px;
-          margin-top: 6px;
+          gap: 16px;
+          margin-top: 4px;
         }
         .sig-block {
-          flex: 1;
+          flex: 1 1 50%;
+          width: calc(50% - 8px);
           border: 1px solid #cbd5e1;
           border-radius: 6px;
-          padding: 12px 16px;
+          padding: 10px 14px 12px;
           text-align: center;
-          height: 120px;
-          display: flex;
-          flex-direction: column;
-          justify-content: space-between;
+          background: #f8fafc;
         }
         .sig-title {
           font-weight: 700;
           font-size: 11px;
           color: #0f172a;
           text-transform: uppercase;
+          letter-spacing: 0.3px;
+          padding-bottom: 6px;
+          border-bottom: 1px solid #e2e8f0;
+        }
+        .sig-name {
+          font-size: 11px;
+          color: #334155;
+          font-weight: 600;
+          margin-top: 8px;
+          min-height: 18px;
+        }
+        .sig-space {
+          height: 52px;
         }
         .sig-line {
           font-size: 10px;
           color: #64748b;
-          border-top: 1px solid #cbd5e1;
-          padding-top: 6px;
+          border-top: 1px dashed #94a3b8;
+          padding-top: 5px;
+          font-weight: 500;
         }
         @media print {
           body {
@@ -308,43 +333,51 @@ export function printContract(data: ContractData) {
           <!-- CUSTOMER INFO -->
           <div class="card">
             <div class="card-title">MÜŞTERİ / ALICI BİLGİLERİ</div>
-            <div class="info-row">
-              <span class="info-label">Adı Soyadı:</span>
-              <span class="info-value"><strong>${data.customerName || "-"}</strong></span>
-            </div>
-            <div class="info-row">
-              <span class="info-label">T.C. / Vergi No:</span>
-              <span class="info-value">${data.customerIdentity || "-"}</span>
-            </div>
-            <div class="info-row">
-              <span class="info-label">Telefon:</span>
-              <span class="info-value">${data.customerPhone || "-"}</span>
-            </div>
-            <div class="info-row">
-              <span class="info-label">Adres:</span>
-              <span class="info-value">${data.customerAddress || "-"}</span>
-            </div>
+            <table class="info-table">
+              <tr>
+                <td class="label-col">Adı Soyadı:</td>
+                <td class="val-col"><strong>${data.customerName || "-"}</strong></td>
+              </tr>
+              <tr>
+                <td class="label-col">T.C. / Vergi No:</td>
+                <td class="val-col">${data.customerIdentity || "-"}</td>
+              </tr>
+              <tr>
+                <td class="label-col">Telefon:</td>
+                <td class="val-col">${data.customerPhone || "-"}</td>
+              </tr>
+              <tr>
+                <td class="label-col">Adres:</td>
+                <td class="val-col">${data.customerAddress || "-"}</td>
+              </tr>
+            </table>
           </div>
 
           <!-- VEHICLE INFO -->
           <div class="card">
             <div class="card-title">TESLİM EDİLEN ARAÇ BİLGİLERİ</div>
-            <div class="info-row">
-              <span class="info-label">Marka / Model:</span>
-              <span class="info-value"><strong>${data.vehicleBrand || ""} ${data.vehicleModel || ""}</strong></span>
-            </div>
-            <div class="info-row">
-              <span class="info-label">Şasi Numarası:</span>
-              <span class="info-value" style="font-family: monospace; letter-spacing: 0.5px; font-weight:700;">${data.vehicleChassis || "-"}</span>
-            </div>
-            <div class="info-row">
-              <span class="info-label">Motor No / Yıl:</span>
-              <span class="info-value">${data.vehicleEngineNo || "-"} / ${data.vehicleYear || "-"}</span>
-            </div>
-            <div class="info-row">
-              <span class="info-label">Renk / Km / Konum:</span>
-              <span class="info-value">${data.vehicleColor || "-"} / ${data.vehicleKm || "0"} KM / ${data.vehicleLocation || "Merkez"}</span>
-            </div>
+            <table class="info-table">
+              <tr>
+                <td class="label-col">Marka / Model:</td>
+                <td class="val-col"><strong>${data.vehicleBrand || ""} ${data.vehicleModel || ""}</strong></td>
+              </tr>
+              <tr>
+                <td class="label-col">Şasi Numarası:</td>
+                <td class="val-col" style="font-family: monospace; letter-spacing: 0.5px; font-weight:700;">${data.vehicleChassis || "-"}</td>
+              </tr>
+              <tr>
+                <td class="label-col">Motor No / Yıl:</td>
+                <td class="val-col">${data.vehicleEngineNo || "-"} / ${data.vehicleYear || "-"}</td>
+              </tr>
+              <tr>
+                <td class="label-col">Renk / Km:</td>
+                <td class="val-col">${data.vehicleColor || "-"} / ${data.vehicleKm || "0"} KM</td>
+              </tr>
+              <tr>
+                <td class="label-col">Konum:</td>
+                <td class="val-col">${data.vehicleLocation || "Merkez"}</td>
+              </tr>
+            </table>
           </div>
         </div>
 
@@ -428,13 +461,15 @@ export function printContract(data: ContractData) {
         <div class="signatures">
           <div class="sig-block">
             <div class="sig-title">SATICI FİRMA / YETKİLİ</div>
-            <div style="font-size: 10px; color:#475569;">${data.companyAuthorized || data.companyName || "Yetkili İmza"}</div>
+            <div class="sig-name">${data.companyAuthorized || data.companyName || "Firma Yetkilisi"}</div>
+            <div class="sig-space"></div>
             <div class="sig-line">Kaşe & Islak İmza</div>
           </div>
           
           <div class="sig-block">
             <div class="sig-title">ALICI (MÜŞTERİ)</div>
-            <div style="font-size: 10px; color:#475569;">${data.customerName || "Adı Soyadı"} - ${data.customerIdentity ? "TC: " + data.customerIdentity : ""}</div>
+            <div class="sig-name">${data.customerName || "Adı Soyadı"} ${data.customerIdentity ? "— TC: " + data.customerIdentity : ""}</div>
+            <div class="sig-space"></div>
             <div class="sig-line">Tarih & Islak İmza</div>
           </div>
         </div>
