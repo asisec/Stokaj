@@ -164,6 +164,35 @@ export interface CompanyInfo {
   company_authorized: string
 }
 
+export interface ContractRecord {
+  id: number
+  contract_no: string
+  contract_date: string
+  customer_name: string
+  customer_identity: string
+  customer_phone: string
+  customer_address: string
+  company_name: string
+  company_address: string
+  company_tax_office: string
+  company_tax_no: string
+  company_phone: string
+  company_authorized: string
+  vehicle_brand: string
+  vehicle_model: string
+  vehicle_year: string
+  vehicle_color: string
+  vehicle_chassis: string
+  vehicle_engine_no: string
+  vehicle_km: string
+  vehicle_location: string
+  id_card_front: string | null
+  id_card_back: string | null
+  special_notes: string
+  created_at: string
+  updated_at: string
+}
+
 export const api = {
   getCompanyInfo: () => request<CompanyInfo>("/api/company"),
   updateCompanyInfo: (data: Partial<CompanyInfo>) =>
@@ -244,5 +273,16 @@ export const api = {
   updateDocument: (id: number, data: Partial<RegistrationDocument>) =>
     request<RegistrationDocument>(`/api/documents/${id}`, { method: "PUT", body: JSON.stringify(data) }),
   deleteDocument: (id: number) => request<{ message: string }>(`/api/documents/${id}`, { method: "DELETE" }),
+
+  getContracts: (search?: string) => {
+    const params = new URLSearchParams()
+    if (search) params.set("search", search)
+    const query = params.toString()
+    return request<ContractRecord[]>(`/api/contracts${query ? `?${query}` : ""}`)
+  },
+  getContract: (id: number) => request<ContractRecord>(`/api/contracts/${id}`),
+  createContract: (data: any) =>
+    request<ContractRecord>("/api/contracts", { method: "POST", body: JSON.stringify(data) }),
+  deleteContract: (id: number) => request<{ message: string }>(`/api/contracts/${id}`, { method: "DELETE" }),
 }
 

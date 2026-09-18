@@ -318,7 +318,7 @@ export function ContractForm() {
     }
   }
 
-  const handlePrint = () => {
+  const handlePrint = async () => {
     if (!customerName.trim()) {
       toast.warning("Lütfen müşteri adını girin veya seçin")
       return
@@ -329,6 +329,15 @@ export function ContractForm() {
     }
 
     const data = buildContractData()
+
+    // Automatically save contract record to DB for digital history/retrieval
+    try {
+      await api.createContract(data)
+      toast.success("Sözleşme dijital arşive kaydedildi")
+    } catch {
+      // Continue print even if DB save fails
+    }
+
     printContract(data)
   }
 
@@ -698,6 +707,12 @@ export function ContractForm() {
                   <CheckCircle2 className="h-3.5 w-3.5 text-rose-400 mt-0.5 shrink-0" />
                   <span>
                     <strong>5. Hukuki Sorumluluk:</strong> Teslim anından itibaren trafik cezaları ve tüm hukuki sorumluluk alıcıya aittir.
+                  </span>
+                </p>
+                <p className="flex items-start gap-1.5 text-zinc-300">
+                  <CheckCircle2 className="h-3.5 w-3.5 text-indigo-400 mt-0.5 shrink-0" />
+                  <span>
+                    <strong>6. Ödeme & Kart Sorumluluğu:</strong> Kullanılan kart teslim alana ait olmasa dahi tüm sorumluluk teslim alana aittir. Ulaşmayan onay mesajlarından satıcı sorumlu değildir.
                   </span>
                 </p>
               </div>

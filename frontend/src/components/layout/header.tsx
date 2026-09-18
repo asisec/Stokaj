@@ -14,6 +14,7 @@ const pageTitles: Record<string, string> = {
   "/pos": "Satış / POS",
   "/documents": "Evrak & Noter Takibi",
   "/contracts": "Müşteri Sözleşmesi & Teslim Tutanağı",
+  "/contracts/history": "Dijital Sözleşmeler & Arşiv",
 }
 
 export function Header() {

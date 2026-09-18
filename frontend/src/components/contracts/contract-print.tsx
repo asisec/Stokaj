@@ -471,11 +471,15 @@ export function printContract(data: ContractData) {
             <strong>5. HUKUKİ VE TRAFİK SORUMLULUĞU:</strong> Teslim anından itibaren araca ait her türlü kaza, trafik cezası, idari ve hukuki sorumluluk münhasıran alıcıya aittir.
           </div>
 
+          <div class="term-item">
+            <strong>6. ÖDEME VE KART SORUMLULUĞU:</strong> İşlemde kullanılan ödeme kartı aracı teslim alana ait olmasa dahi tüm hukuki ve mali sorumluluk kartı ibraz eden ve aracı teslim alan kişiye aittir. Kart sahibine ulaşmayan onay mesajlarından firmamız sorumlu tutulamaz.
+          </div>
+
           ${
             data.specialNotes
               ? `
             <div class="term-item">
-              <strong>6. ÖZEL NOTLAR:</strong> ${data.specialNotes}
+              <strong>7. ÖZEL NOTLAR:</strong> ${data.specialNotes}
             </div>
           `
               : ""
