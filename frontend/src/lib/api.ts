@@ -153,7 +153,24 @@ export interface DashboardStats {
   top_brands: BrandStat[];
 }
 
+export interface CompanyInfo {
+  id?: number
+  company_name: string
+  company_address: string
+  company_tax_office: string
+  company_tax_no: string
+  company_phone: string
+  company_authorized: string
+}
+
 export const api = {
+  getCompanyInfo: () => request<CompanyInfo>("/api/company"),
+  updateCompanyInfo: (data: Partial<CompanyInfo>) =>
+    request<CompanyInfo>("/api/company", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
   getMotorcycles: (search?: string, status?: string) => {
     const params = new URLSearchParams()
     if (search) params.set("search", search)

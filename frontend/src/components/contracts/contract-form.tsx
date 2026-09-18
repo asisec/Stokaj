@@ -34,6 +34,7 @@ export function ContractForm() {
   const [customers, setCustomers] = useState<Customer[]>([])
   const [motorcycles, setMotorcycles] = useState<Motorcycle[]>([])
   const [loading, setLoading] = useState(true)
+  const [savingCompany, setSavingCompany] = useState(false)
 
   const [contractNo, setContractNo] = useState("")
   const [contractDate, setContractDate] = useState("")
@@ -102,12 +103,21 @@ export function ContractForm() {
 
     async function loadData() {
       try {
-        const [cList, mList] = await Promise.all([
+        const [cList, mList, companyData] = await Promise.all([
           api.getCustomers().catch(() => []),
           api.getMotorcycles().catch(() => []),
+          api.getCompanyInfo().catch(() => null),
         ])
         setCustomers(cList || [])
         setMotorcycles(mList || [])
+        if (companyData) {
+          if (companyData.company_name) setCompanyName(companyData.company_name)
+          if (companyData.company_address) setCompanyAddress(companyData.company_address)
+          if (companyData.company_tax_office) setCompanyTaxOffice(companyData.company_tax_office)
+          if (companyData.company_tax_no) setCompanyTaxNo(companyData.company_tax_no)
+          if (companyData.company_phone) setCompanyPhone(companyData.company_phone)
+          if (companyData.company_authorized) setCompanyAuthorized(companyData.company_authorized)
+        }
       } catch {
         toast.error("Veriler yüklenirken hata oluştu")
       } finally {
@@ -117,20 +127,38 @@ export function ContractForm() {
     loadData()
   }, [])
 
-  const saveCompanyInfo = () => {
+  const saveCompanyInfo = async () => {
+    setSavingCompany(true)
     try {
       const data = {
-        companyName,
-        companyAddress,
-        companyTaxOffice,
-        companyTaxNo,
-        companyPhone,
-        companyAuthorized,
+        company_name: companyName,
+        company_address: companyAddress,
+        company_tax_office: companyTaxOffice,
+        company_tax_no: companyTaxNo,
+        company_phone: companyPhone,
+        company_authorized: companyAuthorized,
       }
-      localStorage.setItem(DEFAULT_COMPANY_KEY, JSON.stringify(data))
-      toast.success("Firma bilgileri varsayılan olarak kaydedildi")
-    } catch {
-      toast.error("Firma bilgileri kaydedilemedi")
+      await api.updateCompanyInfo(data)
+      try {
+        localStorage.setItem(
+          DEFAULT_COMPANY_KEY,
+          JSON.stringify({
+            companyName,
+            companyAddress,
+            companyTaxOffice,
+            companyTaxNo,
+            companyPhone,
+            companyAuthorized,
+          })
+        )
+      } catch {
+        // Ignore localStorage error
+      }
+      toast.success("Firma bilgileri veritabanına kaydedildi")
+    } catch (err: any) {
+      toast.error(err?.message || "Firma bilgileri kaydedilemedi")
+    } finally {
+      setSavingCompany(false)
     }
   }
 
@@ -346,9 +374,10 @@ export function ContractForm() {
                   variant="outline"
                   size="sm"
                   onClick={saveCompanyInfo}
+                  disabled={savingCompany}
                   className="text-xs h-7"
                 >
-                  Firma Bilgilerini Kaydet
+                  {savingCompany ? "Kaydediliyor..." : "Firma Bilgilerini Kaydet"}
                 </Button>
               </div>
               <CardDescription className="text-xs">
