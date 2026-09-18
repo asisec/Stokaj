@@ -37,6 +37,7 @@ const initialFormState = {
   quantity: 0,
   description: "",
   is_defective: false,
+  location: "Merkez",
 };
 
 export function SparePartForm({
@@ -98,6 +99,7 @@ export function SparePartForm({
         quantity: sparePart.quantity,
         description: sparePart.description || "",
         is_defective: sparePart.is_defective || false,
+        location: sparePart.location || "Merkez",
       });
       wasEditing.current = true;
     } else {
@@ -295,6 +297,36 @@ export function SparePartForm({
           </div>
 
           <div className="space-y-2">
+            <Label htmlFor="location" className="text-zinc-400 text-sm flex items-center justify-between">
+              <span>Depo / Bulunduğu Konum (Kutu / Raf)</span>
+              <span className="text-xs text-zinc-500 font-normal">Hızlı seçim yapabilirsiniz</span>
+            </Label>
+            <div className="flex flex-wrap gap-1.5 mb-1.5">
+              {["Kutu 1", "Kutu 2", "Kutu 3", "Kutu 4", "Merkez Depo"].map((box) => (
+                <button
+                  key={box}
+                  type="button"
+                  onClick={() => handleChange("location", box)}
+                  className={`text-xs px-2.5 py-1 rounded-md border transition-all ${
+                    formData.location === box
+                      ? "bg-emerald-600/30 border-emerald-500 text-emerald-300 font-medium shadow-sm"
+                      : "bg-zinc-900 border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200"
+                  }`}
+                >
+                  {box}
+                </button>
+              ))}
+            </div>
+            <Input
+              id="location"
+              value={formData.location}
+              onChange={(e) => handleChange("location", e.target.value)}
+              placeholder="Örn: Kutu 1, Kutu 2, A-2 Rafı..."
+              className="bg-zinc-900/50 border-zinc-800 text-zinc-200 focus:border-emerald-500/50 transition-colors"
+            />
+          </div>
+
+          <div className="space-y-2">
             <Label htmlFor="description" className="text-zinc-400 text-sm">
               Açıklama
             </Label>
@@ -302,7 +334,7 @@ export function SparePartForm({
               id="description"
               value={formData.description}
               onChange={(e) => handleChange("description", e.target.value)}
-              rows={4}
+              rows={3}
               className="flex w-full rounded-md border border-zinc-800 bg-zinc-900/50 px-3 py-2 text-sm text-zinc-200 placeholder:text-zinc-600 focus:border-emerald-500/50 focus:outline-none focus:ring-1 focus:ring-emerald-500/30 transition-colors resize-none"
               placeholder="Yedek parça detayları..."
             />

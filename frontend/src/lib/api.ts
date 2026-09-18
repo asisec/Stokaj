@@ -56,6 +56,7 @@ export interface SparePart {
   quantity: number
   description: string
   is_defective: boolean
+  location?: string
   created_at: string
   updated_at: string
 }

@@ -83,7 +83,8 @@ export function SparePartTable({
           (sp.category && sp.category.toLowerCase().includes(query)) ||
           (sp.compatible_brand && sp.compatible_brand.toLowerCase().includes(query)) ||
           (sp.compatible_model && sp.compatible_model.toLowerCase().includes(query)) ||
-          (sp.description && sp.description.toLowerCase().includes(query))
+          (sp.description && sp.description.toLowerCase().includes(query)) ||
+          (sp.location && sp.location.toLowerCase().includes(query))
       );
     }
 
@@ -173,6 +174,35 @@ export function SparePartTable({
               <span className="text-zinc-300 text-sm font-medium">{brand || "-"}</span>
               <span className="text-zinc-500 text-xs">{model || "-"}</span>
             </div>
+          );
+        },
+      },
+      {
+        accessorKey: "location",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="text-zinc-400 hover:text-zinc-200 -ml-4"
+          >
+            Konum / Kutu
+            <ArrowUpDown className="ml-2 h-3.5 w-3.5" />
+          </Button>
+        ),
+        cell: ({ row }) => {
+          const loc = (row.getValue("location") as string) || "Merkez";
+          const isBox = loc.toLowerCase().startsWith("kutu");
+          return (
+            <Badge
+              variant="outline"
+              className={
+                isBox
+                  ? "bg-blue-500/10 text-blue-400 border-blue-500/30 font-medium"
+                  : "bg-zinc-800/60 text-zinc-300 border-zinc-700/60"
+              }
+            >
+              {loc}
+            </Badge>
           );
         },
       },

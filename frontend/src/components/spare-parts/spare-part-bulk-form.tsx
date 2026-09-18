@@ -47,6 +47,7 @@ const emptyRow = (): Partial<SparePart> => ({
   quantity: 1,
   description: "",
   is_defective: false,
+  location: "Merkez",
 });
 
 export function SparePartBulkForm({
@@ -130,12 +131,13 @@ export function SparePartBulkForm({
 
         <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
           <div className="flex-1 overflow-auto p-6">
-            <div className="min-w-[1000px] space-y-4">
-              <div className="grid grid-cols-[150px_1fr_150px_150px_80px_1.5fr_80px_40px] gap-4 text-sm font-medium text-zinc-400 px-2">
+            <div className="min-w-[1100px] space-y-4">
+              <div className="grid grid-cols-[140px_1fr_130px_130px_120px_70px_1.5fr_70px_36px] gap-3 text-sm font-medium text-zinc-400 px-2">
                 <div>Kategori</div>
                 <div>Parça Adı</div>
                 <div>Uyumlu Marka</div>
                 <div>Uyumlu Model</div>
+                <div>Konum / Kutu</div>
                 <div>Adet</div>
                 <div>Açıklama</div>
                 <div className="text-center">Bozuk</div>
@@ -144,7 +146,7 @@ export function SparePartBulkForm({
               
               <div className="space-y-3">
                 {rows.map((row, index) => (
-                  <div key={index} className="grid grid-cols-[150px_1fr_150px_150px_80px_1.5fr_80px_40px] gap-4 items-start">
+                  <div key={index} className="grid grid-cols-[140px_1fr_130px_130px_120px_70px_1.5fr_70px_36px] gap-3 items-start">
                     <Select
                       value={row.category}
                       onValueChange={(val) => updateRow(index, "category", val)}
@@ -222,6 +224,13 @@ export function SparePartBulkForm({
                         </div>
                       )}
                     </div>
+
+                    <Input
+                      placeholder="Konum / Kutu"
+                      value={row.location || "Merkez"}
+                      onChange={(e) => updateRow(index, "location", e.target.value)}
+                      className="bg-zinc-900/50 border-zinc-800 h-9"
+                    />
 
                     <Input
                       type="number"
