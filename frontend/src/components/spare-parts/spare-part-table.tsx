@@ -48,6 +48,12 @@ import {
   Image as ImageIcon,
 } from "lucide-react";
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface SparePartTableProps {
   spareParts: SparePart[];
@@ -209,11 +215,25 @@ export function SparePartTable({
       {
         accessorKey: "description",
         header: () => <span className="text-zinc-400">Açıklama</span>,
-        cell: ({ row }) => (
-          <span className="text-zinc-500 text-sm max-w-[240px] truncate block">
-            {row.getValue("description") || "-"}
-          </span>
-        ),
+        cell: ({ row }) => {
+          const desc = (row.getValue("description") as string) || "";
+          if (!desc) return <span className="text-zinc-500 text-xs">-</span>;
+          return (
+            <TooltipProvider>
+              <Tooltip delayDuration={150}>
+                <TooltipTrigger asChild>
+                  <span className="text-zinc-400 text-sm max-w-[240px] truncate block cursor-help hover:text-zinc-200 transition-colors">
+                    {desc}
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent className="bg-zinc-900 border-zinc-700 text-zinc-100 max-w-sm text-xs p-3 shadow-2xl rounded-lg font-medium leading-relaxed z-50">
+                  <p className="text-zinc-400 text-[11px] font-semibold mb-1 border-b border-zinc-800 pb-1">Parça Detayı / Açıklama</p>
+                  {desc}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          );
+        },
       },
       {
         id: "actions",
