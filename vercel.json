@@ -1,26 +1,6 @@
 {
-  "builds": [
-    {
-      "src": "frontend/package.json",
-      "use": "@vercel/next"
-    },
-    {
-      "src": "backend/api/index.go",
-      "use": "@vercel/go"
-    }
-  ],
-  "rewrites": [
-    {
-      "source": "/api/backend/(.*)",
-      "destination": "/backend/api/index.go"
-    },
-    {
-      "source": "/api/backend",
-      "destination": "/backend/api/index.go"
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/frontend/$1"
-    }
-  ]
+  "buildCommand": "cd frontend && npm run build",
+  "outputDirectory": "frontend/.next",
+  "installCommand": "cd frontend && npm install",
+  "framework": "nextjs"
 }

@@ -6,6 +6,7 @@ type P = { params: Promise<{ id: string }> | { id: string } };
 export async function GET(req: NextRequest, { params }: P) {
   if (!await verifyAuth(req)) return err("Yetkisiz", 401);
   const { id } = await params;
+  const targetId = isNaN(Number(id)) ? id : Number(id);
   const sql = getDb();
   try {
     const rows = await sql`
@@ -16,7 +17,7 @@ export async function GET(req: NextRequest, { params }: P) {
       LEFT JOIN customers c ON c.id = s.customer_id
       LEFT JOIN sale_items si ON si.sale_id = s.id
       LEFT JOIN sale_payments sp ON sp.sale_id = s.id
-      WHERE s.id = ${id} GROUP BY s.id, c.id`;
+      WHERE s.id = ${targetId} GROUP BY s.id, c.id`;
     if (!rows[0]) return err("Satış kaydı bulunamadı", 404);
     return ok(rows[0]);
   } catch (e) { return err(String(e), 500); }
@@ -25,12 +26,13 @@ export async function GET(req: NextRequest, { params }: P) {
 export async function DELETE(req: NextRequest, { params }: P) {
   if (!await verifyAuth(req)) return err("Yetkisiz", 401);
   const { id } = await params;
+  const targetId = isNaN(Number(id)) ? id : Number(id);
   const sql = getDb();
   try {
     const sales = await sql`
       SELECT s.*, COALESCE(json_agg(DISTINCT si.*) FILTER (WHERE si.id IS NOT NULL), '[]') as items
       FROM sales s LEFT JOIN sale_items si ON si.sale_id = s.id
-      WHERE s.id = ${id} GROUP BY s.id`;
+      WHERE s.id = ${targetId} GROUP BY s.id`;
     if (!sales[0]) return err("Satış bulunamadı", 404);
     const sale = sales[0];
 
@@ -44,13 +46,12 @@ export async function DELETE(req: NextRequest, { params }: P) {
       }
     }
 
-    // User requested Option 2: Delete all customer transactions and reset balance to 0 when a sale is deleted
     await sql`DELETE FROM customer_transactions WHERE customer_id=${sale.customer_id}`;
     await sql`UPDATE customers SET balance=0, updated_at=NOW() WHERE id=${sale.customer_id}`;
 
-    await sql`DELETE FROM sale_items WHERE sale_id=${id}`;
-    await sql`DELETE FROM sale_payments WHERE sale_id=${id}`;
-    await sql`DELETE FROM sales WHERE id=${id}`;
+    await sql`DELETE FROM sale_items WHERE sale_id=${targetId}`;
+    await sql`DELETE FROM sale_payments WHERE sale_id=${targetId}`;
+    await sql`DELETE FROM sales WHERE id=${targetId}`;
     return ok({ message: "Satış başarıyla silindi" });
   } catch (e) { return err(String(e), 500); }
 }

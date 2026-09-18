@@ -6,6 +6,7 @@ type P = { params: Promise<{ id: string }> | { id: string } };
 export async function GET(req: NextRequest, { params }: P) {
   if (!await verifyAuth(req)) return err("Yetkisiz", 401);
   const { id } = await params;
+  const targetId = isNaN(Number(id)) ? id : Number(id);
   const sql = getDb();
   try {
     const rows = await sql`
@@ -16,7 +17,7 @@ export async function GET(req: NextRequest, { params }: P) {
       FROM registration_documents d
       LEFT JOIN motorcycles m ON m.id = d.motorcycle_id
       LEFT JOIN customers c ON c.id = d.customer_id
-      WHERE d.id = ${id}
+      WHERE d.id = ${targetId}
     `;
     if (!rows[0]) return err("Evrak kaydı bulunamadı", 404);
     return ok(rows[0]);
@@ -28,12 +29,12 @@ export async function GET(req: NextRequest, { params }: P) {
 export async function PUT(req: NextRequest, { params }: P) {
   if (!await verifyAuth(req)) return err("Yetkisiz", 401);
   const { id } = await params;
+  const targetId = isNaN(Number(id)) ? id : Number(id);
   const sql = getDb();
   const body = await req.json().catch(() => null);
   if (!body) return err("Geçersiz veri formatı");
 
   try {
-    // If status becomes 'delivered' and delivered_at not provided, set to NOW()
     const deliveredAt = body.status === "delivered" 
       ? (body.delivered_at || new Date().toISOString()) 
       : (body.delivered_at || null);
@@ -51,7 +52,7 @@ export async function PUT(req: NextRequest, { params }: P) {
         delivered_at = ${deliveredAt},
         notes = COALESCE(${body.notes}, notes),
         updated_at = NOW()
-      WHERE id = ${id}
+      WHERE id = ${targetId}
       RETURNING *
     `;
 
@@ -65,7 +66,7 @@ export async function PUT(req: NextRequest, { params }: P) {
       FROM registration_documents d
       LEFT JOIN motorcycles m ON m.id = d.motorcycle_id
       LEFT JOIN customers c ON c.id = d.customer_id
-      WHERE d.id = ${id}
+      WHERE d.id = ${targetId}
     `;
 
     return ok(fullDoc[0]);
@@ -78,9 +79,10 @@ export async function PUT(req: NextRequest, { params }: P) {
 export async function DELETE(req: NextRequest, { params }: P) {
   if (!await verifyAuth(req)) return err("Yetkisiz", 401);
   const { id } = await params;
+  const targetId = isNaN(Number(id)) ? id : Number(id);
   const sql = getDb();
   try {
-    await sql`DELETE FROM registration_documents WHERE id = ${id}`;
+    await sql`DELETE FROM registration_documents WHERE id = ${targetId}`;
     return ok({ message: "Evrak kaydı başarıyla silindi" });
   } catch (e) {
     return err(String(e), 500);

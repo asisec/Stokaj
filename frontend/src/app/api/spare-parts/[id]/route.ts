@@ -6,9 +6,10 @@ type P = { params: Promise<{ id: string }> | { id: string } };
 export async function GET(req: NextRequest, { params }: P) {
   if (!await verifyAuth(req)) return err("Yetkisiz", 401);
   const { id } = await params;
+  const targetId = isNaN(Number(id)) ? id : Number(id);
   const sql = getDb();
   try {
-    const rows = await sql`SELECT * FROM spare_parts WHERE id = ${id}`;
+    const rows = await sql`SELECT * FROM spare_parts WHERE id = ${targetId}`;
     if (!rows[0]) return err("Yedek parça bulunamadı", 404);
     return ok(rows[0]);
   } catch (e) { return err(String(e), 500); }
@@ -17,13 +18,14 @@ export async function GET(req: NextRequest, { params }: P) {
 export async function PUT(req: NextRequest, { params }: P) {
   if (!await verifyAuth(req)) return err("Yetkisiz", 401);
   const { id } = await params;
+  const targetId = isNaN(Number(id)) ? id : Number(id);
   const sql = getDb();
   const body = await req.json().catch(() => null);
   if (!body) return err("Geçersiz veri formatı");
   try {
-    const ex = await sql`SELECT * FROM spare_parts WHERE id = ${id}`;
+    const ex = await sql`SELECT * FROM spare_parts WHERE id = ${targetId}`;
     if (!ex[0]) return err("Yedek parça bulunamadı", 404);
-    const rows = await sql`UPDATE spare_parts SET name=${body.name??ex[0].name}, description=${body.description??ex[0].description}, category=${body.category??ex[0].category}, compatible_brand=${body.compatible_brand??ex[0].compatible_brand}, compatible_model=${body.compatible_model??ex[0].compatible_model}, quantity=${body.quantity??ex[0].quantity}, is_defective=${body.is_defective??ex[0].is_defective}, updated_at=NOW() WHERE id=${id} RETURNING *`;
+    const rows = await sql`UPDATE spare_parts SET name=${body.name??ex[0].name}, description=${body.description??ex[0].description}, category=${body.category??ex[0].category}, compatible_brand=${body.compatible_brand??ex[0].compatible_brand}, compatible_model=${body.compatible_model??ex[0].compatible_model}, quantity=${body.quantity??ex[0].quantity}, is_defective=${body.is_defective??ex[0].is_defective}, updated_at=NOW() WHERE id=${targetId} RETURNING *`;
     return ok(rows[0]);
   } catch (e) { return err(String(e), 500); }
 }
@@ -31,11 +33,12 @@ export async function PUT(req: NextRequest, { params }: P) {
 export async function DELETE(req: NextRequest, { params }: P) {
   if (!await verifyAuth(req)) return err("Yetkisiz", 401);
   const { id } = await params;
+  const targetId = isNaN(Number(id)) ? id : Number(id);
   const sql = getDb();
   try {
-    const ex = await sql`SELECT id FROM spare_parts WHERE id = ${id}`;
+    const ex = await sql`SELECT id FROM spare_parts WHERE id = ${targetId}`;
     if (!ex[0]) return err("Yedek parça bulunamadı", 404);
-    await sql`DELETE FROM spare_parts WHERE id = ${id}`;
+    await sql`DELETE FROM spare_parts WHERE id = ${targetId}`;
     return ok({ message: "Yedek parça başarıyla silindi" });
   } catch (e) { return err(String(e), 500); }
 }
