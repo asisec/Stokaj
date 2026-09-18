@@ -83,11 +83,11 @@ export function MotorcycleForm({
       setFormData(initialFormState);
       onOpenChange(false);
       onSuccess();
-    } catch {
+    } catch (err: any) {
       toast.error(
-        motorcycle
+        err?.message || (motorcycle
           ? "Motosiklet güncellenirken hata oluştu"
-          : "Motosiklet eklenirken hata oluştu"
+          : "Motosiklet eklenirken hata oluştu")
       );
     } finally {
       setSubmitting(false);

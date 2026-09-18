@@ -1,23 +1,24 @@
 import { NextRequest } from "next/server";
 import { getDb, verifyAuth, ok, err } from "@/lib/api-helpers";
 
-type P = { params: { id: string } };
+type P = { params: Promise<{ id: string }> | { id: string } };
 
 export async function POST(req: NextRequest, { params }: P) {
   if (!await verifyAuth(req)) return err("Yetkisiz", 401);
+  const { id } = await params;
   const sql = getDb();
   const body = await req.json().catch(() => null);
   if (!body) return err("Geçersiz veri formatı");
   if (!body.amount || isNaN(Number(body.amount)) || !body.method) return err("Geçerli bir tutar ve ödeme yöntemi girin");
 
   try {
-    const customers = await sql`SELECT * FROM customers WHERE id = ${params.id}`;
+    const customers = await sql`SELECT * FROM customers WHERE id = ${id}`;
     if (!customers[0]) return err("Müşteri bulunamadı", 404);
 
     const newBalance = Number(customers[0].balance) - Number(body.amount);
-    await sql`UPDATE customers SET balance = ${newBalance}, updated_at = NOW() WHERE id = ${params.id}`;
+    await sql`UPDATE customers SET balance = ${newBalance}, updated_at = NOW() WHERE id = ${id}`;
     const desc = body.description || "Tahsilat - " + body.method;
-    await sql`INSERT INTO customer_transactions (customer_id, type, amount, description, reference_type, created_at) VALUES (${params.id}, 'credit', ${body.amount}, ${desc}, 'payment', NOW())`;
+    await sql`INSERT INTO customer_transactions (customer_id, type, amount, description, reference_type, created_at) VALUES (${id}, 'credit', ${body.amount}, ${desc}, 'payment', NOW())`;
     return ok({ message: "Tahsilat başarıyla kaydedildi", balance: newBalance });
   } catch (e) { return err(String(e), 500); }
 }

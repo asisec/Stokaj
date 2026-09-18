@@ -1,10 +1,11 @@
 import { NextRequest } from "next/server";
 import { getDb, verifyAuth, ok, err } from "@/lib/api-helpers";
 
-type P = { params: { id: string } };
+type P = { params: Promise<{ id: string }> | { id: string } };
 
 export async function GET(req: NextRequest, { params }: P) {
   if (!await verifyAuth(req)) return err("Yetkisiz", 401);
+  const { id } = await params;
   const sql = getDb();
   try {
     const rows = await sql`
@@ -15,7 +16,7 @@ export async function GET(req: NextRequest, { params }: P) {
       FROM registration_documents d
       LEFT JOIN motorcycles m ON m.id = d.motorcycle_id
       LEFT JOIN customers c ON c.id = d.customer_id
-      WHERE d.id = ${params.id}
+      WHERE d.id = ${id}
     `;
     if (!rows[0]) return err("Evrak kaydı bulunamadı", 404);
     return ok(rows[0]);
@@ -26,6 +27,7 @@ export async function GET(req: NextRequest, { params }: P) {
 
 export async function PUT(req: NextRequest, { params }: P) {
   if (!await verifyAuth(req)) return err("Yetkisiz", 401);
+  const { id } = await params;
   const sql = getDb();
   const body = await req.json().catch(() => null);
   if (!body) return err("Geçersiz veri formatı");
@@ -49,7 +51,7 @@ export async function PUT(req: NextRequest, { params }: P) {
         delivered_at = ${deliveredAt},
         notes = COALESCE(${body.notes}, notes),
         updated_at = NOW()
-      WHERE id = ${params.id}
+      WHERE id = ${id}
       RETURNING *
     `;
 
@@ -63,7 +65,7 @@ export async function PUT(req: NextRequest, { params }: P) {
       FROM registration_documents d
       LEFT JOIN motorcycles m ON m.id = d.motorcycle_id
       LEFT JOIN customers c ON c.id = d.customer_id
-      WHERE d.id = ${params.id}
+      WHERE d.id = ${id}
     `;
 
     return ok(fullDoc[0]);
@@ -75,9 +77,10 @@ export async function PUT(req: NextRequest, { params }: P) {
 
 export async function DELETE(req: NextRequest, { params }: P) {
   if (!await verifyAuth(req)) return err("Yetkisiz", 401);
+  const { id } = await params;
   const sql = getDb();
   try {
-    await sql`DELETE FROM registration_documents WHERE id = ${params.id}`;
+    await sql`DELETE FROM registration_documents WHERE id = ${id}`;
     return ok({ message: "Evrak kaydı başarıyla silindi" });
   } catch (e) {
     return err(String(e), 500);

@@ -129,11 +129,11 @@ export function SparePartForm({
       setFormData(initialFormState);
       onOpenChange(false);
       onSuccess();
-    } catch {
+    } catch (err: any) {
       toast.error(
-        sparePart
+        err?.message || (sparePart
           ? "Parça güncellenirken hata oluştu"
-          : "Parça eklenirken hata oluştu"
+          : "Parça eklenirken hata oluştu")
       );
     } finally {
       setSubmitting(false);

@@ -118,11 +118,11 @@ export function CustomerForm({
       setFormData(initialFormState);
       onOpenChange(false);
       onSuccess();
-    } catch {
+    } catch (err: any) {
       toast.error(
-        customer
+        err?.message || (customer
           ? "Müşteri güncellenirken hata oluştu"
-          : "Müşteri eklenirken hata oluştu"
+          : "Müşteri eklenirken hata oluştu")
       );
     } finally {
       setSubmitting(false);
