@@ -75,7 +75,11 @@ export default function SalesPage() {
       const customerName = sale.customer 
         ? `${sale.customer.first_name} ${sale.customer.last_name}`.toLowerCase() 
         : "";
-      const matchesSearch = customerName.includes(searchTerm.toLowerCase());
+      const itemsText = sale.items
+        ? sale.items.map((i) => `${i.item_name} ${i.chassis_number || ""}`).join(" ").toLowerCase()
+        : "";
+      const query = searchTerm.toLowerCase();
+      const matchesSearch = customerName.includes(query) || itemsText.includes(query);
       
       let matchesFilters = true;
       const saleDate = new Date(sale.created_at).toISOString().split('T')[0];
@@ -110,7 +114,7 @@ export default function SalesPage() {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
           <Input 
-            placeholder="Tüm tablodaki verilerde ara (Müşteri adına göre)..." 
+            placeholder="Müşteri adı, ürün veya şasi numarasına göre ara..." 
             value={searchTerm}
             onChange={(e) => {
               setSearchTerm(e.target.value);
@@ -214,10 +218,23 @@ export default function SalesPage() {
                   <TableCell className="text-zinc-400 print:text-black">
                     {sale.customer?.phone ? (isCensored ? "***********" : sale.customer.phone) : "-"}
                   </TableCell>
-                  <TableCell className="text-zinc-400 max-w-[300px] truncate print:text-black print:whitespace-normal">
-                    {sale.items
-                      ? sale.items.map((item) => item.item_name).join(", ")
-                      : "-"}
+                  <TableCell className="text-zinc-400 max-w-[400px] print:text-black print:whitespace-normal">
+                    {sale.items && sale.items.length > 0 ? (
+                      <div className="space-y-1">
+                        {sale.items.map((item, idx) => (
+                          <div key={idx} className="flex items-center gap-1.5 flex-wrap text-xs">
+                            <span className="font-medium text-zinc-200 print:text-black">{item.item_name}</span>
+                            {item.chassis_number && (
+                              <span className="font-mono text-[11px] text-blue-400 font-semibold bg-blue-500/10 border border-blue-500/20 px-1.5 py-0.5 rounded print:border-gray-400 print:text-black print:bg-gray-100">
+                                Şasi: {item.chassis_number}
+                              </span>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      "-"
+                    )}
                   </TableCell>
                   <TableCell className="text-right font-medium text-zinc-200 print:text-black">
                     {totalQty}

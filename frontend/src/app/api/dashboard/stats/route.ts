@@ -32,10 +32,19 @@ export async function GET(req: NextRequest) {
       sql`SELECT COUNT(*) as total FROM sales`,
       sql`
         SELECT s.*, row_to_json(c.*) as customer,
-          COALESCE(json_agg(DISTINCT si.*) FILTER (WHERE si.id IS NOT NULL), '[]') as items
+          COALESCE(json_agg(DISTINCT jsonb_build_object(
+            'id', si.id,
+            'sale_id', si.sale_id,
+            'item_type', si.item_type,
+            'item_id', si.item_id,
+            'item_name', si.item_name,
+            'quantity', si.quantity,
+            'chassis_number', m.chassis_number
+          )) FILTER (WHERE si.id IS NOT NULL), '[]') as items
         FROM sales s
         LEFT JOIN customers c ON c.id = s.customer_id
         LEFT JOIN sale_items si ON si.sale_id = s.id
+        LEFT JOIN motorcycles m ON (si.item_type = 'motorcycle' AND si.item_id = m.id)
         GROUP BY s.id, c.id ORDER BY s.created_at DESC LIMIT 5
       `,
       sql`SELECT to_char(s.created_at, 'YYYY-MM-DD') as date, SUM(si.quantity) as sales_count FROM sales s JOIN sale_items si ON s.id = si.sale_id WHERE s.created_at >= NOW() - INTERVAL '1 year' GROUP BY date ORDER BY date`,

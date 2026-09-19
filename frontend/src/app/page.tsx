@@ -276,10 +276,23 @@ export default function DashboardPage() {
                           ? (isCensored ? "**** ****" : `${sale.customer.first_name} ${sale.customer.last_name}`)
                           : "-"}
                       </TableCell>
-                      <TableCell className="text-zinc-400 max-w-[200px] truncate">
-                        {sale.items
-                          ? sale.items.map((item) => item.item_name).join(", ")
-                          : "-"}
+                      <TableCell className="text-zinc-400 max-w-[300px]">
+                        {sale.items && sale.items.length > 0 ? (
+                          <div className="space-y-1">
+                            {sale.items.map((item, idx) => (
+                              <div key={idx} className="flex items-center gap-1.5 flex-wrap text-xs">
+                                <span className="font-medium text-zinc-300">{item.item_name}</span>
+                                {item.chassis_number && (
+                                  <span className="font-mono text-[11px] text-blue-400 font-semibold bg-blue-500/10 border border-blue-500/20 px-1.5 py-0.5 rounded">
+                                    Şasi: {item.chassis_number}
+                                  </span>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          "-"
+                        )}
                       </TableCell>
                       <TableCell className="text-zinc-400">
                         {new Date(sale.created_at).toLocaleDateString("tr-TR")}

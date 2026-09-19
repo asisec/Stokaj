@@ -715,6 +715,12 @@ export function ContractForm() {
                     <strong>6. Ödeme & Kart Sorumluluğu:</strong> Kullanılan kart teslim alana ait olmasa dahi tüm sorumluluk teslim alana aittir. Ulaşmayan onay mesajlarından satıcı sorumlu değildir.
                   </span>
                 </p>
+                <p className="flex items-start gap-1.5 text-zinc-300">
+                  <CheckCircle2 className="h-3.5 w-3.5 text-teal-400 mt-0.5 shrink-0" />
+                  <span>
+                    <strong>7. Noter & Tescil Masrafları:</strong> Noter ruhsat tescil plaka basımı masrafları alıcıya aittir.
+                  </span>
+                </p>
               </div>
 
               <div>

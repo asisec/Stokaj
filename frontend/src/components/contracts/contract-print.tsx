@@ -475,11 +475,15 @@ export function printContract(data: ContractData) {
             <strong>6. ÖDEME VE KART SORUMLULUĞU:</strong> İşlemde kullanılan ödeme kartı aracı teslim alana ait olmasa dahi tüm hukuki ve mali sorumluluk kartı ibraz eden ve aracı teslim alan kişiye aittir. Kart sahibine ulaşmayan onay mesajlarından firmamız sorumlu tutulamaz.
           </div>
 
+          <div class="term-item">
+            <strong>7. NOTER VE TESCİL MASRAFLARI:</strong> Noter ruhsat tescil plaka basımı masrafları alıcıya aittir.
+          </div>
+
           ${
             data.specialNotes
               ? `
             <div class="term-item">
-              <strong>7. ÖZEL NOTLAR:</strong> ${data.specialNotes}
+              <strong>8. ÖZEL NOTLAR:</strong> ${data.specialNotes}
             </div>
           `
               : ""

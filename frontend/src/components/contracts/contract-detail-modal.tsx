@@ -238,8 +238,9 @@ export function ContractDetailModal({
               <p><strong>4. Kullanıcı Hatası Ve Parça Temini:</strong> Düşme/kaza kaynaklı parça kırılmaları ve kayıplar garanti dışıdır. İhtiyaç halinde parçalar ücreti karşılığında satıcıdan sipariş edilebilir.</p>
               <p><strong>5. Hukuki Ve Trafik Sorumluluğu:</strong> Teslim anından itibaren araca ait her türlü kaza, trafik cezası, idari ve hukuki sorumluluk alıcıya aittir.</p>
               <p className="text-amber-300/90"><strong>6. Ödeme Ve Kart Sorumluluğu:</strong> İşlemde kullanılan ödeme kartı aracı teslim alana ait olmasa dahi tüm hukuki ve mali sorumluluk kartı ibraz eden ve aracı teslim alan kişiye aittir. Kart sahibine ulaşmayan onay mesajlarından firmamız sorumlu tutulamaz.</p>
+              <p className="text-teal-300"><strong>7. Noter Ve Tescil Masrafları:</strong> Noter ruhsat tescil plaka basımı masrafları alıcıya aittir.</p>
               {contract.special_notes && (
-                <p className="text-purple-300 pt-1 border-t border-zinc-800/80"><strong>7. Özel Notlar:</strong> {contract.special_notes}</p>
+                <p className="text-purple-300 pt-1 border-t border-zinc-800/80"><strong>8. Özel Notlar:</strong> {contract.special_notes}</p>
               )}
             </div>
           </div>

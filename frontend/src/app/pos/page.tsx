@@ -48,6 +48,7 @@ interface CartItem {
   item_type: "motorcycle" | "spare_part";
   item_id: number;
   item_name: string;
+  chassis_number?: string;
   quantity: number;
   max_quantity?: number; // Only for spare parts to limit input
 }
@@ -140,6 +141,7 @@ export default function POSPage() {
         item_type: "motorcycle",
         item_id: motorcycle.id,
         item_name: `${motorcycle.brand} ${motorcycle.model} (${motorcycle.year})`,
+        chassis_number: motorcycle.chassis_number,
         quantity: 1,
       },
     ]);
@@ -423,6 +425,10 @@ export default function POSPage() {
                                 </span>
                                 <span>•</span>
                                 <span className="capitalize">{motorcycle.color}</span>
+                                <span>•</span>
+                                <span className="font-mono text-[11px] text-blue-400 font-semibold bg-blue-500/10 border border-blue-500/20 px-1.5 py-0.5 rounded">
+                                  Şasi: {motorcycle.chassis_number}
+                                </span>
                               </div>
                             </div>
 
@@ -591,6 +597,11 @@ export default function POSPage() {
                       >
                         <div className="flex-1 min-w-0">
                           <div className="text-sm font-semibold text-zinc-100 truncate">{item.item_name}</div>
+                          {item.chassis_number && (
+                            <div className="text-[11px] font-mono text-blue-400 font-medium">
+                              Şasi: {item.chassis_number}
+                            </div>
+                          )}
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
                           {item.item_type === "spare_part" && (

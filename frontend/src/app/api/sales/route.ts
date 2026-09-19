@@ -7,11 +7,23 @@ export async function GET(req: NextRequest) {
   try {
     const rows = await sql`
       SELECT s.*, row_to_json(c.*) as customer,
-        COALESCE(json_agg(DISTINCT si.*) FILTER (WHERE si.id IS NOT NULL), '[]') as items,
+        COALESCE(json_agg(DISTINCT jsonb_build_object(
+          'id', si.id,
+          'sale_id', si.sale_id,
+          'item_type', si.item_type,
+          'item_id', si.item_id,
+          'item_name', si.item_name,
+          'quantity', si.quantity,
+          'unit_price', si.unit_price,
+          'purchase_price', si.purchase_price,
+          'total_price', si.total_price,
+          'chassis_number', m.chassis_number
+        )) FILTER (WHERE si.id IS NOT NULL), '[]') as items,
         COALESCE(json_agg(DISTINCT sp.*) FILTER (WHERE sp.id IS NOT NULL), '[]') as payments
       FROM sales s
       LEFT JOIN customers c ON c.id = s.customer_id
       LEFT JOIN sale_items si ON si.sale_id = s.id
+      LEFT JOIN motorcycles m ON (si.item_type = 'motorcycle' AND si.item_id = m.id)
       LEFT JOIN sale_payments sp ON sp.sale_id = s.id
       GROUP BY s.id, c.id ORDER BY s.created_at DESC`;
     return ok(rows);
@@ -89,10 +101,22 @@ export async function POST(req: NextRequest) {
 
     const result = await sql`
       SELECT s.*, row_to_json(c.*) as customer,
-        COALESCE(json_agg(DISTINCT si.*) FILTER (WHERE si.id IS NOT NULL), '[]') as items
+        COALESCE(json_agg(DISTINCT jsonb_build_object(
+          'id', si.id,
+          'sale_id', si.sale_id,
+          'item_type', si.item_type,
+          'item_id', si.item_id,
+          'item_name', si.item_name,
+          'quantity', si.quantity,
+          'unit_price', si.unit_price,
+          'purchase_price', si.purchase_price,
+          'total_price', si.total_price,
+          'chassis_number', m.chassis_number
+        )) FILTER (WHERE si.id IS NOT NULL), '[]') as items
       FROM sales s
       LEFT JOIN customers c ON c.id = s.customer_id
       LEFT JOIN sale_items si ON si.sale_id = s.id
+      LEFT JOIN motorcycles m ON (si.item_type = 'motorcycle' AND si.item_id = m.id)
       WHERE s.id = ${sale.id} GROUP BY s.id, c.id`;
 
     return ok(result[0], 201);

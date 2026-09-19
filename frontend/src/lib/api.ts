@@ -91,6 +91,7 @@ export interface SaleItem {
   item_id: number
   item_name: string
   quantity: number
+  chassis_number?: string | null
 }
 
 export interface SalePayment {
