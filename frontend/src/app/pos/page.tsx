@@ -426,8 +426,8 @@ export default function POSPage() {
                                 <span>•</span>
                                 <span className="capitalize">{motorcycle.color}</span>
                                 <span>•</span>
-                                <span className="font-mono text-[11px] text-blue-400 font-semibold bg-blue-500/10 border border-blue-500/20 px-1.5 py-0.5 rounded">
-                                  Şasi: {motorcycle.chassis_number}
+                                <span className="font-mono text-[11px] text-blue-300 font-semibold bg-blue-500/10 border border-blue-500/20 px-1.5 py-0.5 rounded">
+                                  {motorcycle.chassis_number}
                                 </span>
                               </div>
                             </div>
@@ -598,8 +598,8 @@ export default function POSPage() {
                         <div className="flex-1 min-w-0">
                           <div className="text-sm font-semibold text-zinc-100 truncate">{item.item_name}</div>
                           {item.chassis_number && (
-                            <div className="text-[11px] font-mono text-blue-400 font-medium">
-                              Şasi: {item.chassis_number}
+                            <div className="text-[11px] font-mono text-blue-300 font-medium">
+                              {item.chassis_number}
                             </div>
                           )}
                         </div>

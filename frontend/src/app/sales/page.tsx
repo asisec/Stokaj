@@ -193,6 +193,7 @@ export default function SalesPage() {
               <TableHead className="text-zinc-400 font-medium print:text-gray-700">Tarih</TableHead>
               <TableHead className="text-zinc-400 font-medium print:text-gray-700">Müşteri</TableHead>
               <TableHead className="text-zinc-400 font-medium print:text-gray-700">Telefon</TableHead>
+              <TableHead className="text-zinc-400 font-medium print:text-gray-700">Şasi No</TableHead>
               <TableHead className="text-zinc-400 font-medium print:text-gray-700">Satılan Ürünler</TableHead>
               <TableHead className="text-right text-zinc-400 font-medium print:text-gray-700">Adet</TableHead>
             </TableRow>
@@ -200,11 +201,14 @@ export default function SalesPage() {
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={5} className="text-center py-8 text-zinc-500">Yükleniyor...</TableCell>
+                <TableCell colSpan={6} className="text-center py-8 text-zinc-500">Yükleniyor...</TableCell>
               </TableRow>
             ) : paginatedSales.length > 0 ? (
               paginatedSales.map((sale) => {
                 const totalQty = sale.items?.reduce((acc, item) => acc + item.quantity, 0) || 1;
+                const chassisList = sale.items
+                  ?.map((item) => item.chassis_number)
+                  .filter((c): c is string => Boolean(c));
                 return (
                 <TableRow key={sale.id} className="border-zinc-800/50 hover:bg-zinc-800/30 print:border-gray-200 print:hover:bg-transparent">
                   <TableCell className="text-zinc-400 print:text-black">
@@ -218,23 +222,13 @@ export default function SalesPage() {
                   <TableCell className="text-zinc-400 print:text-black">
                     {sale.customer?.phone ? (isCensored ? "***********" : sale.customer.phone) : "-"}
                   </TableCell>
-                  <TableCell className="text-zinc-400 max-w-[400px] print:text-black print:whitespace-normal">
-                    {sale.items && sale.items.length > 0 ? (
-                      <div className="space-y-1">
-                        {sale.items.map((item, idx) => (
-                          <div key={idx} className="flex items-center gap-1.5 flex-wrap text-xs">
-                            <span className="font-medium text-zinc-200 print:text-black">{item.item_name}</span>
-                            {item.chassis_number && (
-                              <span className="font-mono text-[11px] text-blue-400 font-semibold bg-blue-500/10 border border-blue-500/20 px-1.5 py-0.5 rounded print:border-gray-400 print:text-black print:bg-gray-100">
-                                Şasi: {item.chassis_number}
-                              </span>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      "-"
-                    )}
+                  <TableCell className="font-mono text-xs text-blue-300 font-medium print:text-black">
+                    {chassisList && chassisList.length > 0 ? chassisList.join(", ") : "-"}
+                  </TableCell>
+                  <TableCell className="text-zinc-400 max-w-[300px] truncate print:text-black print:whitespace-normal">
+                    {sale.items
+                      ? sale.items.map((item) => item.item_name).join(", ")
+                      : "-"}
                   </TableCell>
                   <TableCell className="text-right font-medium text-zinc-200 print:text-black">
                     {totalQty}
@@ -244,7 +238,7 @@ export default function SalesPage() {
               })
             ) : (
               <TableRow>
-                <TableCell colSpan={5} className="text-center py-8 text-zinc-500 print:text-black">Kayıt bulunamadı.</TableCell>
+                <TableCell colSpan={6} className="text-center py-8 text-zinc-500 print:text-black">Kayıt bulunamadı.</TableCell>
               </TableRow>
             )}
           </TableBody>

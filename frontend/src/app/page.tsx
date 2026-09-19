@@ -254,6 +254,9 @@ export default function DashboardPage() {
                       Müşteri
                     </TableHead>
                     <TableHead className="text-zinc-400 font-medium">
+                      Şasi No
+                    </TableHead>
+                    <TableHead className="text-zinc-400 font-medium">
                       Ürünler
                     </TableHead>
                     <TableHead className="text-zinc-400 font-medium">
@@ -266,6 +269,9 @@ export default function DashboardPage() {
                 </TableHeader>
                 <TableBody>
                   {stats.recent_sales.slice(0, 5).map((sale) => {
+                    const chassisList = sale.items
+                      ?.map((item) => item.chassis_number)
+                      .filter((c): c is string => Boolean(c));
                     return (
                     <TableRow
                       key={sale.id}
@@ -276,23 +282,13 @@ export default function DashboardPage() {
                           ? (isCensored ? "**** ****" : `${sale.customer.first_name} ${sale.customer.last_name}`)
                           : "-"}
                       </TableCell>
-                      <TableCell className="text-zinc-400 max-w-[300px]">
-                        {sale.items && sale.items.length > 0 ? (
-                          <div className="space-y-1">
-                            {sale.items.map((item, idx) => (
-                              <div key={idx} className="flex items-center gap-1.5 flex-wrap text-xs">
-                                <span className="font-medium text-zinc-300">{item.item_name}</span>
-                                {item.chassis_number && (
-                                  <span className="font-mono text-[11px] text-blue-400 font-semibold bg-blue-500/10 border border-blue-500/20 px-1.5 py-0.5 rounded">
-                                    Şasi: {item.chassis_number}
-                                  </span>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          "-"
-                        )}
+                      <TableCell className="font-mono text-xs text-blue-300 font-medium">
+                        {chassisList && chassisList.length > 0 ? chassisList.join(", ") : "-"}
+                      </TableCell>
+                      <TableCell className="text-zinc-400 max-w-[200px] truncate">
+                        {sale.items
+                          ? sale.items.map((item) => item.item_name).join(", ")
+                          : "-"}
                       </TableCell>
                       <TableCell className="text-zinc-400">
                         {new Date(sale.created_at).toLocaleDateString("tr-TR")}
