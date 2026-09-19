@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect, useRef } from "react"
+import React, { useState, useEffect, useRef, useMemo } from "react"
 import {
   FileSignature,
   Printer,
@@ -15,6 +15,10 @@ import {
   CheckCircle2,
   HelpCircle,
   Crop,
+  Search,
+  ChevronsUpDown,
+  X,
+  Check,
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -22,11 +26,13 @@ import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover"
 import { toast } from "sonner"
 import { api, type Customer, type Motorcycle } from "@/lib/api"
 import { processIdCardImage } from "@/lib/image-processing"
 import { printContract, type ContractData } from "./contract-print"
 import { IdCardEditorModal } from "./id-card-editor-modal"
+import { cn } from "@/lib/utils"
 
 const DEFAULT_COMPANY_KEY = "stokaj_contract_company_info"
 
@@ -61,6 +67,46 @@ export function ContractForm() {
   const [vehicleEngineNo, setVehicleEngineNo] = useState("")
   const [vehicleKm, setVehicleKm] = useState("0")
   const [vehicleLocation, setVehicleLocation] = useState("Merkez")
+
+  const [customerPopoverOpen, setCustomerPopoverOpen] = useState(false)
+  const [customerSearchQuery, setCustomerSearchQuery] = useState("")
+
+  const [motorcyclePopoverOpen, setMotorcyclePopoverOpen] = useState(false)
+  const [motorcycleSearchQuery, setMotorcycleSearchQuery] = useState("")
+
+  const filteredCustomers = useMemo(() => {
+    if (!customerSearchQuery.trim()) return customers
+    const q = customerSearchQuery.toLowerCase()
+    return customers.filter(
+      (c) =>
+        `${c.first_name} ${c.last_name}`.toLowerCase().includes(q) ||
+        (c.identity_number && c.identity_number.includes(q)) ||
+        (c.phone && c.phone.includes(q))
+    )
+  }, [customers, customerSearchQuery])
+
+  const filteredMotorcycles = useMemo(() => {
+    if (!motorcycleSearchQuery.trim()) return motorcycles
+    const q = motorcycleSearchQuery.toLowerCase()
+    return motorcycles.filter(
+      (m) =>
+        m.brand.toLowerCase().includes(q) ||
+        m.model.toLowerCase().includes(q) ||
+        m.chassis_number.toLowerCase().includes(q) ||
+        (m.year && m.year.toString().includes(q)) ||
+        (m.color && m.color.toLowerCase().includes(q))
+    )
+  }, [motorcycles, motorcycleSearchQuery])
+
+  const selectedCustomerObj = useMemo(
+    () => customers.find((c) => c.id.toString() === selectedCustomerId),
+    [customers, selectedCustomerId]
+  )
+
+  const selectedMotorcycleObj = useMemo(
+    () => motorcycles.find((m) => m.id.toString() === selectedMotorcycleId),
+    [motorcycles, selectedMotorcycleId]
+  )
 
   const [idFrontRaw, setIdFrontRaw] = useState<string | null>(null)
   const [idFrontProcessed, setIdFrontProcessed] = useState<string | null>(null)
@@ -492,20 +538,114 @@ export function ContractForm() {
               {customers.length > 0 && (
                 <div>
                   <Label className="text-xs font-semibold text-muted-foreground">
-                    Kayıtlı Müşteriden Hızlı Seç
+                    Kayıtlı Müşteriden Hızlı Seç (Yazarak Ara)
                   </Label>
-                  <Select value={selectedCustomerId} onValueChange={handleCustomerSelect}>
-                    <SelectTrigger className="h-9 text-sm mt-1 bg-zinc-900/50">
-                      <SelectValue placeholder="Müşteri seçiniz..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {customers.map((c) => (
-                        <SelectItem key={c.id} value={c.id.toString()}>
-                          {c.first_name} {c.last_name} {c.identity_number ? `(${c.identity_number})` : ""}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Popover open={customerPopoverOpen} onOpenChange={setCustomerPopoverOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={customerPopoverOpen}
+                        className="w-full h-10 justify-between bg-zinc-900/50 border-zinc-800 text-zinc-200 hover:bg-zinc-800 hover:text-zinc-100 font-normal mt-1 rounded-xl"
+                      >
+                        <span className="truncate flex items-center gap-2 text-xs">
+                          <User className="h-4 w-4 text-emerald-400 shrink-0" />
+                          {selectedCustomerObj ? (
+                            <span className="font-medium text-zinc-100 truncate">
+                              {selectedCustomerObj.first_name} {selectedCustomerObj.last_name}
+                              {selectedCustomerObj.identity_number && (
+                                <span className="text-[11px] text-zinc-400 font-mono ml-1.5">
+                                  ({selectedCustomerObj.identity_number})
+                                </span>
+                              )}
+                            </span>
+                          ) : (
+                            <span className="text-zinc-500">Müşteri seçiniz veya isim / TCKN yazınız...</span>
+                          )}
+                        </span>
+                        <div className="flex items-center gap-1 shrink-0">
+                          {selectedCustomerId && (
+                            <span
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                setSelectedCustomerId("")
+                                setCustomerName("")
+                                setCustomerIdentity("")
+                                setCustomerPhone("")
+                                setCustomerAddress("")
+                              }}
+                              className="p-1 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 rounded-md transition-colors cursor-pointer"
+                              title="Seçimi Temizle"
+                            >
+                              <X className="h-3.5 w-3.5" />
+                            </span>
+                          )}
+                          <ChevronsUpDown className="h-4 w-4 text-zinc-500 shrink-0" />
+                        </div>
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 bg-zinc-950 border-zinc-800 shadow-2xl rounded-2xl overflow-hidden z-50">
+                      <div className="p-2 border-b border-zinc-800/80 flex items-center gap-2 bg-zinc-900/60">
+                        <Search className="h-4 w-4 text-zinc-400 shrink-0 ml-1" />
+                        <input
+                          type="text"
+                          placeholder="Müşteri adı, T.C. No veya telefon ara..."
+                          value={customerSearchQuery}
+                          onChange={(e) => setCustomerSearchQuery(e.target.value)}
+                          className="w-full bg-transparent text-xs text-zinc-100 placeholder:text-zinc-500 outline-none h-8"
+                          autoFocus
+                        />
+                        {customerSearchQuery && (
+                          <button
+                            type="button"
+                            onClick={() => setCustomerSearchQuery("")}
+                            className="text-zinc-500 hover:text-zinc-300 p-1"
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </button>
+                        )}
+                      </div>
+                      <div className="max-h-60 overflow-y-auto p-1.5 space-y-1">
+                        {filteredCustomers.length > 0 ? (
+                          filteredCustomers.map((c) => {
+                            const isSelected = selectedCustomerId === c.id.toString()
+                            return (
+                              <button
+                                type="button"
+                                key={c.id}
+                                onClick={() => {
+                                  handleCustomerSelect(c.id.toString())
+                                  setCustomerPopoverOpen(false)
+                                  setCustomerSearchQuery("")
+                                }}
+                                className={cn(
+                                  "w-full text-left px-3 py-2 rounded-xl text-xs flex items-center justify-between transition-colors",
+                                  isSelected
+                                    ? "bg-emerald-500/15 text-emerald-300 font-medium"
+                                    : "text-zinc-300 hover:bg-zinc-900 hover:text-zinc-100"
+                                )}
+                              >
+                                <div className="flex flex-col gap-0.5 min-w-0">
+                                  <span className="font-semibold text-zinc-100 truncate">
+                                    {c.first_name} {c.last_name}
+                                  </span>
+                                  <span className="text-[11px] text-zinc-400 flex items-center gap-2 font-mono">
+                                    {c.identity_number && <span>TC: {c.identity_number}</span>}
+                                    {c.phone && <span>• Tel: {c.phone}</span>}
+                                  </span>
+                                </div>
+                                {isSelected && <Check className="h-4 w-4 text-emerald-400 shrink-0 ml-2" />}
+                              </button>
+                            )
+                          })
+                        ) : (
+                          <div className="text-center py-6 text-xs text-zinc-500">
+                            Aramanızla eşleşen müşteri bulunamadı
+                          </div>
+                        )}
+                      </div>
+                    </PopoverContent>
+                  </Popover>
                 </div>
               )}
 
@@ -569,20 +709,119 @@ export function ContractForm() {
               {motorcycles.length > 0 && (
                 <div>
                   <Label className="text-xs font-semibold text-muted-foreground">
-                    Envanterden Araç Seç
+                    Envanterden Araç Seç (Yazarak Ara)
                   </Label>
-                  <Select value={selectedMotorcycleId} onValueChange={handleMotorcycleSelect}>
-                    <SelectTrigger className="h-9 text-sm mt-1 bg-zinc-900/50">
-                      <SelectValue placeholder="Motosiklet seçiniz..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {motorcycles.map((m) => (
-                        <SelectItem key={m.id} value={m.id.toString()}>
-                          {m.brand} {m.model} - {m.chassis_number} ({m.color})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Popover open={motorcyclePopoverOpen} onOpenChange={setMotorcyclePopoverOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={motorcyclePopoverOpen}
+                        className="w-full h-10 justify-between bg-zinc-900/50 border-zinc-800 text-zinc-200 hover:bg-zinc-800 hover:text-zinc-100 font-normal mt-1 rounded-xl"
+                      >
+                        <span className="truncate flex items-center gap-2 text-xs">
+                          <Bike className="h-4 w-4 text-blue-400 shrink-0" />
+                          {selectedMotorcycleObj ? (
+                            <span className="font-medium text-zinc-100 flex items-center gap-1.5 truncate">
+                              <span>{selectedMotorcycleObj.brand} {selectedMotorcycleObj.model}</span>
+                              <span className="font-mono text-[11px] text-blue-300 bg-blue-500/10 border border-blue-500/20 px-1.5 py-0.5 rounded">
+                                {selectedMotorcycleObj.chassis_number}
+                              </span>
+                            </span>
+                          ) : (
+                            <span className="text-zinc-500">Motosiklet seçiniz veya marka, model, şasi no yazınız...</span>
+                          )}
+                        </span>
+                        <div className="flex items-center gap-1 shrink-0">
+                          {selectedMotorcycleId && (
+                            <span
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                setSelectedMotorcycleId("")
+                                setVehicleBrand("")
+                                setVehicleModel("")
+                                setVehicleYear("")
+                                setVehicleColor("")
+                                setVehicleChassis("")
+                                setVehicleLocation("")
+                              }}
+                              className="p-1 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 rounded-md transition-colors cursor-pointer"
+                              title="Seçimi Temizle"
+                            >
+                              <X className="h-3.5 w-3.5" />
+                            </span>
+                          )}
+                          <ChevronsUpDown className="h-4 w-4 text-zinc-500 shrink-0" />
+                        </div>
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 bg-zinc-950 border-zinc-800 shadow-2xl rounded-2xl overflow-hidden z-50">
+                      <div className="p-2 border-b border-zinc-800/80 flex items-center gap-2 bg-zinc-900/60">
+                        <Search className="h-4 w-4 text-zinc-400 shrink-0 ml-1" />
+                        <input
+                          type="text"
+                          placeholder="Marka, model veya şasi numarası ara..."
+                          value={motorcycleSearchQuery}
+                          onChange={(e) => setMotorcycleSearchQuery(e.target.value)}
+                          className="w-full bg-transparent text-xs text-zinc-100 placeholder:text-zinc-500 outline-none h-8"
+                          autoFocus
+                        />
+                        {motorcycleSearchQuery && (
+                          <button
+                            type="button"
+                            onClick={() => setMotorcycleSearchQuery("")}
+                            className="text-zinc-500 hover:text-zinc-300 p-1"
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </button>
+                        )}
+                      </div>
+                      <div className="max-h-60 overflow-y-auto p-1.5 space-y-1">
+                        {filteredMotorcycles.length > 0 ? (
+                          filteredMotorcycles.map((m) => {
+                            const isSelected = selectedMotorcycleId === m.id.toString()
+                            return (
+                              <button
+                                type="button"
+                                key={m.id}
+                                onClick={() => {
+                                  handleMotorcycleSelect(m.id.toString())
+                                  setMotorcyclePopoverOpen(false)
+                                  setMotorcycleSearchQuery("")
+                                }}
+                                className={cn(
+                                  "w-full text-left px-3 py-2 rounded-xl text-xs flex items-center justify-between transition-colors",
+                                  isSelected
+                                    ? "bg-blue-500/15 text-blue-300 font-medium"
+                                    : "text-zinc-300 hover:bg-zinc-900 hover:text-zinc-100"
+                                )}
+                              >
+                                <div className="flex flex-col gap-0.5 min-w-0">
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-semibold text-zinc-100">
+                                      {m.brand} {m.model}
+                                    </span>
+                                    <span className="text-[10px] text-zinc-400 bg-zinc-800 px-1.5 py-0.5 rounded">
+                                      {m.year}
+                                    </span>
+                                  </div>
+                                  <div className="text-[11px] text-zinc-400 flex items-center gap-2 font-mono">
+                                    <span className="text-blue-400 font-medium">Şasi: {m.chassis_number}</span>
+                                    {m.color && <span>• {m.color}</span>}
+                                  </div>
+                                </div>
+                                {isSelected && <Check className="h-4 w-4 text-blue-400 shrink-0 ml-2" />}
+                              </button>
+                            )
+                          })
+                        ) : (
+                          <div className="text-center py-6 text-xs text-zinc-500">
+                            Aramanızla eşleşen motosiklet bulunamadı
+                          </div>
+                        )}
+                      </div>
+                    </PopoverContent>
+                  </Popover>
                 </div>
               )}
 
