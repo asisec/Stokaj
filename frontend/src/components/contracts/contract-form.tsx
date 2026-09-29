@@ -13,7 +13,6 @@ import {
   FileText,
   Trash2,
   CheckCircle2,
-  HelpCircle,
   Crop,
   Search,
   ChevronsUpDown,
@@ -25,9 +24,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover"
-import { toast } from "sonner"
+import { customToast as toast } from "@/lib/toast"
 import { api, type Customer, type Motorcycle } from "@/lib/api"
 import { processIdCardImage } from "@/lib/image-processing"
 import { printContract, type ContractData } from "./contract-print"
@@ -39,7 +37,6 @@ const DEFAULT_COMPANY_KEY = "stokaj_contract_company_info"
 export function ContractForm() {
   const [customers, setCustomers] = useState<Customer[]>([])
   const [motorcycles, setMotorcycles] = useState<Motorcycle[]>([])
-  const [loading, setLoading] = useState(true)
   const [savingCompany, setSavingCompany] = useState(false)
 
   const [contractNo, setContractNo] = useState("")
@@ -79,7 +76,7 @@ export function ContractForm() {
     const q = customerSearchQuery.toLowerCase()
     return customers.filter(
       (c) =>
-        `${c.first_name} ${c.last_name}`.toLowerCase().includes(q) ||
+        `${c.first_name || ""} ${c.last_name || ""}`.toLowerCase().includes(q) ||
         (c.identity_number && c.identity_number.includes(q)) ||
         (c.phone && c.phone.includes(q))
     )
@@ -90,9 +87,9 @@ export function ContractForm() {
     const q = motorcycleSearchQuery.toLowerCase()
     return motorcycles.filter(
       (m) =>
-        m.brand.toLowerCase().includes(q) ||
-        m.model.toLowerCase().includes(q) ||
-        m.chassis_number.toLowerCase().includes(q) ||
+        (m.brand || "").toLowerCase().includes(q) ||
+        (m.model || "").toLowerCase().includes(q) ||
+        (m.chassis_number || "").toLowerCase().includes(q) ||
         (m.year && m.year.toString().includes(q)) ||
         (m.color && m.color.toLowerCase().includes(q))
     )
@@ -111,12 +108,10 @@ export function ContractForm() {
   const [idFrontRaw, setIdFrontRaw] = useState<string | null>(null)
   const [idFrontProcessed, setIdFrontProcessed] = useState<string | null>(null)
   const [frontRotation, setFrontRotation] = useState(0)
-  const [isProcessingFront, setIsProcessingFront] = useState(false)
 
   const [idBackRaw, setIdBackRaw] = useState<string | null>(null)
   const [idBackProcessed, setIdBackProcessed] = useState<string | null>(null)
   const [backRotation, setBackRotation] = useState(0)
-  const [isProcessingBack, setIsProcessingBack] = useState(false)
 
   const [editorOpen, setEditorOpen] = useState(false)
   const [editorTarget, setEditorTarget] = useState<"front" | "back">("front")
@@ -144,7 +139,7 @@ export function ContractForm() {
         if (parsed.companyAuthorized) setCompanyAuthorized(parsed.companyAuthorized)
       }
     } catch {
-      // Ignore localstorage errors
+      
     }
 
     async function loadData() {
@@ -166,8 +161,6 @@ export function ContractForm() {
         }
       } catch {
         toast.error("Veriler yüklenirken hata oluştu")
-      } finally {
-        setLoading(false)
       }
     }
     loadData()
@@ -198,11 +191,12 @@ export function ContractForm() {
           })
         )
       } catch {
-        // Ignore localStorage error
+        
       }
       toast.success("Firma bilgileri veritabanına kaydedildi")
-    } catch (err: any) {
-      toast.error(err?.message || "Firma bilgileri kaydedilemedi")
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Firma bilgileri kaydedilemedi"
+      toast.error(message)
     } finally {
       setSavingCompany(false)
     }
@@ -212,7 +206,7 @@ export function ContractForm() {
     setSelectedCustomerId(custId)
     const found = customers.find((c) => c.id.toString() === custId)
     if (found) {
-      setCustomerName(`${found.first_name} ${found.last_name}`.trim())
+      setCustomerName(`${found.first_name || ""} ${found.last_name || ""}`.trim())
       setCustomerIdentity(found.identity_number || "")
       setCustomerPhone(found.phone || "")
       setCustomerAddress(found.address || "")
@@ -238,7 +232,6 @@ export function ContractForm() {
     const file = e.target.files?.[0]
     if (!file) return
 
-    setIsProcessingFront(true)
     try {
       const reader = new FileReader()
       reader.onload = async (event) => {
@@ -256,15 +249,13 @@ export function ContractForm() {
         } else {
           setIdFrontProcessed(rawUrl)
         }
-        setIsProcessingFront(false)
         setEditorTarget("front")
         setEditorOpen(true)
-        toast.success("Kimlik ön yüzü yüklendi. Kırpma ve temizleme ekranı açıldı.")
+        toast.success("Kimlik ön yüzü yüklendi")
       }
       reader.readAsDataURL(file)
     } catch {
-      setIsProcessingFront(false)
-      toast.error("Kimlik görseli işlenirken bir hata oluştu")
+      toast.error("Kimlik görseli işlenirken hata oluştu")
     }
   }
 
@@ -272,7 +263,6 @@ export function ContractForm() {
     const file = e.target.files?.[0]
     if (!file) return
 
-    setIsProcessingBack(true)
     try {
       const reader = new FileReader()
       reader.onload = async (event) => {
@@ -290,15 +280,13 @@ export function ContractForm() {
         } else {
           setIdBackProcessed(rawUrl)
         }
-        setIsProcessingBack(false)
         setEditorTarget("back")
         setEditorOpen(true)
-        toast.success("Kimlik arka yüzü yüklendi. Kırpma ve temizleme ekranı açıldı.")
+        toast.success("Kimlik arka yüzü yüklendi")
       }
       reader.readAsDataURL(file)
     } catch {
-      setIsProcessingBack(false)
-      toast.error("Kimlik görseli işlenirken bir hata oluştu")
+      toast.error("Kimlik görseli işlenirken hata oluştu")
     }
   }
 
@@ -306,7 +294,6 @@ export function ContractForm() {
     if (!idFrontRaw) return
     const nextRot = (frontRotation + 90) % 360
     setFrontRotation(nextRot)
-    setIsProcessingFront(true)
     try {
       const processed = await processIdCardImage(idFrontRaw, {
         autoDetectBounds: autoClean,
@@ -314,8 +301,8 @@ export function ContractForm() {
         rotation: nextRot,
       })
       setIdFrontProcessed(processed)
-    } finally {
-      setIsProcessingFront(false)
+    } catch {
+      toast.error("Görsel döndürülürken hata oluştu")
     }
   }
 
@@ -323,7 +310,6 @@ export function ContractForm() {
     if (!idBackRaw) return
     const nextRot = (backRotation + 90) % 360
     setBackRotation(nextRot)
-    setIsProcessingBack(true)
     try {
       const processed = await processIdCardImage(idBackRaw, {
         autoDetectBounds: autoClean,
@@ -331,8 +317,8 @@ export function ContractForm() {
         rotation: nextRot,
       })
       setIdBackProcessed(processed)
-    } finally {
-      setIsProcessingBack(false)
+    } catch {
+      toast.error("Görsel döndürülürken hata oluştu")
     }
   }
 
@@ -376,12 +362,11 @@ export function ContractForm() {
 
     const data = buildContractData()
 
-    // Automatically save contract record to DB for digital history/retrieval
     try {
       await api.createContract(data)
       toast.success("Sözleşme dijital arşive kaydedildi")
     } catch {
-      // Continue print even if DB save fails
+      
     }
 
     printContract(data)
@@ -389,7 +374,6 @@ export function ContractForm() {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-16">
-      {/* ACTION BAR */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-card/60 backdrop-blur-md p-4 rounded-2xl border border-border shadow-sm">
         <div>
           <h2 className="text-xl font-bold tracking-tight text-foreground flex items-center gap-2">
@@ -414,9 +398,7 @@ export function ContractForm() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* LEFT 2 COLS: FORMS */}
         <div className="lg:col-span-2 space-y-6">
-          {/* SÖZLEŞME GENEL & FİRMA BİLGİLERİ */}
           <Card className="border-border shadow-sm">
             <CardHeader className="pb-4">
               <div className="flex items-center justify-between">
@@ -523,7 +505,6 @@ export function ContractForm() {
             </CardContent>
           </Card>
 
-          {/* MÜŞTERİ BİLGİLERİ */}
           <Card className="border-border shadow-sm">
             <CardHeader className="pb-4">
               <CardTitle className="text-base flex items-center gap-2">
@@ -543,6 +524,7 @@ export function ContractForm() {
                   <Popover open={customerPopoverOpen} onOpenChange={setCustomerPopoverOpen}>
                     <PopoverTrigger asChild>
                       <Button
+                        type="button"
                         variant="outline"
                         role="combobox"
                         aria-expanded={customerPopoverOpen}
@@ -563,25 +545,7 @@ export function ContractForm() {
                             <span className="text-zinc-500">Müşteri seçiniz veya isim / TCKN yazınız...</span>
                           )}
                         </span>
-                        <div className="flex items-center gap-1 shrink-0">
-                          {selectedCustomerId && (
-                            <span
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                setSelectedCustomerId("")
-                                setCustomerName("")
-                                setCustomerIdentity("")
-                                setCustomerPhone("")
-                                setCustomerAddress("")
-                              }}
-                              className="p-1 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 rounded-md transition-colors cursor-pointer"
-                              title="Seçimi Temizle"
-                            >
-                              <X className="h-3.5 w-3.5" />
-                            </span>
-                          )}
-                          <ChevronsUpDown className="h-4 w-4 text-zinc-500 shrink-0" />
-                        </div>
+                        <ChevronsUpDown className="h-4 w-4 text-zinc-500 shrink-0" />
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 bg-zinc-950 border-zinc-800 shadow-2xl rounded-2xl overflow-hidden z-50">
@@ -694,7 +658,6 @@ export function ContractForm() {
             </CardContent>
           </Card>
 
-          {/* TESLİM EDİLEN ARAÇ BİLGİLERİ */}
           <Card className="border-border shadow-sm">
             <CardHeader className="pb-4">
               <CardTitle className="text-base flex items-center gap-2">
@@ -714,6 +677,7 @@ export function ContractForm() {
                   <Popover open={motorcyclePopoverOpen} onOpenChange={setMotorcyclePopoverOpen}>
                     <PopoverTrigger asChild>
                       <Button
+                        type="button"
                         variant="outline"
                         role="combobox"
                         aria-expanded={motorcyclePopoverOpen}
@@ -732,27 +696,7 @@ export function ContractForm() {
                             <span className="text-zinc-500">Motosiklet seçiniz veya marka, model, şasi no yazınız...</span>
                           )}
                         </span>
-                        <div className="flex items-center gap-1 shrink-0">
-                          {selectedMotorcycleId && (
-                            <span
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                setSelectedMotorcycleId("")
-                                setVehicleBrand("")
-                                setVehicleModel("")
-                                setVehicleYear("")
-                                setVehicleColor("")
-                                setVehicleChassis("")
-                                setVehicleLocation("")
-                              }}
-                              className="p-1 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 rounded-md transition-colors cursor-pointer"
-                              title="Seçimi Temizle"
-                            >
-                              <X className="h-3.5 w-3.5" />
-                            </span>
-                          )}
-                          <ChevronsUpDown className="h-4 w-4 text-zinc-500 shrink-0" />
-                        </div>
+                        <ChevronsUpDown className="h-4 w-4 text-zinc-500 shrink-0" />
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 bg-zinc-950 border-zinc-800 shadow-2xl rounded-2xl overflow-hidden z-50">
@@ -908,7 +852,6 @@ export function ContractForm() {
             </CardContent>
           </Card>
 
-          {/* ÖZEL NOTLAR & SÖZLEŞME MADDELERİ ÖNİZLEMESİ */}
           <Card className="border-border shadow-sm">
             <CardHeader className="pb-3">
               <CardTitle className="text-base flex items-center gap-2">
@@ -975,9 +918,8 @@ export function ContractForm() {
           </Card>
         </div>
 
-        {/* RIGHT 1 COL: SMART ID CARD PROCESSOR & LIVE PREVIEW */}
         <div className="space-y-6">
-          <Card className="border-border shadow-sm sticky top-6">
+          <Card className="border-border shadow-sm">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-base flex items-center gap-2">
@@ -986,7 +928,7 @@ export function ContractForm() {
                 </CardTitle>
               </div>
               <CardDescription className="text-xs">
-                Önlü ve arkalı kimlik yükleyin. Sistem otomatik hizalama, ISO oranında kırpma ve arka plan temizleme uygular.
+                Önlü ve arkalı kimlik yükleyin. Sistem otomatik hizalama ve arka plan temizleme uygular.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -1003,7 +945,6 @@ export function ContractForm() {
                 </Button>
               </div>
 
-              {/* FRONT ID CARD */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Label className="text-xs font-semibold">Kimlik Ön Yüzü</Label>
@@ -1020,7 +961,7 @@ export function ContractForm() {
                         }}
                       >
                         <Crop className="h-3.5 w-3.5" />
-                        Kırp & Düzenle
+                        Kırp
                       </Button>
                       <Button
                         type="button"
@@ -1072,19 +1013,6 @@ export function ContractForm() {
                         Görseli Değiştirmek İçin Tıklayın
                       </div>
                     </div>
-                    <div className="flex items-center justify-between text-[11px] text-zinc-400 px-1">
-                      <span>Masa / arka planı temizle:</span>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setEditorTarget("front")
-                          setEditorOpen(true)
-                        }}
-                        className="text-blue-400 hover:underline font-semibold"
-                      >
-                        Kırp & Netleştir
-                      </button>
-                    </div>
                   </div>
                 ) : (
                   <div
@@ -1104,7 +1032,6 @@ export function ContractForm() {
 
               <Separator />
 
-              {/* BACK ID CARD */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Label className="text-xs font-semibold">Kimlik Arka Yüzü</Label>
@@ -1121,7 +1048,7 @@ export function ContractForm() {
                         }}
                       >
                         <Crop className="h-3.5 w-3.5" />
-                        Kırp & Düzenle
+                        Kırp
                       </Button>
                       <Button
                         type="button"
@@ -1173,19 +1100,6 @@ export function ContractForm() {
                         Görseli Değiştirmek İçin Tıklayın
                       </div>
                     </div>
-                    <div className="flex items-center justify-between text-[11px] text-zinc-400 px-1">
-                      <span>Masa / arka planı temizle:</span>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setEditorTarget("back")
-                          setEditorOpen(true)
-                        }}
-                        className="text-blue-400 hover:underline font-semibold"
-                      >
-                        Kırp & Netleştir
-                      </button>
-                    </div>
                   </div>
                 ) : (
                   <div
@@ -1203,7 +1117,6 @@ export function ContractForm() {
                 )}
               </div>
 
-              {/* QUICK PRINT CALLOUT */}
               <div className="pt-2">
                 <Button
                   type="button"
@@ -1219,7 +1132,6 @@ export function ContractForm() {
         </div>
       </div>
 
-      {/* ID CARD EDITOR MODAL */}
       <IdCardEditorModal
         open={editorOpen}
         onOpenChange={setEditorOpen}
@@ -1228,10 +1140,10 @@ export function ContractForm() {
         onSave={(processedUrl) => {
           if (editorTarget === "front") {
             setIdFrontProcessed(processedUrl)
-            toast.success("Kimlik ön yüzü kırpıldı ve temizlendi")
+            toast.success("Kimlik ön yüzü kırpıldı")
           } else {
             setIdBackProcessed(processedUrl)
-            toast.success("Kimlik arka yüzü kırpıldı ve temizlendi")
+            toast.success("Kimlik arka yüzü kırpıldı")
           }
         }}
       />

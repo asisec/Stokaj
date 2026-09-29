@@ -56,11 +56,6 @@ import {
 } from "lucide-react";
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
 
-const formatCurrency = (value: number) =>
-  new Intl.NumberFormat("tr-TR", { style: "currency", currency: "TRY" }).format(
-    value
-  );
-
 interface MotorcycleTableProps {
   motorcycles: Motorcycle[];
   onEdit: (motorcycle: Motorcycle) => void;
@@ -110,12 +105,16 @@ export function MotorcycleTable({
 
   const uniqueBranches = useMemo(() => {
     return Array.from(
-      new Set(motorcycles.filter(m => m.is_other_branch && m.branch_name).map(m => m.branch_name))
+      new Set(
+        (motorcycles || [])
+          .filter((m) => m.is_other_branch && m.branch_name)
+          .map((m) => m.branch_name)
+      )
     ).sort();
   }, [motorcycles]);
 
   const filteredData = useMemo(() => {
-    let data = motorcycles;
+    let data = motorcycles || [];
 
     if (filters.status !== "all") {
       data = data.filter((m) => m.status === filters.status);
@@ -129,26 +128,43 @@ export function MotorcycleTable({
       }
     }
 
-    if (filters.chassis_number) data = data.filter(m => m.chassis_number.toLowerCase().includes(filters.chassis_number.toLowerCase()));
-    if (filters.brand) data = data.filter(m => m.brand.toLowerCase().includes(filters.brand.toLowerCase()));
-    if (filters.model) data = data.filter(m => m.model.toLowerCase().includes(filters.model.toLowerCase()));
-    if (filters.year) data = data.filter(m => m.year.toString() === filters.year);
-    if (filters.color) data = data.filter(m => m.color.toLowerCase().includes(filters.color.toLowerCase()));
-    
-    
+    if (filters.chassis_number) {
+      data = data.filter((m) =>
+        (m.chassis_number || "").toLowerCase().includes(filters.chassis_number.toLowerCase())
+      );
+    }
+    if (filters.brand) {
+      data = data.filter((m) =>
+        (m.brand || "").toLowerCase().includes(filters.brand.toLowerCase())
+      );
+    }
+    if (filters.model) {
+      data = data.filter((m) =>
+        (m.model || "").toLowerCase().includes(filters.model.toLowerCase())
+      );
+    }
+    if (filters.year) {
+      data = data.filter((m) => (m.year ? m.year.toString() : "") === filters.year);
+    }
+    if (filters.color) {
+      data = data.filter((m) =>
+        (m.color || "").toLowerCase().includes(filters.color.toLowerCase())
+      );
+    }
 
     if (filters.global) {
       const query = filters.global.toLowerCase();
       data = data.filter((m) => {
         const statusText = m.status === "available" ? "bekliyor" : "satıldı";
-        const locationText = (m.is_other_branch && m.branch_name) ? m.branch_name.toLowerCase() : "merkez";
-        
+        const locationText =
+          m.is_other_branch && m.branch_name ? m.branch_name.toLowerCase() : "merkez";
+
         return (
-          m.chassis_number.toLowerCase().includes(query) ||
-          m.brand.toLowerCase().includes(query) ||
-          m.model.toLowerCase().includes(query) ||
-          m.year.toString().includes(query) ||
-          m.color.toLowerCase().includes(query) ||
+          (m.chassis_number || "").toLowerCase().includes(query) ||
+          (m.brand || "").toLowerCase().includes(query) ||
+          (m.model || "").toLowerCase().includes(query) ||
+          (m.year ? m.year.toString() : "").includes(query) ||
+          (m.color || "").toLowerCase().includes(query) ||
           statusText.includes(query) ||
           locationText.includes(query)
         );
@@ -235,7 +251,6 @@ export function MotorcycleTable({
           <span className="text-zinc-400">{row.getValue("color")}</span>
         ),
       },
-
       {
         accessorKey: "status",
         header: () => <span className="text-zinc-400">Durum</span>,
@@ -331,68 +346,23 @@ export function MotorcycleTable({
   });
 
   const handlePrint = () => {
-    const printContent = `
-      <html>
-        <head>
-          <title>Motosiklet Listesi</title>
-          <style>
-            body { font-family: sans-serif; padding: 20px; color: #000; }
-            h2 { text-align: center; margin-bottom: 20px; font-size: 24px; }
-            table { width: 100%; border-collapse: collapse; font-size: 14px; }
-            th, td { border: 1px solid #000; padding: 8px 12px; text-align: left; }
-            th { background-color: #f3f4f6; font-weight: bold; }
-            @media print {
-              body { padding: 0; }
-              table { page-break-inside: auto; }
-              tr { page-break-inside: avoid; page-break-after: auto; }
-            }
-          </style>
-        </head>
-        <body>
-          <h2>Motosiklet Listesi</h2>
-          <table>
-            <thead>
-              <tr>
-                <th>Şasi No</th>
-                <th>Marka</th>
-                <th>Model</th>
-                <th>Yıl</th>
-                <th>Renk</th>
-                <th>Konum</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${table.getRowModel().rows.map(row => {
-                const location = row.original.is_other_branch && row.original.branch_name
-                  ? row.original.branch_name
-                  : "Merkez";
-                return `
-                  <tr>
-                    <td>${row.original.chassis_number}</td>
-                    <td>${row.original.brand}</td>
-                    <td>${row.original.model}</td>
-                    <td>${row.original.year}</td>
-                    <td>${row.original.color}</td>
-                    <td>${location}</td>
-                  </tr>
-                `;
-              }).join('')}
-            </tbody>
-          </table>
-          <script>
-            window.onload = () => {
-              window.print();
-              setTimeout(() => window.close(), 500);
-            }
-          </script>
-        </body>
-      </html>
-    `;
+    const rows = table.getRowModel().rows;
+    const tableRowsHtml = rows
+      .map((row) => {
+        const location =
+          row.original.is_other_branch && row.original.branch_name
+            ? row.original.branch_name
+            : "Merkez";
+        return `<tr><td>${row.original.chassis_number || ""}</td><td>${row.original.brand || ""}</td><td>${row.original.model || ""}</td><td>${row.original.year || ""}</td><td>${row.original.color || ""}</td><td>${location}</td></tr>`;
+      })
+      .join("");
 
     const printWindow = window.open("", "_blank");
     if (printWindow) {
-      printWindow.document.write(printContent);
+      printWindow.document.write(`<!DOCTYPE html><html><head><title>Motosiklet Listesi</title><style>body{font-family:sans-serif;padding:20px;color:#000;}h2{text-align:center;margin-bottom:20px;}table{width:100%;border-collapse:collapse;font-size:14px;}th,td{border:1px solid #000;padding:8px 12px;text-align:left;}th{background:#f3f4f6;}</style></head><body><h2>Motosiklet Listesi</h2><table><thead><tr><th>Şasi No</th><th>Marka</th><th>Model</th><th>Yıl</th><th>Renk</th><th>Konum</th></tr></thead><tbody>${tableRowsHtml}</tbody></table></body></html>`);
       printWindow.document.close();
+      printWindow.focus();
+      printWindow.print();
     }
   };
 
@@ -408,10 +378,13 @@ export function MotorcycleTable({
             className="pl-10 bg-zinc-900/50 border-zinc-800 text-zinc-200 placeholder:text-zinc-600 focus:border-zinc-600 transition-colors"
           />
         </div>
-        
+
         <Popover>
           <PopoverTrigger asChild>
-            <Button variant="outline" className="bg-zinc-900/50 border-zinc-800 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100 relative w-full sm:w-auto">
+            <Button
+              variant="outline"
+              className="bg-zinc-900/50 border-zinc-800 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100 relative w-full sm:w-auto"
+            >
               <Filter className="w-4 h-4 mr-2" />
               Gelişmiş Filtreler
               {activeFiltersCount > 0 && (
@@ -421,7 +394,10 @@ export function MotorcycleTable({
               )}
             </Button>
           </PopoverTrigger>
-          <PopoverContent align="end" className="w-full sm:w-[520px] bg-zinc-950/95 backdrop-blur-xl border-zinc-800/50 shadow-2xl shadow-black p-6 rounded-2xl">
+          <PopoverContent
+            align="end"
+            className="w-full sm:w-[520px] bg-zinc-950/95 backdrop-blur-xl border-zinc-800/50 shadow-2xl shadow-black p-6 rounded-2xl"
+          >
             <div className="space-y-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -434,19 +410,24 @@ export function MotorcycleTable({
                   </div>
                 </div>
                 {activeFiltersCount > 0 && (
-                  <Button variant="ghost" size="sm" onClick={clearFilters} className="h-8 text-red-400 hover:text-red-300 hover:bg-red-400/10 transition-colors">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={clearFilters}
+                    className="h-8 text-red-400 hover:text-red-300 hover:bg-red-400/10 transition-colors"
+                  >
                     Filtreleri Temizle
                   </Button>
                 )}
               </div>
-              
+
               <div className="h-px w-full bg-gradient-to-r from-zinc-800/0 via-zinc-800 to-zinc-800/0" />
-              
-              <div className="grid grid-cols-2 gap-5 max-h-[350px] overflow-y-auto pr-3 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-zinc-800 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-zinc-700 transition-colors">
+
+              <div className="grid grid-cols-2 gap-5 max-h-[350px] overflow-y-auto pr-3">
                 <div className="space-y-2">
                   <Label className="text-zinc-400 text-xs font-medium uppercase tracking-wider">Durum</Label>
                   <Select value={filters.status} onValueChange={(v) => handleFilterChange("status", v)}>
-                    <SelectTrigger className="bg-zinc-900/50 border-zinc-800/80 text-zinc-200 h-10 hover:border-zinc-700 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all rounded-xl focus:ring-offset-0">
+                    <SelectTrigger className="bg-zinc-900/50 border-zinc-800/80 text-zinc-200 h-10 rounded-xl">
                       <SelectValue placeholder="Tümü" />
                     </SelectTrigger>
                     <SelectContent className="bg-zinc-900 border-zinc-800 rounded-xl shadow-xl shadow-black/50">
@@ -460,43 +441,71 @@ export function MotorcycleTable({
                 <div className="space-y-2">
                   <Label className="text-zinc-400 text-xs font-medium uppercase tracking-wider">Konum</Label>
                   <Select value={filters.location} onValueChange={(v) => handleFilterChange("location", v)}>
-                    <SelectTrigger className="bg-zinc-900/50 border-zinc-800/80 text-zinc-200 h-10 hover:border-zinc-700 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all rounded-xl focus:ring-offset-0">
+                    <SelectTrigger className="bg-zinc-900/50 border-zinc-800/80 text-zinc-200 h-10 rounded-xl">
                       <SelectValue placeholder="Tümü" />
                     </SelectTrigger>
                     <SelectContent className="bg-zinc-900 border-zinc-800 rounded-xl shadow-xl shadow-black/50 max-h-40">
                       <SelectItem value="all">Tümü</SelectItem>
                       <SelectItem value="merkez">Merkez</SelectItem>
-                      {uniqueBranches.map(b => <SelectItem key={b} value={b}>{b}</SelectItem>)}
+                      {uniqueBranches.map((b) => (
+                        <SelectItem key={b} value={b}>
+                          {b}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div className="space-y-2">
                   <Label className="text-zinc-400 text-xs font-medium uppercase tracking-wider">Şasi No</Label>
-                  <Input placeholder="Örn: 123456" value={filters.chassis_number} onChange={(e) => handleFilterChange("chassis_number", e.target.value)} className="bg-zinc-900/50 border-zinc-800/80 text-zinc-200 h-10 placeholder:text-zinc-600 hover:border-zinc-700 focus:border-blue-500 focus-visible:ring-1 focus-visible:ring-blue-500 focus-visible:ring-offset-0 transition-all rounded-xl" />
+                  <Input
+                    placeholder="Örn: 123456"
+                    value={filters.chassis_number}
+                    onChange={(e) => handleFilterChange("chassis_number", e.target.value)}
+                    className="bg-zinc-900/50 border-zinc-800/80 text-zinc-200 h-10 rounded-xl"
+                  />
                 </div>
 
                 <div className="space-y-2">
                   <Label className="text-zinc-400 text-xs font-medium uppercase tracking-wider">Marka</Label>
-                  <Input placeholder="Örn: Honda" value={filters.brand} onChange={(e) => handleFilterChange("brand", e.target.value)} className="bg-zinc-900/50 border-zinc-800/80 text-zinc-200 h-10 placeholder:text-zinc-600 hover:border-zinc-700 focus:border-blue-500 focus-visible:ring-1 focus-visible:ring-blue-500 focus-visible:ring-offset-0 transition-all rounded-xl" />
+                  <Input
+                    placeholder="Örn: Honda"
+                    value={filters.brand}
+                    onChange={(e) => handleFilterChange("brand", e.target.value)}
+                    className="bg-zinc-900/50 border-zinc-800/80 text-zinc-200 h-10 rounded-xl"
+                  />
                 </div>
 
                 <div className="space-y-2">
                   <Label className="text-zinc-400 text-xs font-medium uppercase tracking-wider">Model</Label>
-                  <Input placeholder="Örn: CBR650R" value={filters.model} onChange={(e) => handleFilterChange("model", e.target.value)} className="bg-zinc-900/50 border-zinc-800/80 text-zinc-200 h-10 placeholder:text-zinc-600 hover:border-zinc-700 focus:border-blue-500 focus-visible:ring-1 focus-visible:ring-blue-500 focus-visible:ring-offset-0 transition-all rounded-xl" />
+                  <Input
+                    placeholder="Örn: CBR650R"
+                    value={filters.model}
+                    onChange={(e) => handleFilterChange("model", e.target.value)}
+                    className="bg-zinc-900/50 border-zinc-800/80 text-zinc-200 h-10 rounded-xl"
+                  />
                 </div>
 
                 <div className="space-y-2">
                   <Label className="text-zinc-400 text-xs font-medium uppercase tracking-wider">Yıl</Label>
-                  <Input type="number" placeholder="Örn: 2024" value={filters.year} onChange={(e) => handleFilterChange("year", e.target.value)} className="bg-zinc-900/50 border-zinc-800/80 text-zinc-200 h-10 placeholder:text-zinc-600 hover:border-zinc-700 focus:border-blue-500 focus-visible:ring-1 focus-visible:ring-blue-500 focus-visible:ring-offset-0 transition-all rounded-xl" />
+                  <Input
+                    type="number"
+                    placeholder="Örn: 2024"
+                    value={filters.year}
+                    onChange={(e) => handleFilterChange("year", e.target.value)}
+                    className="bg-zinc-900/50 border-zinc-800/80 text-zinc-200 h-10 rounded-xl"
+                  />
                 </div>
 
                 <div className="space-y-2 col-span-2">
                   <Label className="text-zinc-400 text-xs font-medium uppercase tracking-wider">Renk</Label>
-                  <Input placeholder="Örn: Kırmızı" value={filters.color} onChange={(e) => handleFilterChange("color", e.target.value)} className="bg-zinc-900/50 border-zinc-800/80 text-zinc-200 h-10 placeholder:text-zinc-600 hover:border-zinc-700 focus:border-blue-500 focus-visible:ring-1 focus-visible:ring-blue-500 focus-visible:ring-offset-0 transition-all rounded-xl" />
+                  <Input
+                    placeholder="Örn: Kırmızı"
+                    value={filters.color}
+                    onChange={(e) => handleFilterChange("color", e.target.value)}
+                    className="bg-zinc-900/50 border-zinc-800/80 text-zinc-200 h-10 rounded-xl"
+                  />
                 </div>
-
-
               </div>
             </div>
           </PopoverContent>

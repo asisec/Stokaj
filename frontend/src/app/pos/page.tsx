@@ -7,39 +7,21 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { customToast as toast } from "@/lib/toast";
 import {
   Search,
   X,
-  ShoppingCart,
   User,
-  Phone,
   Bike,
   Wrench,
-  CreditCard,
-  Banknote,
-  Building2,
   Check,
   Loader2,
-  Tag,
-  Plus,
   Trash2,
-  AlertCircle,
   ShoppingBag,
   Package,
-  BookOpen,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
@@ -50,9 +32,8 @@ interface CartItem {
   item_name: string;
   chassis_number?: string;
   quantity: number;
-  max_quantity?: number; // Only for spare parts to limit input
+  max_quantity?: number;
 }
-
 
 export default function POSPage() {
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -65,7 +46,6 @@ export default function POSPage() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [sparePartQuantities, setSparePartQuantities] = useState<Record<number, number>>({});
-  const [nextId, setNextId] = useState(2);
   const [activeTab, setActiveTab] = useState<"motorcycles" | "spare_parts">("motorcycles");
   const { isCensored } = useCensorStore();
 
@@ -77,11 +57,12 @@ export default function POSPage() {
         api.getMotorcycles(),
         api.getSpareParts(),
       ]);
-      setCustomers(customersData);
-      setMotorcycles(motorcyclesData);
-      setSpareParts(sparePartsData);
-    } catch {
-      toast.error("Veriler yüklenirken hata oluştu");
+      setCustomers(customersData || []);
+      setMotorcycles(motorcyclesData || []);
+      setSpareParts(sparePartsData || []);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Veriler yüklenirken hata oluştu";
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -92,38 +73,39 @@ export default function POSPage() {
   }, [fetchData]);
 
   const filteredCustomers = useMemo(() => {
-    if (!customerSearch) return customers;
+    if (!customerSearch.trim()) return customers;
     const query = customerSearch.toLowerCase();
     return customers.filter(
       (c) =>
-        c.first_name.toLowerCase().includes(query) ||
-        c.last_name.toLowerCase().includes(query) ||
-        c.phone.toLowerCase().includes(query)
+        (c.first_name || "").toLowerCase().includes(query) ||
+        (c.last_name || "").toLowerCase().includes(query) ||
+        (c.phone || "").toLowerCase().includes(query) ||
+        (c.identity_number || "").toLowerCase().includes(query)
     );
   }, [customers, customerSearch]);
 
   const availableMotorcycles = useMemo(() => {
     const available = motorcycles.filter((m) => m.status === "available");
-    if (!productSearch) return available;
+    if (!productSearch.trim()) return available;
     const query = productSearch.toLowerCase();
     return available.filter(
       (m) =>
-        m.brand.toLowerCase().includes(query) ||
-        m.model.toLowerCase().includes(query) ||
-        m.chassis_number.toLowerCase().includes(query)
+        (m.brand || "").toLowerCase().includes(query) ||
+        (m.model || "").toLowerCase().includes(query) ||
+        (m.chassis_number || "").toLowerCase().includes(query)
     );
   }, [motorcycles, productSearch]);
 
   const availableSpareParts = useMemo(() => {
     const available = spareParts.filter((sp) => sp.quantity > 0 && !sp.is_defective);
-    if (!productSearch) return available;
+    if (!productSearch.trim()) return available;
     const query = productSearch.toLowerCase();
     return available.filter(
       (sp) =>
-        sp.name.toLowerCase().includes(query) ||
-        sp.category.toLowerCase().includes(query) ||
-        sp.compatible_brand.toLowerCase().includes(query) ||
-        sp.compatible_model.toLowerCase().includes(query)
+        (sp.name || "").toLowerCase().includes(query) ||
+        (sp.category || "").toLowerCase().includes(query) ||
+        (sp.compatible_brand || "").toLowerCase().includes(query) ||
+        (sp.compatible_model || "").toLowerCase().includes(query)
     );
   }, [spareParts, productSearch]);
 
@@ -140,7 +122,7 @@ export default function POSPage() {
       {
         item_type: "motorcycle",
         item_id: motorcycle.id,
-        item_name: `${motorcycle.brand} ${motorcycle.model} (${motorcycle.year})`,
+        item_name: `${motorcycle.brand || ""} ${motorcycle.model || ""} (${motorcycle.year || ""})`.trim(),
         chassis_number: motorcycle.chassis_number,
         quantity: 1,
       },
@@ -149,48 +131,50 @@ export default function POSPage() {
   };
 
   const addSparePartToCart = (sparePart: SparePart) => {
-    const quantity = sparePartQuantities[sparePart.id] || 1;
-    if (quantity > sparePart.quantity) {
+    const requestedQty = sparePartQuantities[sparePart.id] || 1;
+    if (requestedQty > sparePart.quantity) {
       toast.error("Yeterli stok bulunmuyor");
       return;
     }
 
-    setCart((prev) => {
-      const existingIdx = prev.findIndex(
-        (item) => item.item_type === "spare_part" && item.item_id === sparePart.id
-      );
-      if (existingIdx >= 0) {
-        const newCart = [...prev];
-        const newTotalQty = newCart[existingIdx].quantity + quantity;
-        if (newTotalQty > sparePart.quantity) {
-          toast.error("Toplam miktar stoktan fazla olamaz");
-          return prev;
-        }
-        newCart[existingIdx].quantity = newTotalQty;
-        toast.success("Yedek parça miktarı güncellendi");
-        return newCart;
-      }
+    const existingIndex = cart.findIndex(
+      (item) => item.item_type === "spare_part" && item.item_id === sparePart.id
+    );
 
-      toast.success("Yedek parça sepete eklendi");
-      return [
+    if (existingIndex >= 0) {
+      const currentQty = cart[existingIndex].quantity;
+      if (currentQty + requestedQty > sparePart.quantity) {
+        toast.error("Toplam miktar stoktan fazla olamaz");
+        return;
+      }
+      setCart((prev) =>
+        prev.map((item, index) =>
+          index === existingIndex
+            ? { ...item, quantity: item.quantity + requestedQty }
+            : item
+        )
+      );
+      toast.success("Yedek parça miktarı güncellendi");
+    } else {
+      setCart((prev) => [
         ...prev,
         {
           item_type: "spare_part",
           item_id: sparePart.id,
           item_name: sparePart.name,
-          quantity: quantity,
-            max_quantity: sparePart.quantity,
+          quantity: requestedQty,
+          max_quantity: sparePart.quantity,
         },
-      ];
-    });
+      ]);
+      toast.success("Yedek parça sepete eklendi");
+    }
 
-    // Reset local quantity input
     setSparePartQuantities((prev) => ({ ...prev, [sparePart.id]: 1 }));
   };
 
   const updateCartQuantity = (index: number, newQty: number) => {
-    const item = cart[index];
     if (newQty < 1) return;
+    const item = cart[index];
     if (item.max_quantity && newQty > item.max_quantity) {
       toast.error(`Stokta sadece ${item.max_quantity} adet bulunuyor`);
       return;
@@ -202,16 +186,14 @@ export default function POSPage() {
     setCart((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const canComplete =
-    !!selectedCustomer &&
-    cart.length > 0;
+  const canComplete = Boolean(selectedCustomer) && cart.length > 0;
 
   const handleCompleteSale = async () => {
-    if (!canComplete) return;
+    if (!canComplete || !selectedCustomer) return;
     setSubmitting(true);
     try {
       await api.createSale({
-        customer_id: selectedCustomer!.id,
+        customer_id: selectedCustomer.id,
         items: cart.map((item) => ({
           item_type: item.item_type,
           item_id: item.item_id,
@@ -223,59 +205,54 @@ export default function POSPage() {
       setSelectedCustomer(null);
       setSparePartQuantities({});
       await fetchData();
-    } catch {
-      toast.error("Satış tamamlanırken hata oluştu");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Satış tamamlanırken hata oluştu";
+      toast.error(message);
     } finally {
       setSubmitting(false);
     }
   };
 
+  const getInitials = (first?: string, last?: string) => {
+    const f = (first || "").trim().charAt(0);
+    const l = (last || "").trim().charAt(0);
+    return `${f}${l}`.toUpperCase() || "M";
+  };
+
   if (loading) {
     return (
-      <div className="flex gap-6 h-[calc(100vh-8rem)] p-2">
-        <div className="w-80 flex flex-col">
+      <div className="flex flex-col lg:flex-row gap-6 h-auto lg:h-[calc(100vh-8rem)] p-2">
+        <div className="w-full lg:w-80 flex flex-col">
           <Skeleton className="h-14 mb-4 rounded-2xl bg-zinc-800/50" />
           <div className="space-y-3 flex-1">
-            {Array.from({ length: 6 }).map((_, i) => (
+            {Array.from({ length: 5 }).map((_, i) => (
               <Skeleton key={i} className="h-20 w-full rounded-2xl bg-zinc-800/50" />
             ))}
           </div>
         </div>
-
         <div className="flex-1 flex flex-col">
           <Skeleton className="h-14 mb-4 rounded-2xl bg-zinc-800/50" />
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-            {Array.from({ length: 8 }).map((_, i) => (
+            {Array.from({ length: 6 }).map((_, i) => (
               <Skeleton key={i} className="h-32 w-full rounded-3xl bg-zinc-800/50" />
             ))}
           </div>
         </div>
-
-        <div className="w-[420px] flex flex-col">
+        <div className="w-full lg:w-[420px] flex flex-col">
           <Skeleton className="h-14 mb-4 rounded-2xl bg-zinc-800/50" />
           <div className="flex-1 bg-zinc-900/50 border border-zinc-800/50 rounded-3xl p-6 space-y-4">
             {Array.from({ length: 3 }).map((_, i) => (
               <Skeleton key={i} className="h-20 w-full rounded-2xl bg-zinc-800/50" />
             ))}
-            <div className="mt-auto space-y-4 pt-6 border-t border-zinc-800/50">
-              <Skeleton className="h-12 w-full rounded-2xl bg-zinc-800/50" />
-              <Skeleton className="h-14 w-full rounded-2xl bg-zinc-800/50" />
-            </div>
           </div>
         </div>
       </div>
     );
   }
 
-  // Generate initials for avatar
-  const getInitials = (first: string, last: string) => {
-    return `${first.charAt(0)}${last.charAt(0)}`.toUpperCase();
-  };
-
   return (
-    <div className="flex gap-6 h-[calc(100vh-8rem)] p-2">
-      {/* 1. SOL PANEL: Müşteri Seçimi */}
-      <div className="w-80 flex flex-col gap-4 shrink-0">
+    <div className="flex flex-col lg:flex-row gap-6 h-auto lg:h-[calc(100vh-8rem)] p-2">
+      <div className="w-full lg:w-80 flex flex-col gap-4 shrink-0">
         <Card className="border-zinc-800/60 bg-zinc-950/40 backdrop-blur-xl flex flex-col h-full rounded-3xl shadow-2xl">
           <CardHeader className="p-5 pb-5 border-b border-zinc-800/60 shrink-0">
             <CardTitle className="text-xl font-semibold text-zinc-100 flex items-center gap-2.5">
@@ -297,13 +274,14 @@ export default function POSPage() {
                 />
               </div>
             </div>
-            <ScrollArea className="flex-1 px-3 pb-3">
+            <ScrollArea className="flex-1 px-3 pb-3 max-h-[300px] lg:max-h-none">
               <div className="space-y-2 pb-4 pt-1">
                 {filteredCustomers.map((customer) => {
                   const isSelected = selectedCustomer?.id === customer.id;
                   return (
                     <button
                       key={customer.id}
+                      type="button"
                       onClick={() => setSelectedCustomer(customer)}
                       className={cn(
                         "w-full text-left p-3.5 rounded-2xl border transition-all duration-300 group relative overflow-hidden",
@@ -330,12 +308,17 @@ export default function POSPage() {
                           {getInitials(customer.first_name, customer.last_name)}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className={cn("font-medium text-sm truncate transition-colors", isSelected ? "text-blue-100" : "text-zinc-200 group-hover:text-white")}>
-                            {isCensored ? "**** ****" : `${customer.first_name} ${customer.last_name}`}
+                          <div
+                            className={cn(
+                              "font-medium text-sm truncate transition-colors",
+                              isSelected ? "text-blue-100" : "text-zinc-200 group-hover:text-white"
+                            )}
+                          >
+                            {isCensored ? "**** ****" : `${customer.first_name || ""} ${customer.last_name || ""}`}
                           </div>
                           <div className="flex items-center gap-1.5 text-xs text-zinc-500 mt-1">
                             <User className="h-3 w-3" />
-                            {isCensored ? "***********" : customer.identity_number}
+                            {isCensored ? "***********" : customer.identity_number || customer.phone || "-"}
                           </div>
                         </div>
                       </div>
@@ -353,8 +336,7 @@ export default function POSPage() {
         </Card>
       </div>
 
-      {/* 2. ORTA PANEL: Ürünler */}
-      <div className="flex-1 flex flex-col gap-4 min-w-0">
+      <div className="flex-1 flex flex-col gap-4 min-w-0 min-h-[400px]">
         <Card className="border-zinc-800/60 bg-zinc-950/40 backdrop-blur-xl flex flex-col h-full rounded-3xl shadow-2xl">
           <Tabs
             value={activeTab}
@@ -371,14 +353,19 @@ export default function POSPage() {
             </CardHeader>
 
             <CardContent className="flex-1 p-0 min-h-0 flex flex-col">
-              {/* Sekmeler ve Arama - sabit üst alan */}
               <div className="px-5 pt-4 pb-3 border-b border-zinc-800/40 shrink-0 flex flex-col gap-3">
                 <TabsList className="bg-zinc-900/80 border border-zinc-800/50 p-1 rounded-xl h-11 w-full grid grid-cols-2">
-                  <TabsTrigger value="motorcycles" className="rounded-lg gap-2 data-[state=active]:bg-zinc-800 data-[state=active]:text-zinc-100 text-zinc-400">
+                  <TabsTrigger
+                    value="motorcycles"
+                    className="rounded-lg gap-2 data-[state=active]:bg-zinc-800 data-[state=active]:text-zinc-100 text-zinc-400"
+                  >
                     <Bike className="h-4 w-4" />
                     Motosikletler
                   </TabsTrigger>
-                  <TabsTrigger value="spare_parts" className="rounded-lg gap-2 data-[state=active]:bg-zinc-800 data-[state=active]:text-zinc-100 text-zinc-400">
+                  <TabsTrigger
+                    value="spare_parts"
+                    className="rounded-lg gap-2 data-[state=active]:bg-zinc-800 data-[state=active]:text-zinc-100 text-zinc-400"
+                  >
                     <Wrench className="h-4 w-4" />
                     Yedek Parçalar
                   </TabsTrigger>
@@ -412,7 +399,6 @@ export default function POSPage() {
                           )}
                         >
                           <div className="p-3 flex flex-col gap-3">
-                            {/* Üst kısım: Bilgiler */}
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 mb-1.5">
                                 <h3 className="font-bold text-zinc-100 text-[14px] group-hover:text-blue-400 transition-colors leading-tight truncate">
@@ -424,39 +410,35 @@ export default function POSPage() {
                                   {motorcycle.year}
                                 </span>
                                 <span>•</span>
-                                <span className="capitalize">{motorcycle.color}</span>
+                                <span className="capitalize">{motorcycle.color || "-"}</span>
                                 <span>•</span>
                                 <span className="font-mono text-[11px] text-blue-300 font-semibold bg-blue-500/10 border border-blue-500/20 px-1.5 py-0.5 rounded">
                                   {motorcycle.chassis_number}
                                 </span>
                               </div>
                             </div>
-
-                            {/* Alt kısım: İşlemler */}
-                              <div className="flex items-center w-full">
-                                {inCart ? (
-                                  <Badge className="bg-blue-500/20 text-blue-300 border-none px-3 h-10 rounded-xl w-full flex justify-center text-sm">
-                                    <Check className="h-4 w-4 mr-2" />
-                                    Sepette
-                                  </Badge>
-                                ) : (
-                                  <div className="flex items-center border border-zinc-800 rounded-xl overflow-hidden bg-zinc-950/50 focus-within:border-blue-500/50 focus-within:ring-1 focus-within:ring-blue-500/20 transition-all w-full">
-                                    <Button
-                                      disabled={inCart}
-                                      onClick={() => addMotorcycleToCart(motorcycle)}
-                                      className="w-full h-10 rounded-none bg-blue-600 hover:bg-blue-500 text-white font-semibold px-6 transition-colors"
-                                    >
-                                      Sepete Ekle
-                                    </Button>
-                                  </div>
-                                )}
-                              </div>
+                            <div className="flex items-center w-full">
+                              {inCart ? (
+                                <Badge className="bg-blue-500/20 text-blue-300 border-none px-3 h-10 rounded-xl w-full flex justify-center text-sm">
+                                  <Check className="h-4 w-4 mr-2" />
+                                  Sepette
+                                </Badge>
+                              ) : (
+                                <Button
+                                  disabled={inCart}
+                                  onClick={() => addMotorcycleToCart(motorcycle)}
+                                  className="w-full h-10 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold px-6 transition-colors"
+                                >
+                                  Sepete Ekle
+                                </Button>
+                              )}
+                            </div>
                           </div>
                         </div>
                       );
                     })}
                     {availableMotorcycles.length === 0 && (
-                      <div className="col-span-full flex flex-col items-center justify-center py-20 text-zinc-500">
+                      <div className="flex flex-col items-center justify-center py-20 text-zinc-500">
                         <Bike className="h-12 w-12 mb-4 opacity-20" />
                         <p className="text-sm font-medium">Motosiklet bulunamadı</p>
                       </div>
@@ -468,57 +450,52 @@ export default function POSPage() {
               <TabsContent value="spare_parts" className="flex-1 m-0 data-[state=inactive]:hidden min-h-0">
                 <ScrollArea className="h-full px-5 pb-5">
                   <div className="flex flex-col gap-2 pt-2 pb-4">
-                    {availableSpareParts.map((sp) => {
-                      return (
-                        <div
-                          key={sp.id}
-                          className="group relative overflow-hidden rounded-xl border border-zinc-800/50 bg-zinc-900/40 hover:bg-zinc-800/40 hover:border-blue-500/30 transition-all duration-300 shadow-sm hover:shadow-lg"
-                        >
-                          <div className="p-3 flex flex-col gap-3">
-                            {/* Üst kısım: Bilgiler */}
-                            <div className="flex-1 min-w-0">
-                              <h3 className="font-bold text-zinc-100 text-[14px] group-hover:text-blue-400 transition-colors truncate mb-1.5">
-                                {sp.name}
-                              </h3>
-                              <div className="text-xs text-zinc-500 flex items-center gap-2 truncate">
-                                <span className="font-medium text-amber-400/80 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded shrink-0">
-                                  {sp.quantity} adet
-                                </span>
-                                <span className="truncate">{sp.category} • {sp.compatible_brand} {sp.compatible_model}</span>
-                              </div>
+                    {availableSpareParts.map((sp) => (
+                      <div
+                        key={sp.id}
+                        className="group relative overflow-hidden rounded-xl border border-zinc-800/50 bg-zinc-900/40 hover:bg-zinc-800/40 hover:border-blue-500/30 transition-all duration-300 shadow-sm hover:shadow-lg"
+                      >
+                        <div className="p-3 flex flex-col gap-3">
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-bold text-zinc-100 text-[14px] group-hover:text-blue-400 transition-colors truncate mb-1.5">
+                              {sp.name}
+                            </h3>
+                            <div className="text-xs text-zinc-500 flex items-center gap-2 truncate">
+                              <span className="font-medium text-amber-400/80 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded shrink-0">
+                                {sp.quantity} adet
+                              </span>
+                              <span className="truncate">{sp.category} • {sp.compatible_brand} {sp.compatible_model}</span>
                             </div>
-
-                            {/* Alt kısım: İşlemler */}
-                            <div className="flex items-center w-full">
-                              <div className="flex items-center border border-zinc-800 rounded-xl overflow-hidden bg-zinc-950/50 focus-within:border-blue-500/50 focus-within:ring-1 focus-within:ring-blue-500/20 transition-all w-full">
-                                <Input
-                                  type="number"
-                                  min="1"
-                                  max={sp.quantity}
-                                  placeholder="Adet"
-                                  value={sparePartQuantities[sp.id] || 1}
-                                  onChange={(e) =>
-                                    setSparePartQuantities((prev) => ({
-                                      ...prev,
-                                      [sp.id]: parseInt(e.target.value) || 1,
-                                    }))
-                                  }
-                                  className="w-[70px] h-10 border-0 border-r border-zinc-800 bg-transparent text-center text-zinc-200 font-medium focus-visible:ring-0 px-1 placeholder:text-zinc-600 flex-1"
-                                />
-                                <Button
-                                  onClick={() => addSparePartToCart(sp)}
-                                  className="h-10 rounded-none bg-blue-600 hover:bg-blue-500 text-white font-semibold px-6 transition-colors shrink-0 w-[120px]"
-                                >
-                                  Sepete Ekle
-                                </Button>
-                              </div>
+                          </div>
+                          <div className="flex items-center w-full">
+                            <div className="flex items-center border border-zinc-800 rounded-xl overflow-hidden bg-zinc-950/50 focus-within:border-blue-500/50 focus-within:ring-1 focus-within:ring-blue-500/20 transition-all w-full">
+                              <Input
+                                type="number"
+                                min="1"
+                                max={sp.quantity}
+                                placeholder="Adet"
+                                value={sparePartQuantities[sp.id] || 1}
+                                onChange={(e) =>
+                                  setSparePartQuantities((prev) => ({
+                                    ...prev,
+                                    [sp.id]: Math.max(1, parseInt(e.target.value) || 1),
+                                  }))
+                                }
+                                className="w-[70px] h-10 border-0 border-r border-zinc-800 bg-transparent text-center text-zinc-200 font-medium focus-visible:ring-0 px-1 placeholder:text-zinc-600 flex-1"
+                              />
+                              <Button
+                                onClick={() => addSparePartToCart(sp)}
+                                className="h-10 rounded-none bg-blue-600 hover:bg-blue-500 text-white font-semibold px-6 transition-colors shrink-0 w-[120px]"
+                              >
+                                Sepete Ekle
+                              </Button>
                             </div>
                           </div>
                         </div>
-                      );
-                    })}
+                      </div>
+                    ))}
                     {availableSpareParts.length === 0 && (
-                      <div className="col-span-full flex flex-col items-center justify-center py-20 text-zinc-500">
+                      <div className="flex flex-col items-center justify-center py-20 text-zinc-500">
                         <Wrench className="h-12 w-12 mb-4 opacity-20" />
                         <p className="text-sm font-medium">Yedek parça bulunamadı</p>
                       </div>
@@ -531,12 +508,9 @@ export default function POSPage() {
         </Card>
       </div>
 
-      {/* 3. SAĞ PANEL: Sepet */}
-      <div className="w-[420px] flex flex-col gap-4 shrink-0">
+      <div className="w-full lg:w-[420px] flex flex-col gap-4 shrink-0">
         <Card className="border-zinc-800/60 bg-zinc-950/40 backdrop-blur-xl flex flex-col h-full rounded-3xl shadow-2xl relative overflow-hidden">
-          {/* Subtle glow in background */}
           <div className="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl pointer-events-none" />
-
           <CardHeader className="px-5 pt-5 pb-4 relative z-10 border-b border-zinc-800/60 shrink-0">
             <div className="flex items-center justify-between">
               <CardTitle className="text-xl font-bold text-zinc-100 flex items-center gap-2.5">
@@ -554,8 +528,6 @@ export default function POSPage() {
           </CardHeader>
 
           <CardContent className="flex-1 flex flex-col p-0 min-h-0 overflow-hidden relative z-10">
-
-            {/* Müşteri Bloğu - sabit, küçülmez */}
             {selectedCustomer && (
               <div className="px-5 pt-3 pb-2 shrink-0">
                 <div className="flex items-center gap-3 p-3 rounded-xl bg-blue-500/10 border border-blue-500/20">
@@ -564,14 +536,15 @@ export default function POSPage() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-semibold text-blue-100 truncate">
-                      {isCensored ? "**** ****" : `${selectedCustomer.first_name} ${selectedCustomer.last_name}`}
+                      {isCensored ? "**** ****" : `${selectedCustomer.first_name || ""} ${selectedCustomer.last_name || ""}`}
                     </div>
                     <div className="text-xs text-blue-300/70 flex items-center gap-1">
                       <User className="h-3 w-3" />
-                      {isCensored ? "***********" : selectedCustomer.identity_number}
+                      {isCensored ? "***********" : selectedCustomer.identity_number || selectedCustomer.phone || "-"}
                     </div>
                   </div>
                   <button
+                    type="button"
                     onClick={() => setSelectedCustomer(null)}
                     className="p-1 rounded-lg text-blue-400/50 hover:text-blue-300 hover:bg-blue-500/20 transition-colors shrink-0"
                   >
@@ -581,8 +554,7 @@ export default function POSPage() {
               </div>
             )}
 
-            {/* Sepet Ürünleri - esnek, kaydırılabilir */}
-            <ScrollArea className="flex-1 px-5 min-h-0">
+            <ScrollArea className="flex-1 px-5 min-h-0 min-h-[160px]">
               <AnimatePresence mode="popLayout">
                 {cart.length > 0 ? (
                   <div className="space-y-2 py-3">
@@ -606,12 +578,28 @@ export default function POSPage() {
                         <div className="flex items-center gap-2 shrink-0">
                           {item.item_type === "spare_part" && (
                             <div className="flex items-center gap-1 bg-zinc-950/50 rounded-lg p-0.5 border border-zinc-800/50">
-                              <button onClick={() => updateCartQuantity(index, item.quantity - 1)} className="w-6 h-6 flex items-center justify-center text-zinc-400 hover:text-zinc-100 rounded-md hover:bg-zinc-800 transition-colors text-sm font-bold">-</button>
+                              <button
+                                type="button"
+                                onClick={() => updateCartQuantity(index, item.quantity - 1)}
+                                className="w-6 h-6 flex items-center justify-center text-zinc-400 hover:text-zinc-100 rounded-md hover:bg-zinc-800 transition-colors text-sm font-bold"
+                              >
+                                -
+                              </button>
                               <span className="text-xs font-medium w-5 text-center text-zinc-200">{item.quantity}</span>
-                              <button onClick={() => updateCartQuantity(index, item.quantity + 1)} className="w-6 h-6 flex items-center justify-center text-zinc-400 hover:text-zinc-100 rounded-md hover:bg-zinc-800 transition-colors text-sm font-bold">+</button>
+                              <button
+                                type="button"
+                                onClick={() => updateCartQuantity(index, item.quantity + 1)}
+                                className="w-6 h-6 flex items-center justify-center text-zinc-400 hover:text-zinc-100 rounded-md hover:bg-zinc-800 transition-colors text-sm font-bold"
+                              >
+                                +
+                              </button>
                             </div>
                           )}
-                          <button onClick={() => removeFromCart(index)} className="p-1.5 rounded-lg text-zinc-600 hover:text-red-400 hover:bg-red-500/10 transition-colors">
+                          <button
+                            type="button"
+                            onClick={() => removeFromCart(index)}
+                            className="p-1.5 rounded-lg text-zinc-600 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                          >
                             <Trash2 className="h-4 w-4" />
                           </button>
                         </div>
@@ -634,11 +622,8 @@ export default function POSPage() {
               </AnimatePresence>
             </ScrollArea>
 
-            {/* Ödeme Footer - sabit, hiç büyümez */}
             {cart.length > 0 && (
               <div className="shrink-0 bg-zinc-900/90 border-t border-zinc-800/60 px-5 pt-3 pb-4 backdrop-blur-md flex flex-col gap-2.5">
-
-                {/* Özet Footer */}
                 <div className="flex items-center justify-between py-1">
                   <span className="text-sm font-medium text-zinc-400">Toplam Ürün</span>
                   <span className="text-xl font-bold text-emerald-400 tabular-nums">
