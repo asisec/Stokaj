@@ -25,7 +25,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Bike, Wrench, Users, ShoppingCart, Trash2, ShieldAlert, Eye, EyeOff, Wallet } from "lucide-react";
+import { Bike, Wrench, Users, ShoppingCart, Trash2, ShieldAlert, Eye, EyeOff, Wallet, ClipboardCheck, CheckCircle2, AlertTriangle, FileText } from "lucide-react";
 import { customToast as toast } from "@/lib/toast";
 import {
   AlertDialog,
@@ -40,6 +40,9 @@ import {
 import { useCensorStore } from "@/store/censor";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { StockAuditModal } from "@/components/stock-audit-modal";
+
+import { cn } from "@/lib/utils";
 
 const formatDate = (date: string) =>
   new Date(date).toLocaleDateString("tr-TR");
@@ -49,6 +52,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
 
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [auditModalOpen, setAuditModalOpen] = useState(false);
   const { isCensored, toggleCensor } = useCensorStore();
 
   const [timeRange, setTimeRange] = useState<"1w" | "1m" | "6m" | "1y">("6m");
@@ -77,6 +81,8 @@ export default function DashboardPage() {
       setDeletingId(null);
     }
   };
+
+  const latestAudit = stats?.stock_audits?.[0];
 
   const filteredTrend = useMemo(() => {
     if (!stats?.sales_trend) return [];
@@ -175,7 +181,7 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-8 p-2">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-zinc-100 to-zinc-400 bg-clip-text text-transparent">
             İşletme Özeti
@@ -184,15 +190,76 @@ export default function DashboardPage() {
             Sisteme hoş geldin, Yönetici. İşte güncel işletme verilerin:
           </p>
         </div>
-        <button
-          type="button"
-          onClick={toggleCensor}
-          className="p-2 rounded-lg bg-zinc-900/50 border border-zinc-800 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors"
-          title={isCensored ? "Verileri Göster" : "Verileri Gizle"}
-        >
-          {isCensored ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-        </button>
+
+        <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap">
+          {latestAudit && (
+            <button
+              onClick={() => setAuditModalOpen(true)}
+              className="hidden md:flex items-center gap-2 px-3.5 py-2 rounded-xl bg-zinc-900/60 border border-zinc-800 text-xs text-zinc-400 hover:bg-zinc-800/80 transition-colors"
+              title="Geçmiş stok kontrollerini gör"
+            >
+              <span>Son Kontrol:</span>
+              <span className="font-medium text-zinc-200">
+                {new Date(latestAudit.created_at).toLocaleDateString("tr-TR", { day: "2-digit", month: "short" })}
+              </span>
+              {latestAudit.status === "all_ok" ? (
+                <Badge className="bg-emerald-500/15 text-emerald-300 border-emerald-500/30 text-[10px] px-2 py-0.5">
+                  <CheckCircle2 className="h-3 w-3 mr-1" /> Eksiksiz
+                </Badge>
+              ) : (
+                <Badge className="bg-amber-500/15 text-amber-300 border-amber-500/30 text-[10px] px-2 py-0.5">
+                  <AlertTriangle className="h-3 w-3 mr-1" /> Eksik Var
+                </Badge>
+              )}
+            </button>
+          )}
+
+          <Button
+            onClick={() => setAuditModalOpen(true)}
+            className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold h-10 px-4 rounded-xl gap-2 shadow-lg shadow-emerald-600/20"
+          >
+            <ClipboardCheck className="h-4 w-4" />
+            Haftalık Stok Kontrolü
+          </Button>
+
+          <button
+            type="button"
+            onClick={toggleCensor}
+            className="p-2.5 rounded-xl bg-zinc-900/50 border border-zinc-800 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors"
+            title={isCensored ? "Verileri Göster" : "Verileri Gizle"}
+          >
+            {isCensored ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          </button>
+        </div>
       </div>
+
+      {latestAudit && (
+        <div className="p-4 rounded-2xl bg-zinc-900/40 border border-zinc-800/70 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+          <div className="flex items-center gap-3">
+            <div className={cn("p-2.5 rounded-xl shrink-0", latestAudit.status === "all_ok" ? "bg-emerald-500/10 text-emerald-400" : "bg-amber-500/10 text-amber-400")}>
+              {latestAudit.status === "all_ok" ? <CheckCircle2 className="h-5 w-5" /> : <AlertTriangle className="h-5 w-5" />}
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-zinc-200">Son Haftalık Stok Kontrolü</span>
+                <span className="text-zinc-500">•</span>
+                <span className="text-zinc-400">{new Date(latestAudit.created_at).toLocaleString("tr-TR", { day: "2-digit", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" })}</span>
+              </div>
+              <p className="text-zinc-400 mt-0.5 line-clamp-1">
+                {latestAudit.notes || (latestAudit.status === "all_ok" ? "Her şey eksiksiz ve tam." : "Eksik / uyuşmazlık tespit edildi.")}
+              </p>
+            </div>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setAuditModalOpen(true)}
+            className="border-zinc-800 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100 h-8 text-xs rounded-lg shrink-0"
+          >
+            Detay / Tüm Kontroller
+          </Button>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {statCards.map((card) => {
@@ -470,6 +537,13 @@ export default function DashboardPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <StockAuditModal
+        open={auditModalOpen}
+        onOpenChange={setAuditModalOpen}
+        stats={stats}
+        onAuditSaved={loadStats}
+      />
     </div>
   );
 }

@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
   
   try {
     const sql = getDb();
-    const [mc, sp, spq, ls, cust, sc, recent, trend, brands] = await Promise.all([
+    const [mc, sp, spq, ls, cust, sc, recent, trend, brands, stockAudits] = await Promise.all([
       sql`SELECT COUNT(*) as total, COUNT(*) FILTER (WHERE status='available') as available, COUNT(*) FILTER (WHERE status='sold') as sold FROM motorcycles`,
       sql`SELECT COUNT(*) as total FROM spare_parts`,
       sql`SELECT COALESCE(SUM(quantity), 0) as total FROM spare_parts`,
@@ -48,7 +48,8 @@ export async function GET(req: NextRequest) {
         GROUP BY s.id, c.id ORDER BY s.created_at DESC LIMIT 5
       `,
       sql`SELECT to_char(s.created_at, 'YYYY-MM-DD') as date, SUM(si.quantity) as sales_count FROM sales s JOIN sale_items si ON s.id = si.sale_id WHERE s.created_at >= NOW() - INTERVAL '1 year' GROUP BY date ORDER BY date`,
-      sql`SELECT m.brand, COUNT(si.id)::int as count FROM sale_items si JOIN motorcycles m ON si.item_id = m.id WHERE si.item_type = 'motorcycle' GROUP BY m.brand ORDER BY count DESC LIMIT 5`
+      sql`SELECT m.brand, COUNT(si.id)::int as count FROM sale_items si JOIN motorcycles m ON si.item_id = m.id WHERE si.item_type = 'motorcycle' GROUP BY m.brand ORDER BY count DESC LIMIT 5`,
+      sql`SELECT * FROM stock_audits ORDER BY created_at DESC LIMIT 10`.catch(() => [])
     ]);
 
     return NextResponse.json({
@@ -62,7 +63,8 @@ export async function GET(req: NextRequest) {
       total_sales: Number(sc[0].total),
       recent_sales: recent,
       sales_trend: trend,
-      top_brands: brands
+      top_brands: brands,
+      stock_audits: stockAudits
     });
   } catch (e) {
     console.error("Dashboard error:", e);

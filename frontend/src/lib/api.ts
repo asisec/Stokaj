@@ -141,6 +141,15 @@ export interface BrandStat {
   count: number
 }
 
+export interface StockAudit {
+  id: number
+  status: "all_ok" | "issues_found"
+  notes: string
+  motorcycle_count: number
+  spare_part_count: number
+  created_at: string
+}
+
 export interface DashboardStats {
   total_motorcycles: number;
   available_motorcycles: number;
@@ -153,6 +162,7 @@ export interface DashboardStats {
   recent_sales: Sale[];
   sales_trend: SalesTrend[];
   top_brands: BrandStat[];
+  stock_audits?: StockAudit[];
 }
 
 export interface CompanyInfo {
@@ -285,5 +295,14 @@ export const api = {
   createContract: (data: any) =>
     request<ContractRecord>("/api/contracts", { method: "POST", body: JSON.stringify(data) }),
   deleteContract: (id: number) => request<{ message: string }>(`/api/contracts/${id}`, { method: "DELETE" }),
+
+  getStockAudits: () => request<StockAudit[]>("/api/stock-audits"),
+  createStockAudit: (data: { status: string; notes: string; motorcycle_count?: number; spare_part_count?: number }) =>
+    request<StockAudit>("/api/stock-audits", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+  deleteStockAudit: (id: number) =>
+    request<{ message: string }>(`/api/stock-audits/${id}`, { method: "DELETE" }),
 }
 
